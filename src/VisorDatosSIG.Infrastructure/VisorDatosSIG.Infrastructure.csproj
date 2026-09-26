@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\VisorDatosSIG.Application\VisorDatosSIG.Application.csproj" />
+    <ProjectReference Include="..\VisorDatosSIG.Domain\VisorDatosSIG.Domain.csproj" />
+  </ItemGroup>
+</Project>
