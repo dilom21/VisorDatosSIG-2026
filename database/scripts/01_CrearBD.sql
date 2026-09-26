@@ -1,0 +1,3 @@
+-- VisorDatosSIG 2026
+-- Script 01: creación de la base de datos.
+-- Completar de acuerdo con el diseño físico oficial del docente.
