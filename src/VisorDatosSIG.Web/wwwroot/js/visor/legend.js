@@ -1,0 +1,1 @@
+// Leyenda dinámica del visor.
