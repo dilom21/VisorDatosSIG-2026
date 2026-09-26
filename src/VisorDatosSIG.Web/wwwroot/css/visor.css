@@ -1,0 +1,12 @@
+html { font-family: Arial, sans-serif; }
+body { margin: 0; }
+header { padding: 1rem; border-bottom: 1px solid #ddd; }
+nav { display: flex; gap: 1rem; }
+main { padding: 1rem; }
+.visor-shell { display: grid; grid-template-columns: minmax(220px, 280px) 1fr; gap: 1rem; }
+.visor-panel, .visor-map { min-width: 0; border: 1px solid #ddd; padding: 1rem; }
+.visor-map { min-height: 520px; }
+@media (max-width: 768px) {
+    .visor-shell { grid-template-columns: 1fr; }
+    .visor-map { min-height: 420px; }
+}
