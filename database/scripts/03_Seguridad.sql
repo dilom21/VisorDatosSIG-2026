@@ -1,0 +1,3 @@
+-- VisorDatosSIG 2026
+-- Script 03: objetos y configuración de seguridad autorizados.
+-- No incluir credenciales reales.
