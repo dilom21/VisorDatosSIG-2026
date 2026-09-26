@@ -1,0 +1,3 @@
+-- VisorDatosSIG 2026
+-- Script 02: tablas, restricciones, relaciones, índices y demás objetos.
+-- Completar de acuerdo con el diseño físico oficial del docente.
