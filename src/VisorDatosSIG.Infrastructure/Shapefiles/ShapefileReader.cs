@@ -1,12 +1,7 @@
-using System.Globalization;
-using NetTopologySuite.Geometries;
 using NetTopologySuite.IO.Esri;
-using NetTopologySuite.IO.Esri.Dbf.Fields;
 using VisorDatosSIG.Application.DTOs;
 using VisorDatosSIG.Application.Interfaces;
 using EsriShapefileReader = NetTopologySuite.IO.Esri.Shapefiles.Readers.ShapefileReader;
-using EsriShapefileReaderOptions = NetTopologySuite.IO.Esri.Shapefiles.Readers.ShapefileReaderOptions;
-using EsriGeometryBuilderMode = NetTopologySuite.IO.Esri.Shapefiles.Readers.GeometryBuilderMode;
 
 namespace VisorDatosSIG.Infrastructure.Shapefiles;
 
@@ -117,23 +112,15 @@ public sealed class ShapefileReader : IShapefileReader
         {
             try
             {
-                var readerOptions = new EsriShapefileReaderOptions
-                {
-                    // Los registros se leen tal como están en el archivo: en esta fase no se
-                    // reparan ni se descartan geometrías inválidas (eso corresponde a la
-                    // validación detallada de la siguiente fase).
-                    GeometryBuilderMode = EsriGeometryBuilderMode.IgnoreInvalidShapes
-                };
-
-                using var reader = Shapefile.OpenRead(fullPath, readerOptions);
+                using var reader = ShapefileAccess.OpenReader(fullPath);
 
                 recordCount = reader.RecordCount;
-                fields = MapFields(reader.Fields);
+                fields = ShapefileAccess.MapFields(reader.Fields);
                 dbfEncodingName = reader.Encoding?.WebName;
-                extentText = FormatExtent(reader.BoundingBox);
-                extentWithinGeographicRange = IsWithinGeographicRange(reader.BoundingBox);
+                extentText = ShapefileAccess.FormatExtent(reader.BoundingBox);
+                extentWithinGeographicRange = ShapefileAccess.IsWithinGeographicRange(reader.BoundingBox);
                 shapeType = Shapefile.GetShapeType(fullPath);
-                declaredShapeType = DescribeShapeType(shapeType);
+                declaredShapeType = ShapefileAccess.DescribeShapeType(shapeType);
 
                 preview = ReadPreview(reader, fields, observedGeometryTypes, cancellationToken);
 
@@ -153,15 +140,15 @@ public sealed class ShapefileReader : IShapefileReader
             }
             catch (Exception ex)
             {
-                errors.Add($"Ocurrió un error al leer el archivo '{fileName}': {DescribeException(ex)}");
+                errors.Add($"Ocurrió un error al leer el archivo '{fileName}': {ShapefileAccess.DescribeException(ex)}");
             }
         }
 
         if (errors.Count == 0 && layerDetection.IsRecognized
-            && !MatchesExpectedGeometry(layerDetection.Layer, shapeType))
+            && !ShapefileAccess.MatchesExpectedShapeType(layerDetection.Layer, shapeType))
         {
             warnings.Add($"El tipo de geometría declarado ({declaredShapeType}) no coincide con el esperado para la capa " +
-                         $"{layerDetection.LayerDisplayName} ({ExpectedGeometryDescription(layerDetection.Layer)}).");
+                         $"{layerDetection.LayerDisplayName} ({ShapefileAccess.ExpectedGeometryDescription(layerDetection.Layer)}).");
         }
 
         var status = errors.Count > 0
@@ -243,7 +230,7 @@ public sealed class ShapefileReader : IShapefileReader
         }
         catch (Exception ex)
         {
-            warnings.Add($"No se pudo leer el archivo .prj: {DescribeException(ex)}");
+            warnings.Add($"No se pudo leer el archivo .prj: {ShapefileAccess.DescribeException(ex)}");
             return PrjSpatialReferenceReader.Parse(null);
         }
 
@@ -257,28 +244,6 @@ public sealed class ShapefileReader : IShapefileReader
     }
 
     /// <summary>
-    /// Convierte las definiciones de campos del DBF en el DTO que utiliza la aplicación.
-    /// </summary>
-    private static IReadOnlyList<ShapefileFieldDto> MapFields(DbfFieldCollection dbfFields)
-    {
-        var fields = new List<ShapefileFieldDto>(dbfFields.Count);
-        for (var index = 0; index < dbfFields.Count; index++)
-        {
-            var field = dbfFields[index];
-            fields.Add(new ShapefileFieldDto
-            {
-                Index = index,
-                Name = field.Name,
-                DataType = field.FieldType.ToString(),
-                Length = field.Length,
-                DecimalCount = field.NumericScale
-            });
-        }
-
-        return fields;
-    }
-
-    /// <summary>
     /// Lee como máximo <see cref="MaxPreviewRecords"/> registros con su geometría y sus atributos.
     /// </summary>
     private static ShapefilePreviewDto ReadPreview(
@@ -288,6 +253,7 @@ public sealed class ShapefileReader : IShapefileReader
         CancellationToken cancellationToken)
     {
         var records = new List<ShapefileRecordDto>(MaxPreviewRecords);
+        var buffer = new Dictionary<string, string?>(fields.Count, StringComparer.OrdinalIgnoreCase);
         long recordNumber = 0;
 
         // Read() avanza al siguiente registro y omite los marcados como eliminados en el DBF.
@@ -303,18 +269,14 @@ public sealed class ShapefileReader : IShapefileReader
                 observedGeometryTypes.Add(geometryType);
             }
 
-            var values = new Dictionary<string, string?>(fields.Count, StringComparer.OrdinalIgnoreCase);
-            for (var index = 0; index < fields.Count; index++)
-            {
-                var value = index < reader.Fields.Count ? reader.Fields[index].Value : null;
-                values[fields[index].Name] = FormatAttributeValue(value);
-            }
+            // El búfer se reutiliza entre registros: cada fila conserva su propia copia.
+            ShapefileAccess.FillRecordValues(reader, fields, buffer);
 
             records.Add(new ShapefileRecordDto
             {
                 RecordNumber = recordNumber,
                 GeometryType = geometryType,
-                Values = values
+                Values = new Dictionary<string, string?>(buffer, StringComparer.OrdinalIgnoreCase)
             });
         }
 
@@ -325,115 +287,6 @@ public sealed class ShapefileReader : IShapefileReader
             MaxRecords = MaxPreviewRecords
         };
     }
-
-    /// <summary>
-    /// Convierte el valor de un campo del DBF a texto sin modificar su contenido
-    /// (no se recortan espacios porque esta fase no debe corregir valores silenciosamente).
-    /// </summary>
-    private static string? FormatAttributeValue(object? value) => value switch
-    {
-        null => null,
-        string text => text,
-        DateTime date => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-        bool boolean => boolean ? "true" : "false",
-        double number => number.ToString("0.############", CultureInfo.InvariantCulture),
-        float number => number.ToString("0.############", CultureInfo.InvariantCulture),
-        decimal number => number.ToString("0.############", CultureInfo.InvariantCulture),
-        IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
-        _ => value.ToString()
-    };
-
-    /// <summary>
-    /// Da formato a la extensión (bounding box) declarada en el encabezado del SHP.
-    /// </summary>
-    private static string? FormatExtent(Envelope? envelope)
-    {
-        if (envelope is null || envelope.IsNull)
-        {
-            return null;
-        }
-
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "X: {0:0.######} a {1:0.######} | Y: {2:0.######} a {3:0.######}",
-            envelope.MinX,
-            envelope.MaxX,
-            envelope.MinY,
-            envelope.MaxY);
-    }
-
-    /// <summary>
-    /// Verifica si la extensión está dentro del rango válido de coordenadas geográficas.
-    /// Sirve como evidencia adicional para justificar un sistema geográfico.
-    /// </summary>
-    private static bool? IsWithinGeographicRange(Envelope? envelope)
-    {
-        if (envelope is null || envelope.IsNull)
-        {
-            return null;
-        }
-
-        return envelope.MinX >= -180 && envelope.MaxX <= 180
-               && envelope.MinY >= -90 && envelope.MaxY <= 90;
-    }
-
-    /// <summary>
-    /// Describe el tipo de geometría declarado en el encabezado del archivo SHP.
-    /// </summary>
-    private static string DescribeShapeType(ShapeType shapeType)
-    {
-        var kind = shapeType switch
-        {
-            ShapeType.NullShape => "nulo",
-            _ when shapeType.IsPoint() => "punto",
-            _ when shapeType.IsMultiPoint() => "multipunto",
-            _ when shapeType.IsPolyLine() => "línea",
-            _ when shapeType.IsPolygon() => "polígono",
-            _ => "desconocido"
-        };
-
-        var dimensions = new List<string>(2);
-        if (shapeType.HasZ())
-        {
-            dimensions.Add("con Z");
-        }
-
-        if (shapeType.HasM())
-        {
-            dimensions.Add("con M");
-        }
-
-        var suffix = dimensions.Count > 0 ? $", {string.Join(", ", dimensions)}" : string.Empty;
-        return $"{shapeType} ({kind}{suffix})";
-    }
-
-    /// <summary>
-    /// Compara el tipo de geometría del archivo con el esperado para la capa detectada.
-    /// </summary>
-    private static bool MatchesExpectedGeometry(ShapefileLayer layer, ShapeType shapeType) => layer switch
-    {
-        ShapefileLayer.Manzanas or ShapefileLayer.Lotes => shapeType.IsPolygon(),
-        ShapefileLayer.CodigosFijos => shapeType.IsPoint(),
-        ShapefileLayer.Vias => shapeType.IsPolyLine(),
-        _ => true
-    };
-
-    /// <summary>
-    /// Describe la geometría esperada para la capa detectada.
-    /// </summary>
-    private static string ExpectedGeometryDescription(ShapefileLayer layer) => layer switch
-    {
-        ShapefileLayer.Manzanas or ShapefileLayer.Lotes => "polígono / multipolígono",
-        ShapefileLayer.CodigosFijos => "punto",
-        ShapefileLayer.Vias => "línea / multilínea",
-        _ => "sin restricción"
-    };
-
-    /// <summary>
-    /// Describe una excepción técnica de forma breve y comprensible.
-    /// </summary>
-    private static string DescribeException(Exception exception) =>
-        $"{exception.GetType().Name}: {exception.Message}";
 
     /// <summary>
     /// Definición de un archivo asociado al shapefile.
