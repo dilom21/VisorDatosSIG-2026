@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="NetTopologySuite.IO.Esri.Shapefile" Version="1.2.0" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\VisorDatosSIG.Application\VisorDatosSIG.Application.csproj" />
     <ProjectReference Include="..\VisorDatosSIG.Domain\VisorDatosSIG.Domain.csproj" />
   </ItemGroup>
