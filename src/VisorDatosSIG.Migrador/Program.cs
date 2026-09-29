@@ -1,10 +1,13 @@
+using Microsoft.Extensions.Configuration;
 using VisorDatosSIG.Application.Interfaces;
 using VisorDatosSIG.Infrastructure.Migration;
 using VisorDatosSIG.Infrastructure.Persistence;
 using VisorDatosSIG.Infrastructure.Shapefiles;
 using VisorDatosSIG.Infrastructure.Validation;
+using VisorDatosSIG.Migrador.Configuration;
 using VisorDatosSIG.Migrador.Forms;
-using Microsoft.Extensions.Configuration;
+using VisorDatosSIG.Migrador.Services;
+using VisorDatosSIG.Migrador.Session;
 using WinFormsApplication = System.Windows.Forms.Application;
 
 namespace VisorDatosSIG.Migrador;
@@ -27,7 +30,7 @@ internal static class Program
             ? configuredBatchSize
             : 500;
 
-        // Composición de dependencias sin contenedor externo:
+        // Composición de dependencias:
         IShapefileLayerDetector layerDetector = new ShapefileLayerDetector();
         IShapefileReader shapefileReader = new ShapefileReader(layerDetector);
         IShapefileValidator shapefileValidator = new ShapefileValidator();
@@ -38,8 +41,14 @@ internal static class Program
         IMigrationExporter migrationExporter = new MigrationExporter();
         IMigrationService migrationService = new MigrationService(shapefileReader, shapefileValidator, migrationWriter, bitacoraService);
 
-        // Se usa un alias porque el espacio de nombres VisorDatosSIG.Application
-        // oculta al tipo Application de Windows Forms dentro de este archivo.
+        // Cliente de autenticación contra la API HTTP (Harold):
+        var ajustesApi = ApiSettings.CrearDesdeEntorno();
+        using var clienteHttp = ajustesApi.CrearClienteHttp();
+        var clienteAutenticacion = new AuthenticationApiClient(clienteHttp);
+
+        // Sesión en memoria:
+        var sesion = new UserSession();
+
         WinFormsApplication.Run(new MigradorForm(
             shapefileReader,
             shapefileValidator,
@@ -48,6 +57,8 @@ internal static class Program
             migrationWriter,
             migrationExporter,
             bitacoraService,
+            clienteAutenticacion,
+            sesion,
             batchSize));
     }
 }

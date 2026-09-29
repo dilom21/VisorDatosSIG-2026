@@ -41,6 +41,11 @@ public sealed partial class MigradorForm
     private readonly Button _btnExportar = new();
     private readonly Button _btnReconstruirIndices = new();
 
+    // Sesión del usuario en la cabecera: botón de acceso o identificación del usuario.
+    private readonly Panel _areaSesion = new();
+    private readonly GradientButton _btnIniciarSesion = new();
+    private readonly UserChipButton _chipUsuario = new();
+
     // Tarjetas de resumen.
     private readonly SummaryCard _cardCapa = new("Capa detectada");
     private readonly SummaryCard _cardRegistros = new("Registros");
@@ -147,7 +152,7 @@ public sealed partial class MigradorForm
         ResumeLayout(true);
     }
 
-    private static Control CrearCabecera()
+    private Control CrearCabecera()
     {
         var panel = new Panel
         {
@@ -179,7 +184,46 @@ public sealed partial class MigradorForm
 
         panel.Controls.Add(titulo);
         panel.Controls.Add(subtitulo);
+        panel.Controls.Add(CrearAreaSesion());
         return panel;
+    }
+
+    /// <summary>
+    /// Crea la zona derecha de la cabecera: «Iniciar sesión» cuando no hay sesión y la
+    /// identificación del usuario (con su menú) cuando ya se inició sesión.
+    /// </summary>
+    private Control CrearAreaSesion()
+    {
+        // Tamaño explícito: la zona se redimensiona al cambiar entre «Iniciar sesión» y el usuario
+        // activo (la actualización se hace en MigradorForm.Session.cs).
+        _areaSesion.AutoSize = false;
+        _areaSesion.Size = new Size(152, 44);
+        _areaSesion.BackColor = Color.Transparent;
+        _areaSesion.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        _areaSesion.Margin = new Padding(0);
+
+        _btnIniciarSesion.Text = "Iniciar sesión";
+        _btnIniciarSesion.TextoEnProgreso = "Conectando...";
+        _btnIniciarSesion.MostrarFlecha = false;
+        _btnIniciarSesion.Size = new Size(152, 34);
+        _btnIniciarSesion.Radio = 17;
+        _btnIniciarSesion.Font = EstiloUI.FuenteBotonPequeno;
+        _btnIniciarSesion.Location = new Point(0, 5);
+        _btnIniciarSesion.AccessibleName = "Iniciar sesión";
+        _btnIniciarSesion.Click += btnIniciarSesion_Click;
+        _toolTip.SetToolTip(
+            _btnIniciarSesion,
+            $"Iniciar sesión en VisorDatosSIG · Servidor: {_apiClient.DireccionBase?.AbsoluteUri.TrimEnd('/')}");
+
+        // El chip solo se muestra con sesión activa; la cabecera lo activa desde MigradorForm.Session.
+        _chipUsuario.Visible = false;
+        _chipUsuario.Location = new Point(0, 1);
+        _chipUsuario.AccessibleName = "Menú del usuario autenticado";
+        _chipUsuario.Click += btnUsuario_Click;
+
+        _areaSesion.Controls.Add(_btnIniciarSesion);
+        _areaSesion.Controls.Add(_chipUsuario);
+        return _areaSesion;
     }
 
     private Control CrearBarraAcciones()

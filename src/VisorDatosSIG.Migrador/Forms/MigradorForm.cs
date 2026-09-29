@@ -3,6 +3,8 @@ using System.Windows.Forms;
 using VisorDatosSIG.Application.DTOs;
 using VisorDatosSIG.Application.Interfaces;
 using VisorDatosSIG.Infrastructure.Migration;
+using VisorDatosSIG.Migrador.Services;
+using VisorDatosSIG.Migrador.Session;
 
 namespace VisorDatosSIG.Migrador.Forms;
 
@@ -24,6 +26,8 @@ public sealed partial class MigradorForm : Form
     private readonly SqlMigrationWriter _migrationWriter;
     private readonly IMigrationExporter _migrationExporter;
     private readonly IBitacoraService _bitacoraService;
+    private readonly AuthenticationApiClient _apiClient;
+    private readonly UserSession _sesion;
     private readonly int _batchSize;
 
     private string? _ultimaCarpeta;
@@ -38,7 +42,7 @@ public sealed partial class MigradorForm : Form
     private bool _migracionEnCurso;
 
     /// <summary>
-    /// Inicializa el formulario con los servicios de inspección, validación, migración, exportación y bitácora.
+    /// Inicializa el formulario con los servicios de inspección, validación, migración, exportación, bitácora y sesión de usuario.
     /// </summary>
     public MigradorForm(
         IShapefileReader shapefileReader,
@@ -48,6 +52,8 @@ public sealed partial class MigradorForm : Form
         SqlMigrationWriter migrationWriter,
         IMigrationExporter migrationExporter,
         IBitacoraService bitacoraService,
+        AuthenticationApiClient apiClient,
+        UserSession sesion,
         int batchSize)
     {
         _shapefileReader = shapefileReader ?? throw new ArgumentNullException(nameof(shapefileReader));
@@ -57,9 +63,12 @@ public sealed partial class MigradorForm : Form
         _migrationWriter = migrationWriter ?? throw new ArgumentNullException(nameof(migrationWriter));
         _migrationExporter = migrationExporter ?? throw new ArgumentNullException(nameof(migrationExporter));
         _bitacoraService = bitacoraService ?? throw new ArgumentNullException(nameof(bitacoraService));
+        _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
+        _sesion = sesion ?? throw new ArgumentNullException(nameof(sesion));
         _batchSize = batchSize > 0 ? batchSize : 500;
 
         InicializarInterfaz();
+        InicializarSesion();
         ReiniciarResultados();
     }
 
@@ -76,6 +85,7 @@ public sealed partial class MigradorForm : Form
             _cancelacionMigracion?.Cancel();
             _cancelacionMigracion?.Dispose();
             _cancelacionMigracion = null;
+            LiberarSesion();
             _toolTip.Dispose();
         }
 
