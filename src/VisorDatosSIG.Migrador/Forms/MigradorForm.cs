@@ -1,6 +1,8 @@
 using System.Windows.Forms;
 using VisorDatosSIG.Application.DTOs;
 using VisorDatosSIG.Application.Interfaces;
+using VisorDatosSIG.Migrador.Services;
+using VisorDatosSIG.Migrador.Session;
 
 namespace VisorDatosSIG.Migrador.Forms;
 
@@ -20,6 +22,8 @@ public sealed partial class MigradorForm : Form
 
     private readonly IShapefileReader _shapefileReader;
     private readonly IShapefileValidator _shapefileValidator;
+    private readonly AuthenticationApiClient _apiClient;
+    private readonly UserSession _sesion;
 
     private string? _ultimaCarpeta;
     private ShapefileInfoDto? _inspeccionActual;
@@ -29,16 +33,25 @@ public sealed partial class MigradorForm : Form
     private bool _validacionEnCurso;
 
     /// <summary>
-    /// Inicializa el formulario con los servicios de inspección y validación.
+    /// Inicializa el formulario con los servicios de inspección y validación y con la sesión del usuario.
     /// </summary>
     /// <param name="shapefileReader">Servicio de inspección de shapefiles.</param>
     /// <param name="shapefileValidator">Servicio de validación detallada.</param>
-    public MigradorForm(IShapefileReader shapefileReader, IShapefileValidator shapefileValidator)
+    /// <param name="apiClient">Cliente HTTP de autenticación (el Migrador nunca accede a SQL Server).</param>
+    /// <param name="sesion">Sesión en memoria del usuario autenticado.</param>
+    public MigradorForm(
+        IShapefileReader shapefileReader,
+        IShapefileValidator shapefileValidator,
+        AuthenticationApiClient apiClient,
+        UserSession sesion)
     {
         _shapefileReader = shapefileReader ?? throw new ArgumentNullException(nameof(shapefileReader));
         _shapefileValidator = shapefileValidator ?? throw new ArgumentNullException(nameof(shapefileValidator));
+        _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
+        _sesion = sesion ?? throw new ArgumentNullException(nameof(sesion));
 
         InicializarInterfaz();
+        InicializarSesion();
         ReiniciarResultados();
     }
 
@@ -52,6 +65,7 @@ public sealed partial class MigradorForm : Form
             _cancelacionValidacion?.Cancel();
             _cancelacionValidacion?.Dispose();
             _cancelacionValidacion = null;
+            LiberarSesion();
             _toolTip.Dispose();
         }
 
