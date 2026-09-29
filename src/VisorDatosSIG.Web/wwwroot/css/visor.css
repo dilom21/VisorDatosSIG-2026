@@ -1,12 +1,715 @@
-html { font-family: Arial, sans-serif; }
-body { margin: 0; }
-header { padding: 1rem; border-bottom: 1px solid #ddd; }
-nav { display: flex; gap: 1rem; }
-main { padding: 1rem; }
-.visor-shell { display: grid; grid-template-columns: minmax(220px, 280px) 1fr; gap: 1rem; }
-.visor-panel { min-width: 0; border: 1px solid #ddd; padding: 1rem; }
-.visor-map { min-width: 0; border: 1px solid #ddd; height: 520px; background-color: #eef1f4; }
+/* =============================================================================
+   VisorDatosSIG 2026 — Base visual global
+   FE-UI 1: identidad visual (tokens, layout, componentes comunes y visor).
+
+   Este archivo es la base visual del sistema: define las variables de diseño,
+   la tipografía, el layout global, los botones y las alertas, y los estilos del
+   visor cartográfico. Los estilos específicos de autenticación viven en auth.css
+   y reutilizan estos tokens; no se duplican valores.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. Tokens de diseño
+   -------------------------------------------------------------------------- */
+:root {
+    /* Marca: azul profundo como color principal, teal SIG como acento. */
+    --color-primary: #0d3b66;
+    --color-primary-dark: #092b4c;
+    --color-primary-soft: #e8eff6;
+    --color-accent: #0f8f83;
+    --color-accent-dark: #0b6f66;
+
+    /* Superficies y fondos. */
+    --color-background: #f4f6f9;
+    --color-surface: #ffffff;
+    --color-surface-alt: #f8fafc;
+
+    /* Texto. */
+    --color-text: #17293d;
+    --color-muted: #5a6b7d;
+    --color-border: #dce3ea;
+    --color-border-strong: #c6d0da;
+
+    /* Estados accesibles (texto sobre fondo). */
+    --color-error: #a4231c;
+    --color-error-bg: #fdeceb;
+    --color-error-border: #f3c4c0;
+    --color-warning: #7a5600;
+    --color-warning-bg: #fff6e0;
+    --color-warning-border: #f0d99a;
+    --color-success: #1a6a3a;
+    --color-success-bg: #e9f5ee;
+    --color-info: #1b5c94;
+    --color-info-bg: #eaf2fa;
+    --color-info-border: #c3d9ee;
+
+    /* Radios. */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+
+    /* Sombras. */
+    --shadow-sm: 0 1px 2px rgba(15, 40, 64, 0.06), 0 1px 3px rgba(15, 40, 64, 0.07);
+    --shadow-md: 0 4px 14px rgba(15, 40, 64, 0.08), 0 2px 4px rgba(15, 40, 64, 0.05);
+    --shadow-lg: 0 16px 40px rgba(15, 40, 64, 0.14);
+
+    /* Espaciados. */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
+
+    /* Layout. */
+    --header-height: 64px;
+    --container-width: 1280px;
+
+    /* Tipografía: stack del sistema, sin fuentes externas. */
+    --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    /* Transiciones muy sutiles. */
+    --transition-fast: 120ms ease;
+}
+
+/* -----------------------------------------------------------------------------
+   2. Reset mínimo y base
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--color-text);
+    background-color: var(--color-background);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+    line-height: 1.25;
+    margin: 0 0 var(--space-3);
+    color: var(--color-text);
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1rem; }
+
+p { margin: 0 0 var(--space-3); }
+
+a {
+    color: var(--color-primary);
+}
+
+a:hover {
+    color: var(--color-primary-dark);
+}
+
+/* El atributo `hidden` debe ganar siempre: varios contenedores se muestran y
+   ocultan desde JavaScript y algunos usan display flex/grid. */
+[hidden] {
+    display: none !important;
+}
+
+/* Foco visible consistente en todo el sistema. */
+:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* Enlace de salto para navegación por teclado. */
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    padding: var(--space-2) var(--space-4);
+    background-color: var(--color-primary);
+    color: #fff;
+    border-radius: 0 0 var(--radius-sm) 0;
+    text-decoration: none;
+}
+
+.skip-link:focus {
+    left: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   3. Cabecera de la aplicación
+   -------------------------------------------------------------------------- */
+.app-header {
+    position: relative;
+    z-index: 500;
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+}
+
+.app-header__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    width: 100%;
+    max-width: var(--container-width);
+    min-height: var(--header-height);
+    margin: 0 auto;
+    padding: var(--space-2) var(--space-5);
+}
+
+/* Marca: símbolo cartográfico + nombre. */
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    text-decoration: none;
+    color: var(--color-text);
+    flex: 0 0 auto;
+}
+
+.brand__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(150deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+.brand__mark svg {
+    display: block;
+}
+
+.brand__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.brand__title {
+    font-size: 1.02rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.brand__subtitle {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* Navegación principal. */
+.app-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 1 1 auto;
+}
+
+.app-nav__link {
+    display: inline-block;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    font-size: 0.94rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.app-nav__link:hover {
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   4. Layout del contenido
+   -------------------------------------------------------------------------- */
+.app-main {
+    width: 100%;
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: var(--space-5);
+}
+
+/* -----------------------------------------------------------------------------
+   5. Botones
+   -------------------------------------------------------------------------- */
+.btn-primario,
+.btn-secundario,
+.btn-sesion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 40px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font: inherit;
+    font-size: 0.94rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--transition-fast),
+        border-color var(--transition-fast), color var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+.btn-primario {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+.btn-primario:hover {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: #fff;
+}
+
+.btn-primario:active {
+    background-color: #072038;
+    border-color: #072038;
+}
+
+.btn-secundario {
+    background-color: var(--color-surface);
+    border-color: var(--color-border-strong);
+    color: var(--color-primary);
+}
+
+.btn-secundario:hover {
+    background-color: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    color: var(--color-primary-dark);
+}
+
+.btn-sesion {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    font-size: 0.88rem;
+}
+
+.btn-sesion:hover {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: #fff;
+}
+
+/* Variante discreta sobre superficie blanca (cerrar sesión). */
+.btn-sesion--ghost {
+    background-color: transparent;
+    border-color: var(--color-border-strong);
+    color: var(--color-primary);
+}
+
+.btn-sesion--ghost:hover {
+    background-color: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    color: var(--color-primary-dark);
+}
+
+.btn-primario:disabled,
+.btn-secundario:disabled,
+.btn-sesion:disabled,
+.btn-primario[aria-busy="true"],
+.btn-secundario[aria-busy="true"],
+.btn-sesion[aria-busy="true"] {
+    opacity: 0.62;
+    cursor: progress;
+    box-shadow: none;
+}
+
+/* -----------------------------------------------------------------------------
+   6. Alertas (error / aviso / información)
+   Las tres zonas de mensaje del sistema reciben su texto por `textContent`
+   desde JavaScript, por eso la iconografía se resuelve con `::before` y nunca
+   con nodos hijos.
+   -------------------------------------------------------------------------- */
+.login-mensaje,
+.login-info,
+.visor-aviso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-left-width: 4px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.login-mensaje::before,
+.login-info::before,
+.visor-aviso::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    background-color: currentColor;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+/* Variante de error (login.js agrega la clase `login-error`). */
+.login-error {
+    color: var(--color-error);
+    background-color: var(--color-error-bg);
+    border-color: var(--color-error-border);
+    border-left-color: var(--color-error);
+}
+
+.login-error::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.6a1.3 1.3 0 0 1 1.3 1.3v5.2a1.3 1.3 0 0 1-2.6 0V7.9A1.3 1.3 0 0 1 12 6.6Zm0 10.4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.6a1.3 1.3 0 0 1 1.3 1.3v5.2a1.3 1.3 0 0 1-2.6 0V7.9A1.3 1.3 0 0 1 12 6.6Zm0 10.4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z'/%3E%3C/svg%3E");
+}
+
+/* Variante informativa. */
+.login-info {
+    color: var(--color-info);
+    background-color: var(--color-info-bg);
+    border-color: var(--color-info-border);
+    border-left-color: var(--color-info);
+}
+
+.login-info::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm1.3 11.2h-2.6v-6.5h2.6v6.5Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm1.3 11.2h-2.6v-6.5h2.6v6.5Z'/%3E%3C/svg%3E");
+}
+
+/* Variante de aviso: la usa el guard cuando no puede validar la sesión. */
+.visor-aviso {
+    color: var(--color-warning);
+    background-color: var(--color-warning-bg);
+    border-color: var(--color-warning-border);
+    border-left-color: var(--color-warning);
+}
+
+.visor-aviso::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.6 1.7 20.4h20.6L12 2.6Zm0 5.6a1.3 1.3 0 0 1 1.3 1.3v4.4a1.3 1.3 0 0 1-2.6 0V9.5A1.3 1.3 0 0 1 12 8.2Zm0 8.2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.6 1.7 20.4h20.6L12 2.6Zm0 5.6a1.3 1.3 0 0 1 1.3 1.3v4.4a1.3 1.3 0 0 1-2.6 0V9.5A1.3 1.3 0 0 1 12 8.2Zm0 8.2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z'/%3E%3C/svg%3E");
+}
+
+/* Variante de éxito (disponible para usos futuros). */
+.alerta-exito {
+    color: var(--color-success);
+    background-color: var(--color-success-bg);
+    border-color: var(--color-success);
+    border-left-color: var(--color-success);
+}
+
+.alerta-exito::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm5 7.2-6.2 6.6a1.2 1.2 0 0 1-1.7 0L6.4 13a1.2 1.2 0 0 1 1.7-1.7l1.9 2 5.3-5.7A1.2 1.2 0 0 1 17 9.2Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm5 7.2-6.2 6.6a1.2 1.2 0 0 1-1.7 0L6.4 13a1.2 1.2 0 0 1 1.7-1.7l1.9 2 5.3-5.7A1.2 1.2 0 0 1 17 9.2Z'/%3E%3C/svg%3E");
+}
+
+/* -----------------------------------------------------------------------------
+   7. Visor cartográfico
+   -------------------------------------------------------------------------- */
+.visor-shell {
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+}
+
+.visor-panel {
+    min-width: 0;
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.visor-panel__head {
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-3);
+}
+
+.visor-panel__head h2 {
+    margin: 0 0 var(--space-2);
+    font-size: 1.05rem;
+}
+
+.visor-panel__head p {
+    margin: 0;
+    font-size: 0.86rem;
+    color: var(--color-muted);
+}
+
+.visor-panel__lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.visor-panel__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+    font-size: 0.88rem;
+    color: var(--color-muted);
+}
+
+.visor-panel__item::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-accent);
+    opacity: 0.55;
+}
+
+.visor-panel__nota {
+    margin: var(--space-3) 0 0;
+    font-size: 0.78rem;
+    color: var(--color-muted);
+}
+
+/* Contenedor de Leaflet: sin padding y con altura explícita. */
+.visor-map {
+    min-width: 0;
+    height: 560px;
+    min-height: 420px;
+    background-color: #e9eef3;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+@media (min-width: 900px) {
+    .visor-map {
+        height: calc(100vh - var(--header-height) - 6rem);
+        min-height: 480px;
+    }
+}
+
+/* Fail-closed: mientras no se valide la sesión, el mapa no es utilizable. */
+body.sesion-verificando .visor-map {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* -----------------------------------------------------------------------------
+   8. Página de inicio
+   -------------------------------------------------------------------------- */
+.home-hero {
+    padding: var(--space-6);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.home-hero__eyebrow {
+    margin: 0 0 var(--space-2);
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent-dark);
+}
+
+.home-hero h1 {
+    margin: 0 0 var(--space-3);
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+}
+
+.home-hero__lead {
+    max-width: 62ch;
+    margin: 0 0 var(--space-5);
+    font-size: 1.02rem;
+    color: var(--color-muted);
+}
+
+.home-hero__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.home-hero__saludo {
+    margin: 0;
+    font-size: 0.94rem;
+    color: var(--color-muted);
+}
+
+.home-capas {
+    margin-top: var(--space-5);
+}
+
+.home-capas h2 {
+    margin: 0 0 var(--space-1);
+}
+
+.home-capas__nota {
+    margin: 0 0 var(--space-4);
+    font-size: 0.88rem;
+    color: var(--color-muted);
+}
+
+.capas-grid {
+    display: grid;
+    /* min(220px, 100%) evita desbordamiento horizontal en pantallas estrechas. */
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.capa-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.capa-card__icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin-bottom: var(--space-3);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.capa-card__icono svg {
+    display: block;
+}
+
+.capa-card h3 {
+    margin: 0 0 var(--space-1);
+    font-size: 0.98rem;
+}
+
+.capa-card p {
+    margin: 0;
+    font-size: 0.84rem;
+    color: var(--color-muted);
+}
+
+.capa-card__estado {
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: auto;
+    padding: 2px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background-color: var(--color-surface-alt);
+    font-size: 0.72rem;
+    color: var(--color-muted);
+}
+
+/* -----------------------------------------------------------------------------
+   9. Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+    .visor-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .visor-map {
+        height: 440px;
+        min-height: 420px;
+    }
+}
+
 @media (max-width: 768px) {
-    .visor-shell { grid-template-columns: 1fr; }
-    .visor-map { height: 420px; }
+    .app-header__inner {
+        flex-wrap: wrap;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+    }
+
+    .app-nav {
+        order: 3;
+        width: 100%;
+    }
+
+    .app-main {
+        padding: var(--space-4);
+    }
+
+    .home-hero {
+        padding: var(--space-5);
+    }
+
+    .home-hero h1 {
+        font-size: 1.6rem;
+    }
+
+    h1 { font-size: 1.45rem; }
+}
+
+@media (max-width: 480px) {
+    .app-nav {
+        gap: var(--space-1);
+    }
+
+    .app-nav__link {
+        padding: var(--space-2);
+        font-size: 0.9rem;
+    }
+
+    .visor-map {
+        height: 420px;
+    }
 }

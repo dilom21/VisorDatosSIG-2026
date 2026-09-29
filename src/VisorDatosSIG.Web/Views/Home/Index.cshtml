@@ -1,12 +1,91 @@
 @{
     ViewData["Title"] = "Inicio";
 }
-<h1>VisorDatosSIG 2026</h1>
-<p>Estructura inicial del proyecto.</p>
-<div class="sesion-resumen" data-sesion-anonimo>
-    <p>Inicie sesión para acceder al visor cartográfico.</p>
-    <a class="btn-sesion" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
-</div>
-<div class="sesion-resumen" data-sesion-bloque hidden>
-    <p>Ha iniciado sesión como <span class="sesion-nombre" data-sesion-nombre></span>.</p>
-</div>
+
+<section class="home-hero">
+    <p class="home-hero__eyebrow">Sistema de información geográfica</p>
+    <h1>VisorDatosSIG 2026</h1>
+    <p class="home-hero__lead">
+        Plataforma para migración, consulta y visualización de información geográfica
+        sobre SQL Server.
+    </p>
+
+    @* Los contenedores de estado de sesión los muestra u oculta guard.js
+       (data-sesion-anonimo / data-sesion-bloque / data-sesion-nombre). *@
+    <div class="home-hero__acciones">
+        <div data-sesion-anonimo>
+            <a class="btn-primario" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
+        </div>
+        <div data-sesion-bloque hidden>
+            <p class="home-hero__saludo">
+                Ha iniciado sesión como <span class="sesion-nombre" data-sesion-nombre></span>.
+            </p>
+            <a class="btn-primario" asp-controller="Visor" asp-action="Index">Abrir visor cartográfico</a>
+        </div>
+    </div>
+</section>
+
+<section class="home-capas" aria-labelledby="titulo-capas">
+    <h2 id="titulo-capas">Capas contempladas por el proyecto</h2>
+    <p class="home-capas__nota">
+        Información prevista para las siguientes fases del visor; aún no disponible
+        en la aplicación web.
+    </p>
+
+    <ul class="capas-grid">
+        <li class="capa-card">
+            <span class="capa-card__icono" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+            </span>
+            <h3>Manzanas</h3>
+            <p>Unidades urbanas del área de estudio.</p>
+            <span class="capa-card__estado">Prevista</span>
+        </li>
+
+        <li class="capa-card">
+            <span class="capa-card__icono" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                    <path d="M4 5.5 12 3l8 2.5v13L12 21l-8-2.5Z" />
+                    <path d="M12 3v18" />
+                </svg>
+            </span>
+            <h3>Lotes</h3>
+            <p>Predios individuales dentro de cada manzana.</p>
+            <span class="capa-card__estado">Prevista</span>
+        </li>
+
+        <li class="capa-card">
+            <span class="capa-card__icono" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                    <path d="M12 21.2s6.6-5.4 6.6-10.4a6.6 6.6 0 1 0-13.2 0c0 5 6.6 10.4 6.6 10.4Z" />
+                    <circle cx="12" cy="10.4" r="2.5" />
+                </svg>
+            </span>
+            <h3>Códigos Fijos</h3>
+            <p>Puntos de referencia identificados en campo.</p>
+            <span class="capa-card__estado">Prevista</span>
+        </li>
+
+        <li class="capa-card">
+            <span class="capa-card__icono" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                    <path d="M7 3 5 21" />
+                    <path d="M17 3l2 18" />
+                    <path d="M12 4.5v3M12 10.5v3M12 16.5v3" />
+                </svg>
+            </span>
+            <h3>Vías</h3>
+            <p>Red vial que estructura el territorio.</p>
+            <span class="capa-card__estado">Prevista</span>
+        </li>
+    </ul>
+</section>

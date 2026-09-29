@@ -6,9 +6,26 @@
 }
 <section class="visor-shell">
     <aside class="visor-panel">
+        <div class="visor-panel__head">
+            <h2>Capas</h2>
+            <p>Contenido previsto para las siguientes fases del visor.</p>
+        </div>
+
+        @* Zona de aviso del guard: recibe su texto por textContent, por lo que no
+           debe contener nodos hijos en el marcado. *@
         <p id="visor-aviso" class="visor-aviso" role="status" hidden></p>
-        <h2>Capas</h2>
-        <p>Aquí se incorporarán Manzanas, Lotes, Códigos Fijos y Vías.</p>
+
+        <ul class="visor-panel__lista">
+            <li class="visor-panel__item">Manzanas</li>
+            <li class="visor-panel__item">Lotes</li>
+            <li class="visor-panel__item">Códigos Fijos</li>
+            <li class="visor-panel__item">Vías</li>
+        </ul>
+
+        <p class="visor-panel__nota">
+            Las capas aún no están disponibles en la Web; el mapa muestra únicamente
+            el mapa base de OpenStreetMap.
+        </p>
     </aside>
     <div id="map" class="visor-map" aria-label="Mapa del VisorDatosSIG"></div>
 </section>
