@@ -1,16 +1,18 @@
 @{
     ViewData["Title"] = "Visor cartográfico";
 }
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+}
 <section class="visor-shell">
     <aside class="visor-panel">
         <h2>Capas</h2>
         <p>Aquí se incorporarán Manzanas, Lotes, Códigos Fijos y Vías.</p>
     </aside>
-    <div id="map" class="visor-map" aria-label="Mapa del VisorDatosSIG">
-        <p>Área reservada para Leaflet.</p>
-    </div>
+    <div id="map" class="visor-map" aria-label="Mapa del VisorDatosSIG"></div>
 </section>
 @section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
     <script src="~/js/visor/map.js"></script>
     <script src="~/js/visor/geojson.js"></script>
     <script src="~/js/visor/layers.js"></script>
