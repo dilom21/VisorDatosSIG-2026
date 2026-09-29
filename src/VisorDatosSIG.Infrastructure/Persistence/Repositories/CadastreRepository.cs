@@ -30,6 +30,7 @@ public sealed class CadastreRepository : ICadastreRepository
         int limit = 2000,
         CancellationToken cancellationToken = default)
     {
+        limit = Math.Clamp(limit <= 0 ? 2000 : limit, 1, 10000);
         var features = new List<GeoJsonFeatureDto>();
         var (tableName, idCol, selectCols) = ResolveLayerInfo(layerName);
 
@@ -271,17 +272,36 @@ public sealed class CadastreRepository : ICadastreRepository
         await using var connection = _connectionFactory.Create();
         await connection.OpenAsync(cancellationToken);
 
-        var table = "dbo.Manzanas";
-        if (!string.IsNullOrWhiteSpace(layerName))
+        string sql;
+        if (string.IsNullOrWhiteSpace(layerName) ||
+            layerName.Trim().Equals("todas", StringComparison.OrdinalIgnoreCase) ||
+            layerName.Trim().Equals("global", StringComparison.OrdinalIgnoreCase) ||
+            layerName.Trim() == "*")
         {
-            var (resolvedTable, _, _) = ResolveLayerInfo(layerName);
-            if (!string.IsNullOrEmpty(resolvedTable))
-            {
-                table = resolvedTable;
-            }
+            // Extensión global calculada abarcando todas las capas espaciales existentes
+            sql = """
+                WITH Extents AS (
+                    SELECT MIN(Geom.STEnvelope().STPointN(1).STX) AS MinX, MIN(Geom.STEnvelope().STPointN(1).STY) AS MinY, MAX(Geom.STEnvelope().STPointN(3).STX) AS MaxX, MAX(Geom.STEnvelope().STPointN(3).STY) AS MaxY FROM dbo.Manzanas WHERE Geom IS NOT NULL
+                    UNION ALL
+                    SELECT MIN(Geom.STEnvelope().STPointN(1).STX), MIN(Geom.STEnvelope().STPointN(1).STY), MAX(Geom.STEnvelope().STPointN(3).STX), MAX(Geom.STEnvelope().STPointN(3).STY) FROM dbo.Lotes WHERE Geom IS NOT NULL
+                    UNION ALL
+                    SELECT MIN(Geom.STEnvelope().STPointN(1).STX), MIN(Geom.STEnvelope().STPointN(1).STY), MAX(Geom.STEnvelope().STPointN(3).STX), MAX(Geom.STEnvelope().STPointN(3).STY) FROM dbo.CodigosFijos WHERE Geom IS NOT NULL
+                    UNION ALL
+                    SELECT MIN(Geom.STEnvelope().STPointN(1).STX), MIN(Geom.STEnvelope().STPointN(1).STY), MAX(Geom.STEnvelope().STPointN(3).STX), MAX(Geom.STEnvelope().STPointN(3).STY) FROM dbo.Vias WHERE Geom IS NOT NULL
+                )
+                SELECT MIN(MinX), MIN(MinY), MAX(MaxX), MAX(MaxY) FROM Extents WHERE MinX IS NOT NULL;
+                """;
         }
+        else
+        {
+            var (table, _, _) = ResolveLayerInfo(layerName);
+            if (string.IsNullOrEmpty(table))
+            {
+                return null;
+            }
 
-        var sql = $"SELECT MIN(Geom.STEnvelope().STPointN(1).STX), MIN(Geom.STEnvelope().STPointN(1).STY), MAX(Geom.STEnvelope().STPointN(3).STX), MAX(Geom.STEnvelope().STPointN(3).STY) FROM {table} WHERE Geom IS NOT NULL";
+            sql = $"SELECT MIN(Geom.STEnvelope().STPointN(1).STX), MIN(Geom.STEnvelope().STPointN(1).STY), MAX(Geom.STEnvelope().STPointN(3).STX), MAX(Geom.STEnvelope().STPointN(3).STY) FROM {table} WHERE Geom IS NOT NULL";
+        }
 
         await using var command = new SqlCommand(sql, connection);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -315,7 +335,7 @@ public sealed class CadastreRepository : ICadastreRepository
 
         if (normalized.Contains("codigofijo") || normalized.Contains("codigo") || normalized.Contains("codfijo"))
         {
-            return ("dbo.CodigosFijos", "IdCodigo", "CodF_SQL, CodF_SIG, CodFijo, Nombre, Estado, Longitud, Latitud");
+            return ("dbo.CodigosFijos", "IdCodigo", "CodF_SQL, CodF_SIG, CodFijo, Nombre, Estado, IdLote, Longitud, Latitud");
         }
 
         if (normalized.Contains("via"))

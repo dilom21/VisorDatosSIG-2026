@@ -1,14 +1,21 @@
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VisorDatosSIG.Application.Common;
 using VisorDatosSIG.Application.Interfaces;
 
 namespace VisorDatosSIG.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
 public sealed class CapasController : ControllerBase
 {
+    private const int LimiteMinimo = 1;
+    private const int LimiteMaximo = 10000;
+    private const int LimitePorDefecto = 2000;
+
     private readonly ICadastreRepository _cadastreRepository;
     private readonly ILogger<CapasController> _logger;
 
@@ -32,6 +39,7 @@ public sealed class CapasController : ControllerBase
     /// <summary>
     /// Obtiene las geometrías de una capa en formato GeoJSON RFC 7946 (CU14 - Mapa, CU17 - Elementos Geográficos).
     /// Soporta Bounding Box (minX, minY, maxX, maxY) para optimización en Leaflet / MapLibre.
+    /// El parámetro limit se acota entre 1 y 10000 para evitar sobrecarga del servidor.
     /// </summary>
     [HttpGet("{capa}/geojson")]
     [ProducesResponseType(typeof(GeoJsonFeatureCollectionDto), StatusCodes.Status200OK)]
@@ -41,10 +49,11 @@ public sealed class CapasController : ControllerBase
         [FromQuery] double? minY = null,
         [FromQuery] double? maxX = null,
         [FromQuery] double? maxY = null,
-        [FromQuery] int limit = 2000,
+        [FromQuery, Range(LimiteMinimo, LimiteMaximo)] int limit = LimitePorDefecto,
         CancellationToken cancellationToken = default)
     {
-        var geojson = await _cadastreRepository.GetLayerGeoJsonAsync(capa, minX, minY, maxX, maxY, limit, cancellationToken);
+        var limitAcotado = Math.Clamp(limit <= 0 ? LimitePorDefecto : limit, LimiteMinimo, LimiteMaximo);
+        var geojson = await _cadastreRepository.GetLayerGeoJsonAsync(capa, minX, minY, maxX, maxY, limitAcotado, cancellationToken);
         return Ok(geojson);
     }
 
