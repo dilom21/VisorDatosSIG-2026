@@ -1,2 +1,0 @@
--- VisorDatosSIG 2026
--- Script 04: datos mínimos de prueba autorizados.
