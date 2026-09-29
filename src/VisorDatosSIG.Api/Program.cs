@@ -161,8 +161,9 @@ if (app.Environment.IsDevelopment())
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "VisorDatosSIG API v1");
         options.DocumentTitle = "VisorDatosSIG API";
-        options.RoutePrefix = string.Empty; // Carga Swagger en la raíz http://localhost:5080/
+        options.RoutePrefix = "swagger"; // Disponible en http://localhost:5080/swagger
     });
+    app.MapGet("/", () => Results.Redirect("/swagger"));
 }
 
 if (!app.Environment.IsDevelopment())
