@@ -32,7 +32,9 @@ public sealed partial class MigradorForm
     // Barra de archivo y acciones.
     private readonly TextBox _txtRuta = new();
     private readonly Button _btnSeleccionar = new();
+    private readonly Button _btnProbarConexion = new();
     private readonly Button _btnValidar = new();
+    private readonly Button _btnMigrar = new();
     private readonly Button _btnCancelar = new();
 
     // Tarjetas de resumen.
@@ -243,6 +245,25 @@ public sealed partial class MigradorForm
         _btnValidar.Margin = new Padding(0, 0, 10, 0);
         _btnValidar.Click += btnValidar_Click;
 
+        _btnProbarConexion.Text = "Probar conexión";
+        _btnProbarConexion.AutoSize = true;
+        _btnProbarConexion.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        _btnProbarConexion.Padding = new Padding(14, 6, 14, 6);
+        _btnProbarConexion.Margin = new Padding(0, 0, 10, 0);
+        _btnProbarConexion.Click += btnProbarConexion_Click;
+
+        _btnMigrar.Text = "Migrar (reemplazar)";
+        _btnMigrar.AutoSize = true;
+        _btnMigrar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        _btnMigrar.Padding = new Padding(14, 6, 14, 6);
+        _btnMigrar.BackColor = ColorOk;
+        _btnMigrar.ForeColor = Color.White;
+        _btnMigrar.FlatStyle = FlatStyle.Flat;
+        _btnMigrar.FlatAppearance.BorderSize = 0;
+        _btnMigrar.Enabled = false;
+        _btnMigrar.Margin = new Padding(0, 0, 10, 0);
+        _btnMigrar.Click += btnMigrar_Click;
+
         _btnCancelar.Text = "Cancelar validación";
         _btnCancelar.AutoSize = true;
         _btnCancelar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
@@ -250,7 +271,9 @@ public sealed partial class MigradorForm
         _btnCancelar.Enabled = false;
         _btnCancelar.Click += btnCancelar_Click;
 
+        flujo.Controls.Add(_btnProbarConexion);
         flujo.Controls.Add(_btnValidar);
+        flujo.Controls.Add(_btnMigrar);
         flujo.Controls.Add(_btnCancelar);
         return flujo;
     }

@@ -20,23 +20,39 @@ public sealed partial class MigradorForm : Form
 
     private readonly IShapefileReader _shapefileReader;
     private readonly IShapefileValidator _shapefileValidator;
+    private readonly ISqlServerConnectionProbe _connectionProbe;
+    private readonly IMigrationService _migrationService;
+    private readonly int _batchSize;
 
     private string? _ultimaCarpeta;
     private ShapefileInfoDto? _inspeccionActual;
     private ShapefileValidationResultDto? _validacionActual;
     private IReadOnlyList<RecordValidationIssueDto> _incidenciasActuales = [];
     private CancellationTokenSource? _cancelacionValidacion;
+    private CancellationTokenSource? _cancelacionMigracion;
     private bool _validacionEnCurso;
+    private bool _migracionEnCurso;
 
     /// <summary>
     /// Inicializa el formulario con los servicios de inspección y validación.
     /// </summary>
     /// <param name="shapefileReader">Servicio de inspección de shapefiles.</param>
     /// <param name="shapefileValidator">Servicio de validación detallada.</param>
-    public MigradorForm(IShapefileReader shapefileReader, IShapefileValidator shapefileValidator)
+    /// <param name="connectionProbe">Servicio para probar la conexión y permisos de SQL Server.</param>
+    /// <param name="migrationService">Servicio de migración transaccional.</param>
+    /// <param name="batchSize">Cantidad de registros procesados por lote.</param>
+    public MigradorForm(
+        IShapefileReader shapefileReader,
+        IShapefileValidator shapefileValidator,
+        ISqlServerConnectionProbe connectionProbe,
+        IMigrationService migrationService,
+        int batchSize)
     {
         _shapefileReader = shapefileReader ?? throw new ArgumentNullException(nameof(shapefileReader));
         _shapefileValidator = shapefileValidator ?? throw new ArgumentNullException(nameof(shapefileValidator));
+        _connectionProbe = connectionProbe ?? throw new ArgumentNullException(nameof(connectionProbe));
+        _migrationService = migrationService ?? throw new ArgumentNullException(nameof(migrationService));
+        _batchSize = batchSize > 0 ? batchSize : 500;
 
         InicializarInterfaz();
         ReiniciarResultados();
@@ -52,10 +68,54 @@ public sealed partial class MigradorForm : Form
             _cancelacionValidacion?.Cancel();
             _cancelacionValidacion?.Dispose();
             _cancelacionValidacion = null;
+            _cancelacionMigracion?.Cancel();
+            _cancelacionMigracion?.Dispose();
+            _cancelacionMigracion = null;
             _toolTip.Dispose();
         }
 
         base.Dispose(disposing);
+    }
+
+    private async void btnProbarConexion_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            _btnProbarConexion.Enabled = false;
+            EstablecerActividad("Comprobando conexión con SQL Server...");
+            var result = await _connectionProbe.TestAsync();
+            MostrarResultadoConexion(result);
+        }
+        catch (Exception ex)
+        {
+            if (FormularioActivo)
+            {
+                MostrarErrorInesperado("No se pudo comprobar la conexión con SQL Server.", ex);
+            }
+        }
+        finally
+        {
+            if (FormularioActivo)
+            {
+                _btnProbarConexion.Enabled = true;
+                ActualizarAcciones();
+            }
+        }
+    }
+
+    private async void btnMigrar_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            await MigrarAsync();
+        }
+        catch (Exception ex)
+        {
+            if (FormularioActivo)
+            {
+                MostrarErrorInesperado("Ocurrió un error inesperado durante la migración.", ex);
+            }
+        }
     }
 
     private async void btnSeleccionar_Click(object? sender, EventArgs e)
@@ -152,14 +212,70 @@ public sealed partial class MigradorForm : Form
 
     private void btnCancelar_Click(object? sender, EventArgs e)
     {
-        if (_cancelacionValidacion is null || _cancelacionValidacion.IsCancellationRequested)
+        var cancellation = _cancelacionValidacion ?? _cancelacionMigracion;
+        if (cancellation is null || cancellation.IsCancellationRequested)
         {
             return;
         }
 
-        EstablecerActividad("Cancelando la validación...");
+        EstablecerActividad(_migracionEnCurso ? "Cancelando la migración..." : "Cancelando la validación...");
         _btnCancelar.Enabled = false;
-        _cancelacionValidacion.Cancel();
+        cancellation.Cancel();
+    }
+
+    private async Task MigrarAsync()
+    {
+        var info = _inspeccionActual;
+        var validation = _validacionActual;
+        if (info is null || validation is null || !PuedeValidar(info) || validation.HasErrors)
+        {
+            EstablecerActividad("Debe inspeccionar y validar correctamente el archivo antes de migrar.");
+            return;
+        }
+
+        var confirmation = MessageBox.Show(
+            this,
+            "La modalidad Reemplazar eliminará los datos actuales de la tabla de destino dentro de una transacción. " +
+            "Si la carga falla, se ejecutará rollback. ¿Desea continuar?",
+            "Confirmar migración",
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Warning);
+
+        if (confirmation != DialogResult.Yes)
+        {
+            return;
+        }
+
+        _cancelacionMigracion = new CancellationTokenSource();
+        try
+        {
+            ActivarModoMigracion(true);
+            var progress = new Progress<MigrationProgress>(MostrarProgresoMigracion);
+            var result = await _migrationService.MigrateAsync(
+                new MigrationOptions
+                {
+                    ShapefilePath = info.FilePath,
+                    Layer = info.Layer,
+                    Mode = MigrationMode.Replace,
+                    BatchSize = _batchSize
+                },
+                progress,
+                _cancelacionMigracion.Token);
+
+            if (FormularioActivo)
+            {
+                MostrarResultadoMigracion(result);
+            }
+        }
+        finally
+        {
+            _cancelacionMigracion?.Dispose();
+            _cancelacionMigracion = null;
+            if (FormularioActivo)
+            {
+                ActivarModoMigracion(false);
+            }
+        }
     }
 
     private async Task ValidarAsync()
@@ -217,6 +333,18 @@ public sealed partial class MigradorForm : Form
         }
     }
 
+    private void ActivarModoMigracion(bool enCurso)
+    {
+        _migracionEnCurso = enCurso;
+        _btnSeleccionar.Enabled = !enCurso;
+        _btnValidar.Enabled = !enCurso && _inspeccionActual is not null && PuedeValidar(_inspeccionActual);
+        _btnMigrar.Enabled = !enCurso && _validacionActual is not null && !_validacionActual.HasErrors;
+        _btnCancelar.Enabled = enCurso;
+        _btnProbarConexion.Enabled = !enCurso;
+        _barraProgreso.Visible = enCurso;
+        UseWaitCursor = enCurso;
+    }
+
     private void ActivarModoValidacion(bool enCurso)
     {
         _validacionEnCurso = enCurso;
@@ -250,6 +378,10 @@ public sealed partial class MigradorForm : Form
         _btnValidar.Enabled = _inspeccionActual is not null
                               && PuedeValidar(_inspeccionActual)
                               && !_validacionEnCurso;
+        _btnMigrar.Enabled = _validacionActual is not null
+                             && !_validacionActual.HasErrors
+                             && !_validacionEnCurso
+                             && !_migracionEnCurso;
     }
 
     private void tabs_Selecting(object? sender, TabControlCancelEventArgs e)
@@ -318,6 +450,7 @@ public sealed partial class MigradorForm : Form
         _barraProgreso.Value = 0;
         _barraProgreso.Visible = false;
         _btnValidar.Enabled = false;
+        _btnMigrar.Enabled = false;
         _btnCancelar.Enabled = false;
 
         EstablecerMensajes(["Seleccione un archivo .shp para inspeccionarlo."]);

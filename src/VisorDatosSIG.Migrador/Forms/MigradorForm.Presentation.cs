@@ -284,6 +284,68 @@ public sealed partial class MigradorForm
             $"{progreso.Phase}: {progreso.ProcessedRecords:N0} de {progreso.TotalRecords:N0} ({progreso.Percentage} %)...");
     }
 
+    private void MostrarProgresoMigracion(MigrationProgress progreso)
+    {
+        _barraProgreso.Maximum = Math.Max(1, progreso.TotalRecords);
+        _barraProgreso.Value = Math.Clamp(progreso.ProcessedRecords, 0, _barraProgreso.Maximum);
+
+        EstablecerActividad(
+            $"{progreso.Phase}: {progreso.ProcessedRecords:N0} de {progreso.TotalRecords:N0} " +
+            $"({progreso.Percentage} %) · insertados {progreso.InsertedRecords:N0} · " +
+            $"omitidos {progreso.OmittedRecords:N0} · lote {progreso.CurrentBatch:N0}/{progreso.TotalBatches:N0}");
+    }
+
+    private void MostrarResultadoConexion(ConnectionTestResult resultado)
+    {
+        var detalles = new List<string> { resultado.Message };
+        if (resultado.MissingTables.Count > 0)
+        {
+            detalles.Add($"Tablas faltantes: {string.Join(", ", resultado.MissingTables)}");
+        }
+
+        detalles.AddRange(resultado.Errors);
+        EstablecerMensajes(detalles);
+        EstablecerActividad(resultado.IsReady
+            ? "Conexión SQL Server lista para migrar."
+            : "La conexión SQL Server no está preparada para migrar.");
+
+        MessageBox.Show(
+            this,
+            string.Join(Environment.NewLine, detalles),
+            "Prueba de conexión",
+            MessageBoxButtons.OK,
+            resultado.IsReady ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+    }
+
+    private void MostrarResultadoMigracion(MigrationResult resultado)
+    {
+        var detalles = new List<string>
+        {
+            resultado.Status,
+            $"Tabla: {resultado.DestinationTable}",
+            $"Origen: {resultado.SourceRecords:N0}",
+            $"Procesados: {resultado.ProcessedRecords:N0}",
+            $"Insertados: {resultado.InsertedRecords:N0}",
+            $"Omitidos: {resultado.OmittedRecords:N0}",
+            $"Fallidos: {resultado.FailedRecords:N0}",
+            $"Duración: {FormatearDuracion(resultado.Duration)}"
+        };
+
+        detalles.AddRange(resultado.Warnings.Select(warning => "ADVERTENCIA: " + warning));
+        detalles.AddRange(resultado.Errors.Select(error => "ERROR: " + error));
+        EstablecerMensajes(detalles);
+        EstablecerActividad(resultado.Succeeded
+            ? "Migración completada correctamente."
+            : $"Migración finalizada con estado {resultado.Status}.");
+
+        MessageBox.Show(
+            this,
+            string.Join(Environment.NewLine, detalles),
+            "Resultado de migración",
+            MessageBoxButtons.OK,
+            resultado.Succeeded ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+    }
+
     private void MostrarErrorInesperado(string mensaje, Exception excepcion)
     {
         EstablecerMensajes(
