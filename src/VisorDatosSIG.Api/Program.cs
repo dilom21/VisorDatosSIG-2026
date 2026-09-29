@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using VisorDatosSIG.Api.Configuration;
 using VisorDatosSIG.Api.Middleware;
 using VisorDatosSIG.Application.Interfaces;
 using VisorDatosSIG.Infrastructure.Authentication;
@@ -23,6 +24,22 @@ if (errorJwt is not null)
         $"{errorJwt} Configure la sección 'Jwt' con User Secrets " +
         "(dotnet user-secrets set \"Jwt:Key\" \"<clave de al menos 32 bytes>\"), " +
         "variables de entorno (Jwt__Key) o appsettings.Development.json (no versionado).");
+}
+
+// ---------------------------------------------------------------------------
+// CORS: los orígenes autorizados se leen de Cors:AllowedOrigins (arreglo).
+// En desarrollo se definen en Properties/launchSettings.json mediante las
+// variables Cors__AllowedOrigins__0, Cors__AllowedOrigins__1, ... (archivo
+// versionado y sin secretos), o en appsettings.Development.json (no versionado).
+// La API nunca habilita AllowAnyOrigin ni credenciales: la sesión viaja en el
+// encabezado Authorization, no en cookies.
+// ---------------------------------------------------------------------------
+var corsSettings = CorsSettings.Desde(builder.Configuration);
+
+var errorCors = corsSettings.Validar();
+if (errorCors is not null)
+{
+    throw new InvalidOperationException(errorCors);
 }
 
 // ---------------------------------------------------------------------------
@@ -66,6 +83,27 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+// Política CORS exclusiva para el visor web: únicamente los orígenes configurados.
+// No se usa AllowAnyOrigin ni AllowCredentials.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(CorsSettings.NombrePolitica, politica =>
+    {
+        if (!corsSettings.TieneOrigenes)
+        {
+            // Sin orígenes configurados la política no autoriza ninguno:
+            // no hay respaldo con comodines.
+            return;
+        }
+
+        politica
+            .WithOrigins(corsSettings.AllowedOrigins)
+            .WithHeaders(CorsSettings.EncabezadosPermitidos)
+            .WithMethods(CorsSettings.MetodosPermitidos)
+            .DisallowCredentials();
+    });
+});
 
 // Swagger / OpenAPI con soporte de Bearer.
 builder.Services.AddEndpointsApiExplorer();
@@ -113,8 +151,27 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ---------------------------------------------------------------------------
+// El orden del pipeline es obligatorio:
+//   enrutamiento -> CORS -> autenticación -> autorización -> controladores.
+// UseRouting se declara explícitamente para fijar ese orden y UseCors se ubica
+// antes de la autenticación para que las solicitudes preflight (OPTIONS, sin
+// token) reciban las cabeceras CORS en lugar de un 401.
+// ---------------------------------------------------------------------------
+app.UseRouting();
+app.UseCors(CorsSettings.NombrePolitica);
 app.UseAuthentication();
 app.UseAuthorization();
+
+if (!corsSettings.TieneOrigenes)
+{
+    app.Logger.LogWarning(
+        "CORS: no hay orígenes configurados en {Clave}; ningún origen de navegador podrá consumir la API " +
+        "(no se habilita AllowAnyOrigin como respaldo). En desarrollo defina Cors__AllowedOrigins__0 " +
+        "en Properties/launchSettings.json.",
+        CorsSettings.ClaveAllowedOrigins);
+}
 
 app.MapControllers();
 

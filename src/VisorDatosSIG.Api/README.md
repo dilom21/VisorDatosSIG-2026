@@ -59,6 +59,42 @@ Disponible solo en entorno **Development**:
 3. Botón **Authorize** → pegar el token (sin la palabra `Bearer`).
 4. Probar `GET /api/autenticacion/me` y `POST /api/autenticacion/cerrar`.
 
+## CORS
+
+El visor web es un origen distinto (`http://localhost:5000`) y consume la API directamente desde el
+navegador, por lo que la API aplica una política CORS explícita llamada **`VisorWeb`**:
+
+| Aspecto | Valor |
+|---|---|
+| Orígenes | Se leen de `Cors:AllowedOrigins` (arreglo de configuración) |
+| Comodines | No se usan: la API rechaza `"*"` al iniciar y nunca habilita `AllowAnyOrigin` |
+| Credenciales | No se habilitan (`DisallowCredentials`): la sesión viaja en el encabezado `Authorization`, no en cookies |
+| Encabezados permitidos | `Authorization`, `Content-Type`, `Accept` |
+| Métodos permitidos | `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS` |
+| Lista vacía | La política no autoriza ningún origen (no hay respaldo con comodines, solo se registra un aviso) |
+
+En desarrollo la lista se define en `Properties/launchSettings.json` (archivo **versionado y sin
+secretos**), por lo que no hace falta una copia nueva de `appsettings.Development.json`:
+
+```json
+"environmentVariables": {
+  "ASPNETCORE_ENVIRONMENT": "Development",
+  "Cors__AllowedOrigins__0": "http://localhost:5000"
+}
+```
+
+Para agregar más orígenes use `Cors__AllowedOrigins__1`, `Cors__AllowedOrigins__2`, ... o la clave
+`Cors:AllowedOrigins` en `appsettings.Development.json` (no versionado). Escriba los orígenes en
+minúsculas, sin ruta, sin consulta y sin barra final.
+
+`appsettings.json` (versionado) solo declara la sección vacía `Cors:AllowedOrigins: []`.
+
+Orden del pipeline HTTP: **enrutamiento → CORS → autenticación → autorización → controladores**.
+CORS se ejecuta antes de la autenticación para que las solicitudes preflight (`OPTIONS`, sin token)
+reciban las cabeceras CORS en lugar de un `401`.
+
+Puertos locales de desarrollo: API `http://localhost:5080`, visor web `http://localhost:5000`.
+
 ## Configuración (sin secretos en el repositorio)
 
 La API requiere dos valores que **no** se versionan:

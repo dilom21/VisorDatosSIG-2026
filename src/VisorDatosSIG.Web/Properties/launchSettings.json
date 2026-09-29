@@ -1,14 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "VisorDatosSIG.Api": {
+    "VisorDatosSIG.Web": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,
-      "applicationUrl": "http://localhost:5080",
+      "applicationUrl": "http://localhost:5000",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "Cors__AllowedOrigins__0": "http://localhost:5000"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
   }
