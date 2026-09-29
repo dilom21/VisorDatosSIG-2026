@@ -48,7 +48,7 @@ public sealed partial class MigradorForm
         {
             _chipUsuario.Text = _sesion.NombreParaMostrar;
             _chipUsuario.Iniciales = _sesion.Iniciales;
-            _chipUsuario.TextoSecundario = _sesion.Login;
+            _chipUsuario.TextoSecundario = string.Empty;
             _toolTip.SetToolTip(
                 _chipUsuario,
                 $"{_sesion.NombreParaMostrar} ({_sesion.Login}) · Rol: {_sesion.RolesTexto}");
@@ -71,6 +71,7 @@ public sealed partial class MigradorForm
         _areaSesion.PerformLayout();
         _chipUsuario.Invalidate();
         _btnIniciarSesion.Invalidate();
+        ActualizarAcciones();
     }
 
     private void btnIniciarSesion_Click(object? sender, EventArgs e)

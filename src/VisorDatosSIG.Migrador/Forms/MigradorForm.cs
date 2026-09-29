@@ -651,7 +651,8 @@ public sealed partial class MigradorForm : Form
         _btnValidar.Enabled = _inspeccionActual is not null
                               && PuedeValidar(_inspeccionActual)
                               && !_validacionEnCurso;
-        _btnMigrar.Enabled = _validacionActual is not null
+        _btnMigrar.Enabled = _sesion.IsAuthenticated
+                             && _validacionActual is not null
                              && !_validacionActual.HasErrors
                              && !_validacionEnCurso
                              && !_migracionEnCurso;

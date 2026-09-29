@@ -10,9 +10,9 @@ namespace VisorDatosSIG.Migrador.Controls;
 /// </summary>
 internal sealed class UserChipButton : Control
 {
-    private const int DiametroAvatar = 28;
-    private const int MargenIzquierdo = 10;
-    private const int AnchoIndicador = 22;
+    private const int DiametroAvatar = 22;
+    private const int MargenIzquierdo = 8;
+    private const int AnchoIndicador = 18;
 
     private string _iniciales = "?";
     private string _textoSecundario = string.Empty;
@@ -36,7 +36,7 @@ internal sealed class UserChipButton : Control
         Font = EstiloUI.FuenteCuerpoDestacado;
         Cursor = Cursors.Hand;
         TabStop = true;
-        Height = 48;
+        Height = 35;
         AccessibleRole = AccessibleRole.PushButton;
         AjustarTamano();
     }
@@ -59,7 +59,7 @@ internal sealed class UserChipButton : Control
         }
     }
 
-    /// <summary>Texto secundario discreto (normalmente el login).</summary>
+    /// <summary>Texto secundario discreto.</summary>
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string TextoSecundario
     {
@@ -78,14 +78,13 @@ internal sealed class UserChipButton : Control
         }
     }
 
-    /// <summary>Recalcula el ancho y alto del chip a partir del nombre y del login.</summary>
+    /// <summary>Recalcula el ancho y alto del chip a partir del nombre.</summary>
     public void AjustarTamano()
     {
         var anchoNombre = Medir(Text, Font);
-        var anchoLogin = string.IsNullOrEmpty(_textoSecundario) ? 0 : Medir(_textoSecundario, EstiloUI.FuenteMenor);
 
-        Width = MargenIzquierdo + DiametroAvatar + 10 + Math.Max(anchoNombre, anchoLogin) + AnchoIndicador + 14;
-        Height = string.IsNullOrEmpty(_textoSecundario) ? 40 : 48;
+        Width = MargenIzquierdo + DiametroAvatar + 10 + anchoNombre + AnchoIndicador + 10;
+        Height = 35;
     }
 
     /// <summary>Ejecuta el clic del chip desde el teclado.</summary>
@@ -113,8 +112,7 @@ internal sealed class UserChipButton : Control
         graficos.SmoothingMode = SmoothingMode.AntiAlias;
 
         var area = new RectangleF(0.5F, 0.5F, Width - 1F, Height - 1F);
-        var radio = string.IsNullOrEmpty(_textoSecundario) ? Height / 2F : 14F;
-        using var ruta = EstiloUI.RutaRedondeada(area, radio);
+        using var ruta = EstiloUI.RutaRedondeada(area, Height / 2F);
 
         var fondo = _presionado
             ? EstiloUI.Mezclar(EstiloUI.ChipFondoHover, Color.Black, 0.12)
@@ -139,7 +137,7 @@ internal sealed class UserChipButton : Control
         AvatarInicial.Dibujar(graficos, areaAvatar, _iniciales, EstiloUI.GradienteInicio, EstiloUI.GradienteFin);
 
         DibujarTextos(graficos);
-        DibujarIndicador(graficos, new RectangleF(Width - AnchoIndicador - 6F, 0F, AnchoIndicador - 8F, Height));
+        DibujarIndicador(graficos, new RectangleF(Width - AnchoIndicador - 4F, 0F, AnchoIndicador - 6F, Height));
     }
 
     private static int Medir(string? texto, Font fuente) =>
@@ -219,54 +217,15 @@ internal sealed class UserChipButton : Control
         const TextFormatFlags banderas =
             TextFormatFlags.NoPadding | TextFormatFlags.SingleLine | TextFormatFlags.Left | TextFormatFlags.VerticalCenter;
 
-        var izquierda = MargenIzquierdo + DiametroAvatar + 10;
-        var ancho = Math.Max(10, Width - izquierda - AnchoIndicador);
-
-        if (string.IsNullOrEmpty(_textoSecundario))
-        {
-            TextRenderer.DrawText(
-                graficos,
-                Text,
-                Font,
-                new Rectangle(izquierda, 0, ancho, Height),
-                ForeColor,
-                banderas);
-
-            return;
-        }
-
-        var altoNombre = TextRenderer.MeasureText(
-            graficos,
-            Text,
-            Font,
-            new Size(ancho, Height),
-            banderas).Height;
-
-        var altoLogin = TextRenderer.MeasureText(
-            graficos,
-            _textoSecundario,
-            EstiloUI.FuenteMenor,
-            new Size(ancho, Height),
-            banderas).Height;
-
-        const int espaciado = 1;
-        var altoTotal = altoNombre + espaciado + altoLogin;
-        var arriba = Math.Max(3, (Height - altoTotal) / 2);
+        var izquierda = MargenIzquierdo + DiametroAvatar + 8;
+        var ancho = Math.Max(10, Width - izquierda - AnchoIndicador - 4);
 
         TextRenderer.DrawText(
             graficos,
             Text,
             Font,
-            new Rectangle(izquierda, arriba, ancho, altoNombre),
+            new Rectangle(izquierda, 0, ancho, Height),
             ForeColor,
-            banderas);
-
-        TextRenderer.DrawText(
-            graficos,
-            _textoSecundario,
-            EstiloUI.FuenteMenor,
-            new Rectangle(izquierda, arriba + altoNombre + espaciado, ancho, altoLogin),
-            EstiloUI.ConAlfa(Color.White, 195),
             banderas);
     }
 
@@ -284,7 +243,7 @@ internal sealed class UserChipButton : Control
             lapiz,
             [
                 new PointF(area.Left, centroY - 2F),
-                new PointF(area.Left + (area.Width / 2F), centroY + 2.5F),
+                new PointF(area.Left + (area.Width / 2F), centroY + 2F),
                 new PointF(area.Right, centroY - 2F)
             ]);
     }

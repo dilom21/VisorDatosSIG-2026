@@ -16,15 +16,20 @@ internal static class EstiloUI
     // Superficies.
     public static readonly Color Fondo = Color.FromArgb(245, 246, 250);
     public static readonly Color Tarjeta = Color.White;
-    public static readonly Color BordeTarjeta = Color.FromArgb(227, 213, 250);
+    public static readonly Color BordeTarjeta = Color.FromArgb(215, 225, 238);
     public static readonly Color Sombra = Color.FromArgb(26, 32, 51);
 
-    // Identidad (violeta → azul).
-    public static readonly Color Violeta = Color.FromArgb(124, 58, 237);
-    public static readonly Color VioletaSuave = Color.FromArgb(245, 240, 255);
-    public static readonly Color Azul = Color.FromArgb(47, 128, 237);
-    public static readonly Color GradienteInicio = Color.FromArgb(181, 23, 240);
-    public static readonly Color GradienteFin = Color.FromArgb(47, 128, 237);
+    // Identidad institucional (azul clásico del Migrador, sin morados).
+    public static readonly Color AzulPrimario = Color.FromArgb(31, 59, 91);
+    public static readonly Color AzulBrillante = Color.FromArgb(37, 99, 160);
+    public static readonly Color AzulSuave = Color.FromArgb(235, 241, 247);
+    public static readonly Color GradienteInicio = Color.FromArgb(41, 102, 166);
+    public static readonly Color GradienteFin = Color.FromArgb(31, 59, 91);
+
+    // Compatibilidad: se reasignan a la paleta azul institucional
+    public static readonly Color Violeta = AzulBrillante;
+    public static readonly Color VioletaSuave = AzulSuave;
+    public static readonly Color Azul = AzulBrillante;
 
     // Textos.
     public static readonly Color TextoPrincipal = Color.FromArgb(31, 36, 48);
@@ -38,7 +43,7 @@ internal static class EstiloUI
     // Campos de entrada.
     public static readonly Color CampoFondo = Color.White;
     public static readonly Color CampoBorde = Color.FromArgb(222, 227, 234);
-    public static readonly Color CampoBordeFoco = Violeta;
+    public static readonly Color CampoBordeFoco = AzulBrillante;
 
     // Cabecera del Migrador (azul institucional ya usado en las fases 1 y 2).
     public static readonly Color FondoCabecera = Color.FromArgb(31, 59, 91);

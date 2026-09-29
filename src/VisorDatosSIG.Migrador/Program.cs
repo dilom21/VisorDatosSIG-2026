@@ -49,6 +49,16 @@ internal static class Program
         // Sesión en memoria:
         var sesion = new UserSession();
 
+        // Requerir inicio de sesión antes de abrir y utilizar el Migrador:
+        using (var loginForm = new LoginForm(clienteAutenticacion, sesion))
+        {
+            var dialogResult = loginForm.ShowDialog();
+            if (dialogResult != DialogResult.OK || !sesion.IsAuthenticated)
+            {
+                return;
+            }
+        }
+
         WinFormsApplication.Run(new MigradorForm(
             shapefileReader,
             shapefileValidator,
