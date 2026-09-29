@@ -280,6 +280,13 @@ public sealed partial class MigradorForm
         _barraProgreso.Maximum = Math.Max(1, progreso.TotalRecords);
         _barraProgreso.Value = Math.Clamp(progreso.ProcessedRecords, 0, _barraProgreso.Maximum);
 
+        _pnlProgreso.Visible = true;
+        _pgbProgresoGrande.Maximum = 100;
+        _pgbProgresoGrande.Value = Math.Clamp(progreso.Percentage, 0, 100);
+        _lblProgresoPorcentaje.Text = $"{progreso.Percentage} %";
+        _lblProgresoTitulo.Text = "Validación de integridad del Shapefile en curso...";
+        _lblProgresoDetalle.Text = $"{progreso.Phase}: {progreso.ProcessedRecords:N0} de {progreso.TotalRecords:N0} registros analizados ({progreso.Percentage} %)";
+
         EstablecerActividad(
             $"{progreso.Phase}: {progreso.ProcessedRecords:N0} de {progreso.TotalRecords:N0} ({progreso.Percentage} %)...");
     }
@@ -288,6 +295,14 @@ public sealed partial class MigradorForm
     {
         _barraProgreso.Maximum = Math.Max(1, progreso.TotalRecords);
         _barraProgreso.Value = Math.Clamp(progreso.ProcessedRecords, 0, _barraProgreso.Maximum);
+
+        _pnlProgreso.Visible = true;
+        _pgbProgresoGrande.Maximum = 100;
+        _pgbProgresoGrande.Value = Math.Clamp(progreso.Percentage, 0, 100);
+        _lblProgresoPorcentaje.Text = $"{progreso.Percentage} %";
+        _lblProgresoTitulo.Text = $"Migrando capa {progreso.Layer} hacia SQL Server ({progreso.Phase})...";
+        _lblProgresoDetalle.Text = $"{progreso.ProcessedRecords:N0} de {progreso.TotalRecords:N0} registros ({progreso.Percentage} %) · " +
+            $"Insertados: {progreso.InsertedRecords:N0} · Omitidos: {progreso.OmittedRecords:N0} · Lote: {progreso.CurrentBatch:N0} de {progreso.TotalBatches:N0}";
 
         EstablecerActividad(
             $"{progreso.Phase}: {progreso.ProcessedRecords:N0} de {progreso.TotalRecords:N0} " +
@@ -319,6 +334,13 @@ public sealed partial class MigradorForm
 
     private void MostrarResultadoMigracion(MigrationResult resultado)
     {
+        _pnlProgreso.Visible = true;
+        _pgbProgresoGrande.Maximum = 100;
+        _pgbProgresoGrande.Value = 100;
+        _lblProgresoPorcentaje.Text = "100 %";
+        _lblProgresoTitulo.Text = resultado.Succeeded ? "✅ Migración completada con éxito" : $"⚠️ Migración finalizada con estado: {resultado.Status}";
+        _lblProgresoDetalle.Text = $"Tabla: {resultado.DestinationTable} · Insertados: {resultado.InsertedRecords:N0} · Omitidos: {resultado.OmittedRecords:N0} · Fallidos: {resultado.FailedRecords:N0} · Duración: {FormatearDuracion(resultado.Duration)}";
+
         var detalles = new List<string>
         {
             resultado.Status,

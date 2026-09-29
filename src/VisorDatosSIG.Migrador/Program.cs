@@ -28,15 +28,15 @@ internal static class Program
             : 500;
 
         // Composición de dependencias sin contenedor externo:
-        // Application define los contratos (detector, lector y validador)
-        // e Infrastructure aporta la lectura y el análisis con NetTopologySuite.
         IShapefileLayerDetector layerDetector = new ShapefileLayerDetector();
         IShapefileReader shapefileReader = new ShapefileReader(layerDetector);
         IShapefileValidator shapefileValidator = new ShapefileValidator();
         var connectionFactory = new SqlServerConnectionFactory(connectionString);
         ISqlServerConnectionProbe connectionProbe = new SqlServerConnectionProbe(connectionFactory);
+        IBitacoraService bitacoraService = new BitacoraService(connectionFactory);
         var migrationWriter = new SqlMigrationWriter(connectionFactory);
-        IMigrationService migrationService = new MigrationService(shapefileReader, shapefileValidator, migrationWriter);
+        IMigrationExporter migrationExporter = new MigrationExporter();
+        IMigrationService migrationService = new MigrationService(shapefileReader, shapefileValidator, migrationWriter, bitacoraService);
 
         // Se usa un alias porque el espacio de nombres VisorDatosSIG.Application
         // oculta al tipo Application de Windows Forms dentro de este archivo.
@@ -45,6 +45,9 @@ internal static class Program
             shapefileValidator,
             connectionProbe,
             migrationService,
+            migrationWriter,
+            migrationExporter,
+            bitacoraService,
             batchSize));
     }
 }

@@ -34,8 +34,12 @@ public sealed partial class MigradorForm
     private readonly Button _btnSeleccionar = new();
     private readonly Button _btnProbarConexion = new();
     private readonly Button _btnValidar = new();
+    private readonly Label _lblModalidad = new();
+    private readonly ComboBox _cboModalidad = new();
     private readonly Button _btnMigrar = new();
     private readonly Button _btnCancelar = new();
+    private readonly Button _btnExportar = new();
+    private readonly Button _btnReconstruirIndices = new();
 
     // Tarjetas de resumen.
     private readonly SummaryCard _cardCapa = new("Capa detectada");
@@ -47,12 +51,32 @@ public sealed partial class MigradorForm
     private readonly SummaryCard _cardAdvertencias = new("Registros con advertencias");
     private readonly SummaryCard _cardOmitibles = new("Omitibles");
 
+    // Panel de progreso visible con porcentaje.
+    private readonly Panel _pnlProgreso = new();
+    private readonly Label _lblProgresoTitulo = new();
+    private readonly ProgressBar _pgbProgresoGrande = new();
+    private readonly Label _lblProgresoPorcentaje = new();
+    private readonly Label _lblProgresoDetalle = new();
+
     // Pestañas.
     private readonly TabControl _tabs = new();
     private readonly TabPage _tabInspeccion = new("Inspección");
     private readonly TabPage _tabPrevisualizacion = new("Previsualización");
     private readonly TabPage _tabValidacion = new("Validación");
     private readonly TabPage _tabIncidencias = new("Incidencias");
+    private readonly TabPage _tabBitacora = new("Dashboard de Bitácora");
+
+    // Controles de Pestaña Bitácora.
+    private readonly SummaryCard _cardBitacoraTotal = new("Operaciones registradas");
+    private readonly SummaryCard _cardBitacoraExitos = new("Migraciones exitosas");
+    private readonly SummaryCard _cardBitacoraErrores = new("Errores / Cancelados");
+    private readonly SummaryCard _cardBitacoraUltima = new("Última actividad");
+    private readonly Button _btnRefrescarBitacora = new();
+    private readonly ComboBox _cboFiltroBitacoraTabla = new();
+    private readonly ComboBox _cboFiltroBitacoraResultado = new();
+    private readonly Label _lblResumenBitacora = new();
+    private readonly DataGridView _dgvBitacora = new();
+    private readonly TextBox _txtDetalleBitacora = new();
 
     // Pestaña Inspección.
     private readonly Label _lblValorArchivo = new();
@@ -92,7 +116,7 @@ public sealed partial class MigradorForm
         Font = new Font("Segoe UI", 9F);
         AutoScaleMode = AutoScaleMode.Font;
         MinimumSize = new Size(1100, 720);
-        ClientSize = new Size(1240, 840);
+        ClientSize = new Size(1240, 860);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.White;
 
@@ -100,11 +124,12 @@ public sealed partial class MigradorForm
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 4,
+            RowCount = 5,
             Padding = new Padding(0),
             Margin = new Padding(0)
         };
         layoutRaiz.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        layoutRaiz.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layoutRaiz.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layoutRaiz.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layoutRaiz.RowStyles.Add(new RowStyle(SizeType.Absolute, 150F));
@@ -112,8 +137,9 @@ public sealed partial class MigradorForm
 
         layoutRaiz.Controls.Add(CrearCabecera(), 0, 0);
         layoutRaiz.Controls.Add(CrearBarraAcciones(), 0, 1);
-        layoutRaiz.Controls.Add(CrearPanelTarjetas(), 0, 2);
-        layoutRaiz.Controls.Add(CrearPestanias(), 0, 3);
+        layoutRaiz.Controls.Add(CrearPanelProgreso(), 0, 2);
+        layoutRaiz.Controls.Add(CrearPanelTarjetas(), 0, 3);
+        layoutRaiz.Controls.Add(CrearPestanias(), 0, 4);
 
         Controls.Add(layoutRaiz);
         Controls.Add(CrearBarraEstado());
@@ -233,26 +259,39 @@ public sealed partial class MigradorForm
             Margin = new Padding(0, 10, 0, 0)
         };
 
+        _btnProbarConexion.Text = "Probar conexión";
+        _btnProbarConexion.AutoSize = true;
+        _btnProbarConexion.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        _btnProbarConexion.Padding = new Padding(12, 6, 12, 6);
+        _btnProbarConexion.Margin = new Padding(0, 0, 8, 0);
+        _btnProbarConexion.Click += btnProbarConexion_Click;
+
         _btnValidar.Text = "Validar datos";
         _btnValidar.AutoSize = true;
         _btnValidar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        _btnValidar.Padding = new Padding(18, 6, 18, 6);
+        _btnValidar.Padding = new Padding(16, 6, 16, 6);
         _btnValidar.BackColor = ColorMarca;
         _btnValidar.ForeColor = Color.White;
         _btnValidar.FlatStyle = FlatStyle.Flat;
         _btnValidar.FlatAppearance.BorderSize = 0;
         _btnValidar.Enabled = false;
-        _btnValidar.Margin = new Padding(0, 0, 10, 0);
+        _btnValidar.Margin = new Padding(0, 0, 8, 0);
         _btnValidar.Click += btnValidar_Click;
 
-        _btnProbarConexion.Text = "Probar conexión";
-        _btnProbarConexion.AutoSize = true;
-        _btnProbarConexion.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        _btnProbarConexion.Padding = new Padding(14, 6, 14, 6);
-        _btnProbarConexion.Margin = new Padding(0, 0, 10, 0);
-        _btnProbarConexion.Click += btnProbarConexion_Click;
+        _lblModalidad.Text = "Modo:";
+        _lblModalidad.AutoSize = true;
+        _lblModalidad.Anchor = AnchorStyles.Left;
+        _lblModalidad.ForeColor = ColorTexto;
+        _lblModalidad.Margin = new Padding(4, 8, 4, 0);
 
-        _btnMigrar.Text = "Migrar (reemplazar)";
+        _cboModalidad.DropDownStyle = ComboBoxStyle.DropDownList;
+        _cboModalidad.Items.AddRange(["Reemplazar (limpia y recarga)", "Anexar (sin duplicados)"]);
+        _cboModalidad.SelectedIndex = 0;
+        _cboModalidad.Width = 195;
+        _cboModalidad.Margin = new Padding(0, 5, 8, 0);
+        _cboModalidad.SelectedIndexChanged += cboModalidad_SelectedIndexChanged;
+
+        _btnMigrar.Text = "Migrar datos";
         _btnMigrar.AutoSize = true;
         _btnMigrar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         _btnMigrar.Padding = new Padding(14, 6, 14, 6);
@@ -261,20 +300,40 @@ public sealed partial class MigradorForm
         _btnMigrar.FlatStyle = FlatStyle.Flat;
         _btnMigrar.FlatAppearance.BorderSize = 0;
         _btnMigrar.Enabled = false;
-        _btnMigrar.Margin = new Padding(0, 0, 10, 0);
+        _btnMigrar.Margin = new Padding(0, 0, 8, 0);
         _btnMigrar.Click += btnMigrar_Click;
 
-        _btnCancelar.Text = "Cancelar validación";
+        _btnCancelar.Text = "Cancelar";
         _btnCancelar.AutoSize = true;
         _btnCancelar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        _btnCancelar.Padding = new Padding(14, 6, 14, 6);
+        _btnCancelar.Padding = new Padding(12, 6, 12, 6);
         _btnCancelar.Enabled = false;
+        _btnCancelar.Margin = new Padding(0, 0, 8, 0);
         _btnCancelar.Click += btnCancelar_Click;
+
+        _btnExportar.Text = "Exportar resumen...";
+        _btnExportar.AutoSize = true;
+        _btnExportar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        _btnExportar.Padding = new Padding(12, 6, 12, 6);
+        _btnExportar.Enabled = false;
+        _btnExportar.Margin = new Padding(0, 0, 8, 0);
+        _btnExportar.Click += btnExportar_Click;
+
+        _btnReconstruirIndices.Text = "Reconstruir índices";
+        _btnReconstruirIndices.AutoSize = true;
+        _btnReconstruirIndices.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        _btnReconstruirIndices.Padding = new Padding(12, 6, 12, 6);
+        _btnReconstruirIndices.Margin = new Padding(0, 0, 0, 0);
+        _btnReconstruirIndices.Click += btnReconstruirIndices_Click;
 
         flujo.Controls.Add(_btnProbarConexion);
         flujo.Controls.Add(_btnValidar);
+        flujo.Controls.Add(_lblModalidad);
+        flujo.Controls.Add(_cboModalidad);
         flujo.Controls.Add(_btnMigrar);
         flujo.Controls.Add(_btnCancelar);
+        flujo.Controls.Add(_btnExportar);
+        flujo.Controls.Add(_btnReconstruirIndices);
         return flujo;
     }
 
@@ -318,6 +377,80 @@ public sealed partial class MigradorForm
         return layout;
     }
 
+    private Control CrearPanelProgreso()
+    {
+        _pnlProgreso.Dock = DockStyle.Fill;
+        _pnlProgreso.AutoSize = true;
+        _pnlProgreso.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        _pnlProgreso.BackColor = Color.FromArgb(242, 247, 252);
+        _pnlProgreso.Padding = new Padding(18, 10, 18, 10);
+        _pnlProgreso.Margin = new Padding(0);
+        _pnlProgreso.Visible = false;
+
+        var tabla = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            ColumnCount = 1,
+            RowCount = 3,
+            Margin = new Padding(0)
+        };
+        tabla.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        tabla.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        tabla.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        tabla.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+        _lblProgresoTitulo.Text = "Progreso de la operación";
+        _lblProgresoTitulo.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        _lblProgresoTitulo.ForeColor = ColorMarca;
+        _lblProgresoTitulo.AutoSize = true;
+        _lblProgresoTitulo.Margin = new Padding(0, 0, 0, 6);
+
+        var filaBarra = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            ColumnCount = 2,
+            RowCount = 1,
+            Margin = new Padding(0, 0, 0, 6)
+        };
+        filaBarra.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        filaBarra.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 95F));
+        filaBarra.RowStyles.Add(new RowStyle(SizeType.Absolute, 28F));
+
+        _pgbProgresoGrande.Dock = DockStyle.Fill;
+        _pgbProgresoGrande.Height = 24;
+        _pgbProgresoGrande.Style = ProgressBarStyle.Continuous;
+        _pgbProgresoGrande.Maximum = 100;
+        _pgbProgresoGrande.Value = 0;
+        _pgbProgresoGrande.Margin = new Padding(0, 2, 10, 2);
+
+        _lblProgresoPorcentaje.Dock = DockStyle.Fill;
+        _lblProgresoPorcentaje.Text = "0 %";
+        _lblProgresoPorcentaje.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
+        _lblProgresoPorcentaje.ForeColor = ColorMarca;
+        _lblProgresoPorcentaje.TextAlign = ContentAlignment.MiddleCenter;
+        _lblProgresoPorcentaje.Margin = new Padding(0);
+
+        filaBarra.Controls.Add(_pgbProgresoGrande, 0, 0);
+        filaBarra.Controls.Add(_lblProgresoPorcentaje, 1, 0);
+
+        _lblProgresoDetalle.Text = "Listo para iniciar.";
+        _lblProgresoDetalle.Font = new Font("Segoe UI", 9F);
+        _lblProgresoDetalle.ForeColor = ColorTexto;
+        _lblProgresoDetalle.AutoSize = true;
+        _lblProgresoDetalle.Margin = new Padding(0);
+
+        tabla.Controls.Add(_lblProgresoTitulo, 0, 0);
+        tabla.Controls.Add(filaBarra, 0, 1);
+        tabla.Controls.Add(_lblProgresoDetalle, 0, 2);
+
+        _pnlProgreso.Controls.Add(tabla);
+        return _pnlProgreso;
+    }
+
     private Control CrearPestanias()
     {
         _tabs.Dock = DockStyle.Fill;
@@ -326,7 +459,7 @@ public sealed partial class MigradorForm
         _tabs.Margin = new Padding(14, 6, 14, 0);
         _tabs.Selecting += tabs_Selecting;
 
-        TabPage[] paginas = [_tabInspeccion, _tabPrevisualizacion, _tabValidacion, _tabIncidencias];
+        TabPage[] paginas = [_tabInspeccion, _tabPrevisualizacion, _tabValidacion, _tabIncidencias, _tabBitacora];
         foreach (var pagina in paginas)
         {
             pagina.BackColor = Color.White;
@@ -337,6 +470,7 @@ public sealed partial class MigradorForm
         _tabPrevisualizacion.Controls.Add(CrearContenidoPrevisualizacion());
         _tabValidacion.Controls.Add(CrearContenidoValidacion());
         _tabIncidencias.Controls.Add(CrearContenidoIncidencias());
+        _tabBitacora.Controls.Add(CrearContenidoBitacora());
         _tabs.TabPages.AddRange(paginas);
 
         return _tabs;
@@ -744,4 +878,155 @@ public sealed partial class MigradorForm
         ShapefileComponentType.Dbf => ".dbf: atributos (tabla dBASE)",
         _ => ".prj: referencia espacial en texto WKT (opcional)"
     };
+
+    private Control CrearContenidoBitacora()
+    {
+        var layout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 3,
+            Margin = new Padding(0)
+        };
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 72F));
+        layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+        var layoutTarjetas = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 4,
+            RowCount = 1,
+            Margin = new Padding(0, 0, 0, 6)
+        };
+        for (var c = 0; c < 4; c++)
+        {
+            layoutTarjetas.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+        }
+        layoutTarjetas.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+        SummaryCard[] tarjetas = [_cardBitacoraTotal, _cardBitacoraExitos, _cardBitacoraErrores, _cardBitacoraUltima];
+        for (var i = 0; i < tarjetas.Length; i++)
+        {
+            tarjetas[i].Dock = DockStyle.Fill;
+            layoutTarjetas.Controls.Add(tarjetas[i], i, 0);
+        }
+
+        var barraFiltros = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Margin = new Padding(0, 0, 0, 6)
+        };
+
+        _btnRefrescarBitacora.Text = "🔄 Actualizar historial";
+        _btnRefrescarBitacora.AutoSize = true;
+        _btnRefrescarBitacora.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        _btnRefrescarBitacora.Padding = new Padding(12, 5, 12, 5);
+        _btnRefrescarBitacora.Margin = new Padding(0, 0, 10, 0);
+        _btnRefrescarBitacora.Click += btnRefrescarBitacora_Click;
+
+        var lblTabla = new Label
+        {
+            Text = "Tabla:",
+            AutoSize = true,
+            Anchor = AnchorStyles.Left,
+            ForeColor = ColorTexto,
+            Margin = new Padding(4, 7, 4, 0)
+        };
+
+        _cboFiltroBitacoraTabla.DropDownStyle = ComboBoxStyle.DropDownList;
+        _cboFiltroBitacoraTabla.Items.AddRange(["Todas", "dbo.Manzanas", "dbo.Lotes", "dbo.CodigosFijos", "dbo.Vias"]);
+        _cboFiltroBitacoraTabla.SelectedIndex = 0;
+        _cboFiltroBitacoraTabla.Width = 140;
+        _cboFiltroBitacoraTabla.Margin = new Padding(0, 4, 10, 0);
+        _cboFiltroBitacoraTabla.SelectedIndexChanged += cboFiltroBitacora_SelectedIndexChanged;
+
+        var lblResultado = new Label
+        {
+            Text = "Resultado:",
+            AutoSize = true,
+            Anchor = AnchorStyles.Left,
+            ForeColor = ColorTexto,
+            Margin = new Padding(4, 7, 4, 0)
+        };
+
+        _cboFiltroBitacoraResultado.DropDownStyle = ComboBoxStyle.DropDownList;
+        _cboFiltroBitacoraResultado.Items.AddRange(["Todos", "EXITO", "ERROR", "CANCELADO"]);
+        _cboFiltroBitacoraResultado.SelectedIndex = 0;
+        _cboFiltroBitacoraResultado.Width = 120;
+        _cboFiltroBitacoraResultado.Margin = new Padding(0, 4, 14, 0);
+        _cboFiltroBitacoraResultado.SelectedIndexChanged += cboFiltroBitacora_SelectedIndexChanged;
+
+        _lblResumenBitacora.AutoSize = true;
+        _lblResumenBitacora.Anchor = AnchorStyles.Left;
+        _lblResumenBitacora.ForeColor = ColorTexto;
+        _lblResumenBitacora.Margin = new Padding(0, 7, 0, 0);
+        _lblResumenBitacora.Text = "Cargando historial...";
+
+        barraFiltros.Controls.Add(_btnRefrescarBitacora);
+        barraFiltros.Controls.Add(lblTabla);
+        barraFiltros.Controls.Add(_cboFiltroBitacoraTabla);
+        barraFiltros.Controls.Add(lblResultado);
+        barraFiltros.Controls.Add(_cboFiltroBitacoraResultado);
+        barraFiltros.Controls.Add(_lblResumenBitacora);
+
+        var split = new SplitContainer
+        {
+            Dock = DockStyle.Fill,
+            Orientation = Orientation.Horizontal,
+            SplitterDistance = 220,
+            Margin = new Padding(0)
+        };
+
+        var grupoGrilla = new GroupBox
+        {
+            Text = "Historial de operaciones (dbo.Bitacora)",
+            Dock = DockStyle.Fill,
+            Padding = new Padding(10, 6, 10, 10),
+            ForeColor = ColorTexto
+        };
+
+        ConfigurarGrid(_dgvBitacora);
+        _dgvBitacora.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+        _dgvBitacora.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "#", Name = "colBitacoraId" });
+        _dgvBitacora.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Fecha y Hora", Name = "colBitacoraFecha" });
+        _dgvBitacora.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Módulo", Name = "colBitacoraModulo" });
+        _dgvBitacora.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Acción", Name = "colBitacoraAccion" });
+        _dgvBitacora.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Tabla", Name = "colBitacoraTabla" });
+        _dgvBitacora.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Resultado", Name = "colBitacoraResultado" });
+        _dgvBitacora.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "IP / Host", Name = "colBitacoraIP" });
+        _dgvBitacora.SelectionChanged += dgvBitacora_SelectionChanged;
+        grupoGrilla.Controls.Add(_dgvBitacora);
+
+        var grupoDetalle = new GroupBox
+        {
+            Text = "Detalle técnico de la operación seleccionada",
+            Dock = DockStyle.Fill,
+            Padding = new Padding(10, 6, 10, 10),
+            ForeColor = ColorTexto
+        };
+
+        _txtDetalleBitacora.Dock = DockStyle.Fill;
+        _txtDetalleBitacora.Multiline = true;
+        _txtDetalleBitacora.ReadOnly = true;
+        _txtDetalleBitacora.ScrollBars = ScrollBars.Vertical;
+        _txtDetalleBitacora.Font = new Font("Consolas", 9.5F);
+        _txtDetalleBitacora.BackColor = Color.White;
+        _txtDetalleBitacora.ForeColor = ColorTexto;
+        _txtDetalleBitacora.BorderStyle = BorderStyle.FixedSingle;
+        grupoDetalle.Controls.Add(_txtDetalleBitacora);
+
+        split.Panel1.Controls.Add(grupoGrilla);
+        split.Panel2.Controls.Add(grupoDetalle);
+
+        layout.Controls.Add(layoutTarjetas, 0, 0);
+        layout.Controls.Add(barraFiltros, 0, 1);
+        layout.Controls.Add(split, 0, 2);
+        return layout;
+    }
 }

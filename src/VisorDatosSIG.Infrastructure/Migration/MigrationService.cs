@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using VisorDatosSIG.Application.DTOs;
 using VisorDatosSIG.Application.Interfaces;
 using VisorDatosSIG.Infrastructure.Persistence;
@@ -11,15 +12,18 @@ public sealed class MigrationService : IMigrationService
     private readonly IShapefileReader _shapefileReader;
     private readonly IShapefileValidator _shapefileValidator;
     private readonly SqlMigrationWriter _writer;
+    private readonly IBitacoraService? _bitacoraService;
 
     public MigrationService(
         IShapefileReader shapefileReader,
         IShapefileValidator shapefileValidator,
-        SqlMigrationWriter writer)
+        SqlMigrationWriter writer,
+        IBitacoraService? bitacoraService = null)
     {
         _shapefileReader = shapefileReader ?? throw new ArgumentNullException(nameof(shapefileReader));
         _shapefileValidator = shapefileValidator ?? throw new ArgumentNullException(nameof(shapefileValidator));
         _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+        _bitacoraService = bitacoraService;
     }
 
     public async Task<MigrationResult> MigrateAsync(
@@ -42,16 +46,6 @@ public sealed class MigrationService : IMigrationService
 
         try
         {
-            if (options.Mode == MigrationMode.Append)
-            {
-                return FailureResult(
-                    options,
-                    destinationTable,
-                    "ERROR",
-                    "Append todavía no está habilitado: falta aprobar una regla de duplicados contra SQL Server.",
-                    stopwatch.Elapsed);
-            }
-
             Report(progress, options.Layer, "Inspeccionando origen", 0, 0, 0, 0, 0, 0, 0);
             var inspection = await _shapefileReader.InspectAsync(options.ShapefilePath, cancellationToken);
             sourceRecords = inspection.RecordCount;
@@ -68,7 +62,7 @@ public sealed class MigrationService : IMigrationService
             if (validation.Errors.Count > 0)
             {
                 errors.AddRange(validation.Errors);
-                return FailureResult(
+                var failure = FailureResult(
                     options,
                     destinationTable,
                     "ERROR",
@@ -77,6 +71,9 @@ public sealed class MigrationService : IMigrationService
                     sourceRecords,
                     warnings,
                     errors);
+
+                await RegistrarBitacoraAsync(failure, options.ShapefilePath);
+                return failure;
             }
 
             warnings.AddRange(validation.Warnings);
@@ -90,11 +87,32 @@ public sealed class MigrationService : IMigrationService
 
             try
             {
-                await SqlMigrationWriter.DeleteDestinationAsync(
-                    connection,
-                    transaction,
-                    options.Layer,
-                    cancellationToken);
+                var initialRecords = 0;
+                var existingKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                if (options.Mode == MigrationMode.Replace)
+                {
+                    await SqlMigrationWriter.DeleteDestinationAsync(
+                        connection,
+                        transaction,
+                        options.Layer,
+                        cancellationToken);
+                }
+                else
+                {
+                    // Modo Append: consultar cantidad inicial y claves existentes para no duplicar
+                    initialRecords = await SqlMigrationWriter.GetDestinationRecordCountAsync(
+                        connection,
+                        transaction,
+                        options.Layer,
+                        cancellationToken);
+
+                    existingKeys = await SqlMigrationWriter.GetExistingNaturalKeysAsync(
+                        connection,
+                        transaction,
+                        options.Layer,
+                        cancellationToken);
+                }
 
                 var totalBatches = CalculateTotalBatches(sourceRecords, batchSize);
                 var fields = Array.Empty<ShapefileFieldDto>();
@@ -121,6 +139,25 @@ public sealed class MigrationService : IMigrationService
                     try
                     {
                         var row = LayerRecordMapper.Map(options.Layer, reader, fields);
+
+                        // Si es modo Append, verificar si el registro ya existe por su clave natural
+                        if (options.Mode == MigrationMode.Append)
+                        {
+                            var naturalKeys = LayerRecordMapper.GetNaturalKeys(options.Layer, row).ToArray();
+                            if (naturalKeys.Length > 0 && naturalKeys.Any(k => existingKeys.Contains(k)))
+                            {
+                                omittedRecords++;
+                                Report(progress, options.Layer, "Cargando registros", processedRecords, sourceRecords,
+                                    insertedRecords, omittedRecords, failedRecords, currentBatch, totalBatches);
+                                continue;
+                            }
+
+                            foreach (var key in naturalKeys)
+                            {
+                                existingKeys.Add(key);
+                            }
+                        }
+
                         await SqlMigrationWriter.InsertAsync(
                             connection,
                             transaction,
@@ -147,14 +184,18 @@ public sealed class MigrationService : IMigrationService
                     options.Layer,
                     cancellationToken);
 
-                if (verification.DestinationRecords != insertedRecords
+                var expectedRecords = options.Mode == MigrationMode.Replace
+                    ? insertedRecords
+                    : (initialRecords + insertedRecords);
+
+                if (verification.DestinationRecords != expectedRecords
                     || verification.NullGeometryRecords > 0
                     || verification.WrongSridRecords > 0
                     || verification.InvalidGeometryRecords > 0)
                 {
                     throw new InvalidDataException(
                         $"La verificación post-carga falló: destino={verification.DestinationRecords}, " +
-                        $"esperado={insertedRecords}, geometrías NULL={verification.NullGeometryRecords}, " +
+                        $"esperado={expectedRecords}, geometrías NULL={verification.NullGeometryRecords}, " +
                         $"SRID incorrecto={verification.WrongSridRecords}, " +
                         $"geometrías inválidas={verification.InvalidGeometryRecords}.");
                 }
@@ -173,7 +214,7 @@ public sealed class MigrationService : IMigrationService
                 CalculateTotalBatches(sourceRecords, batchSize),
                 CalculateTotalBatches(sourceRecords, batchSize));
 
-            return new MigrationResult
+            var result = new MigrationResult
             {
                 Layer = options.Layer,
                 Mode = options.Mode,
@@ -188,11 +229,14 @@ public sealed class MigrationService : IMigrationService
                 Warnings = warnings,
                 Errors = errors
             };
+
+            await RegistrarBitacoraAsync(result, options.ShapefilePath);
+            return result;
         }
         catch (OperationCanceledException)
         {
             stopwatch.Stop();
-            return new MigrationResult
+            var cancelResult = new MigrationResult
             {
                 Layer = options.Layer,
                 Mode = options.Mode,
@@ -207,12 +251,15 @@ public sealed class MigrationService : IMigrationService
                 Warnings = warnings,
                 Errors = ["La migración fue cancelada. La transacción fue revertida."]
             };
+
+            await RegistrarBitacoraAsync(cancelResult, options.ShapefilePath);
+            return cancelResult;
         }
         catch (Exception exception)
         {
             stopwatch.Stop();
             errors.Add($"{exception.GetType().Name}: {exception.Message}");
-            return FailureResult(
+            var errorResult = FailureResult(
                 options,
                 destinationTable,
                 "ERROR",
@@ -225,6 +272,51 @@ public sealed class MigrationService : IMigrationService
                 insertedRecords,
                 omittedRecords,
                 failedRecords);
+
+            await RegistrarBitacoraAsync(errorResult, options.ShapefilePath);
+            return errorResult;
+        }
+    }
+
+    private async Task RegistrarBitacoraAsync(MigrationResult resultado, string rutaArchivo)
+    {
+        if (_bitacoraService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var detalle = JsonSerializer.Serialize(new
+            {
+                archivo = Path.GetFileName(rutaArchivo),
+                capa = resultado.Layer.ToString(),
+                modalidad = resultado.Mode.ToString(),
+                origen = resultado.SourceRecords,
+                procesados = resultado.ProcessedRecords,
+                insertados = resultado.InsertedRecords,
+                omitidos = resultado.OmittedRecords,
+                fallidos = resultado.FailedRecords,
+                duracionSegundos = Math.Round(resultado.Duration.TotalSeconds, 2),
+                advertencias = resultado.Warnings,
+                errores = resultado.Errors
+            });
+
+            await _bitacoraService.RegistrarAsync(new BitacoraEntryDto
+            {
+                IdUsuario = 1,
+                FechaHora = DateTime.UtcNow,
+                Modulo = "MIGRADOR",
+                Accion = resultado.Mode == MigrationMode.Replace ? "MIGRACION_REPLACE" : "MIGRACION_APPEND",
+                Entidad = resultado.DestinationTable,
+                Resultado = resultado.Status,
+                Detalle = detalle,
+                IP = Environment.MachineName
+            });
+        }
+        catch
+        {
+            // La auditoría no debe detener la aplicación
         }
     }
 

@@ -1,10 +1,6 @@
 
-
 CREATE DATABASE VisorDatosSIG;
 GO
-
-USE VisorDatosSIG;
-
 
 USE VisorDatosSIG;
 GO

@@ -1,0 +1,57 @@
+** MODULOS SIG **
+1. Usuarios y Seguridad
+CU01 - Gestionar Acceso al Sistema
+CU02 - Registrar y Gestionar Perfil de Cliente
+CU03 - Gestionar Contraseña
+CU04 - Gestionar Usuarios
+CU05 - Gestionar Roles y Permisos
+CU06 - Gestionar Empleados
+CU07 - Consultar Bitácora
+
+2. Catastro y Clientes
+CU08 - Consultar Información del Cliente
+CU09 - Consultar Manzana
+CU10 - Consultar Lotes
+CU11 - Consultar Vías
+CU12 - Consultar Estado del Servicio
+CU13 - Localizar Clientes
+
+3. Visor Geográfico
+CU14 - Gestionar Mapa
+CU15 - Gestionar Visibilidad de Capas
+CU16 - Gestionar Leyendas
+CU17 - Gestionar Elementos Geográfico
+CU18 - Gestionar Entidades
+CU19 - Gestionar Extensión
+
+4. Seguimiento de Servicios
+CU20 - Gestionar Servicios
+CU21 - Gestionar Bajas Parciales
+CU22 - Gestionar Disponibilidad de Personal
+CU23 - Gestionar Rutas
+CU24 - Consultar y Exportar Resultados
+
+5. Migración de Datos Geográficos
+CU25 - Gestionar Conexión de la BD
+CU26 - Gestionar y Validar Datos
+CU27 - Gestionar Capas
+CU28 - Consultar Previsualización y Mapeo
+CU29 - Gestionar Migración
+CU30 - Consultar Bitácora de Migración
+
+6. Dashboard y Reportes
+CU31 - Consultar Dashboard
+CU32 - Consultar Indicadores de Información Geográfica
+CU33 - Consultar Estado de Servicios
+CU34 - Consultar Historial de Migraciones
+CU35 - Gestionar Reportes
+
+
+** ACTORES **
+Administrador
+Consultor
+Supervisor de Servicios
+Empleado / Tecnico de Campo
+Responsable de Migración
+
+

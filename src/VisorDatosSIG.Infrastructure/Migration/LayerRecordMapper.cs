@@ -18,6 +18,56 @@ internal static class LayerRecordMapper
         _ => throw new ArgumentOutOfRangeException(nameof(layer), layer, "La capa no está reconocida.")
     };
 
+    public static IEnumerable<string> GetNaturalKeys(ShapefileLayer layer, MigrationRow row)
+    {
+        switch (layer)
+        {
+            case ShapefileLayer.Manzanas:
+                if (row.Values.TryGetValue("IdOrigen", out var idM) && idM is int idMVal && idMVal > 0)
+                {
+                    yield return $"ID:{idMVal}";
+                }
+                if (row.Values.TryGetValue("UV_MZA", out var uvmza) && uvmza is string uvmzaStr && !string.IsNullOrWhiteSpace(uvmzaStr))
+                {
+                    yield return $"UVMZA:{uvmzaStr.Trim().ToUpperInvariant()}";
+                }
+                break;
+
+            case ShapefileLayer.Lotes:
+                if (row.Values.TryGetValue("IdOrigen", out var idL) && idL is int idLVal && idLVal > 0)
+                {
+                    yield return $"ID:{idLVal}";
+                }
+                if (row.Values.TryGetValue("NroLote", out var nro) && nro is string nroStr && !string.IsNullOrWhiteSpace(nroStr))
+                {
+                    yield return $"NRO:{nroStr.Trim().ToUpperInvariant()}";
+                }
+                break;
+
+            case ShapefileLayer.CodigosFijos:
+                if (row.Values.TryGetValue("CodF_SIG", out var sig) && sig is string sigStr && !string.IsNullOrWhiteSpace(sigStr))
+                {
+                    yield return $"SIG:{sigStr.Trim().ToUpperInvariant()}";
+                }
+                if (row.Values.TryGetValue("CodFijo", out var fijo) && fijo is int fijoVal && fijoVal > 0)
+                {
+                    yield return $"FIJO:{fijoVal}";
+                }
+                break;
+
+            case ShapefileLayer.Vias:
+                if (row.Values.TryGetValue("OSMID", out var osm) && osm is string osmStr && !string.IsNullOrWhiteSpace(osmStr))
+                {
+                    yield return $"OSM:{osmStr.Trim().ToUpperInvariant()}";
+                }
+                if (row.Values.TryGetValue("OBJECTID", out var oid) && oid is int oidVal && oidVal > 0)
+                {
+                    yield return $"OID:{oidVal}";
+                }
+                break;
+        }
+    }
+
     public static MigrationRow Map(
         ShapefileLayer layer,
         EsriShapefileReader reader,
