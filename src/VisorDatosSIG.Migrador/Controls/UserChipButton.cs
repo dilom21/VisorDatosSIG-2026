@@ -10,8 +10,8 @@ namespace VisorDatosSIG.Migrador.Controls;
 /// </summary>
 internal sealed class UserChipButton : Control
 {
-    private const int DiametroAvatar = 26;
-    private const int MargenIzquierdo = 8;
+    private const int DiametroAvatar = 28;
+    private const int MargenIzquierdo = 10;
     private const int AnchoIndicador = 22;
 
     private string _iniciales = "?";
@@ -36,7 +36,7 @@ internal sealed class UserChipButton : Control
         Font = EstiloUI.FuenteCuerpoDestacado;
         Cursor = Cursors.Hand;
         TabStop = true;
-        Height = 42;
+        Height = 48;
         AccessibleRole = AccessibleRole.PushButton;
         AjustarTamano();
     }
@@ -78,14 +78,14 @@ internal sealed class UserChipButton : Control
         }
     }
 
-    /// <summary>Recalcula el ancho del chip a partir del nombre y del login.</summary>
+    /// <summary>Recalcula el ancho y alto del chip a partir del nombre y del login.</summary>
     public void AjustarTamano()
     {
         var anchoNombre = Medir(Text, Font);
         var anchoLogin = string.IsNullOrEmpty(_textoSecundario) ? 0 : Medir(_textoSecundario, EstiloUI.FuenteMenor);
 
-        Width = MargenIzquierdo + DiametroAvatar + 10 + Math.Max(anchoNombre, anchoLogin) + AnchoIndicador + 8;
-        Height = 42;
+        Width = MargenIzquierdo + DiametroAvatar + 10 + Math.Max(anchoNombre, anchoLogin) + AnchoIndicador + 14;
+        Height = string.IsNullOrEmpty(_textoSecundario) ? 40 : 48;
     }
 
     /// <summary>Ejecuta el clic del chip desde el teclado.</summary>
@@ -113,7 +113,8 @@ internal sealed class UserChipButton : Control
         graficos.SmoothingMode = SmoothingMode.AntiAlias;
 
         var area = new RectangleF(0.5F, 0.5F, Width - 1F, Height - 1F);
-        using var ruta = EstiloUI.RutaRedondeada(area, Height / 2F);
+        var radio = string.IsNullOrEmpty(_textoSecundario) ? Height / 2F : 14F;
+        using var ruta = EstiloUI.RutaRedondeada(area, radio);
 
         var fondo = _presionado
             ? EstiloUI.Mezclar(EstiloUI.ChipFondoHover, Color.Black, 0.12)
@@ -138,7 +139,7 @@ internal sealed class UserChipButton : Control
         AvatarInicial.Dibujar(graficos, areaAvatar, _iniciales, EstiloUI.GradienteInicio, EstiloUI.GradienteFin);
 
         DibujarTextos(graficos);
-        DibujarIndicador(graficos, new RectangleF(Width - AnchoIndicador - 2F, 0F, AnchoIndicador - 8F, Height));
+        DibujarIndicador(graficos, new RectangleF(Width - AnchoIndicador - 6F, 0F, AnchoIndicador - 8F, Height));
     }
 
     private static int Medir(string? texto, Font fuente) =>
@@ -238,17 +239,19 @@ internal sealed class UserChipButton : Control
             graficos,
             Text,
             Font,
-            new Size(int.MaxValue, Height),
+            new Size(ancho, Height),
             banderas).Height;
 
         var altoLogin = TextRenderer.MeasureText(
             graficos,
             _textoSecundario,
             EstiloUI.FuenteMenor,
-            new Size(int.MaxValue, Height),
+            new Size(ancho, Height),
             banderas).Height;
 
-        var arriba = Math.Max(0, (Height - altoNombre - altoLogin) / 2);
+        const int espaciado = 1;
+        var altoTotal = altoNombre + espaciado + altoLogin;
+        var arriba = Math.Max(3, (Height - altoTotal) / 2);
 
         TextRenderer.DrawText(
             graficos,
@@ -262,8 +265,8 @@ internal sealed class UserChipButton : Control
             graficos,
             _textoSecundario,
             EstiloUI.FuenteMenor,
-            new Rectangle(izquierda, arriba + altoNombre, ancho, altoLogin),
-            EstiloUI.ConAlfa(Color.White, 185),
+            new Rectangle(izquierda, arriba + altoNombre + espaciado, ancho, altoLogin),
+            EstiloUI.ConAlfa(Color.White, 195),
             banderas);
     }
 

@@ -154,13 +154,27 @@ public sealed partial class MigradorForm
 
     private Control CrearCabecera()
     {
-        var panel = new Panel
+        var cabecera = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             BackColor = ColorMarca,
-            Padding = new Padding(18, 12, 18, 14),
+            Padding = new Padding(18, 10, 18, 10),
             AutoSize = true,
             AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            ColumnCount = 2,
+            RowCount = 1,
+            Margin = new Padding(0)
+        };
+        cabecera.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        cabecera.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        cabecera.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+        var panelTitulos = new Panel
+        {
+            Dock = DockStyle.Fill,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            BackColor = Color.Transparent,
             Margin = new Padding(0)
         };
 
@@ -170,7 +184,7 @@ public sealed partial class MigradorForm
             Font = new Font("Segoe UI", 15F, FontStyle.Bold),
             ForeColor = Color.White,
             AutoSize = true,
-            Location = new Point(18, 12)
+            Location = new Point(0, 2)
         };
 
         var subtitulo = new Label
@@ -179,13 +193,15 @@ public sealed partial class MigradorForm
             Font = new Font("Segoe UI", 9.5F),
             ForeColor = Color.FromArgb(203, 216, 231),
             AutoSize = true,
-            Location = new Point(20, 46)
+            Location = new Point(2, 34)
         };
 
-        panel.Controls.Add(titulo);
-        panel.Controls.Add(subtitulo);
-        panel.Controls.Add(CrearAreaSesion());
-        return panel;
+        panelTitulos.Controls.Add(titulo);
+        panelTitulos.Controls.Add(subtitulo);
+
+        cabecera.Controls.Add(panelTitulos, 0, 0);
+        cabecera.Controls.Add(CrearAreaSesion(), 1, 0);
+        return cabecera;
     }
 
     /// <summary>
@@ -194,21 +210,19 @@ public sealed partial class MigradorForm
     /// </summary>
     private Control CrearAreaSesion()
     {
-        // Tamaño explícito: la zona se redimensiona al cambiar entre «Iniciar sesión» y el usuario
-        // activo (la actualización se hace en MigradorForm.Session.cs).
-        _areaSesion.AutoSize = false;
-        _areaSesion.Size = new Size(152, 44);
+        _areaSesion.AutoSize = true;
+        _areaSesion.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         _areaSesion.BackColor = Color.Transparent;
-        _areaSesion.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        _areaSesion.Anchor = AnchorStyles.Right;
         _areaSesion.Margin = new Padding(0);
 
         _btnIniciarSesion.Text = "Iniciar sesión";
         _btnIniciarSesion.TextoEnProgreso = "Conectando...";
         _btnIniciarSesion.MostrarFlecha = false;
-        _btnIniciarSesion.Size = new Size(152, 34);
-        _btnIniciarSesion.Radio = 17;
+        _btnIniciarSesion.Size = new Size(152, 36);
+        _btnIniciarSesion.Radio = 18;
         _btnIniciarSesion.Font = EstiloUI.FuenteBotonPequeno;
-        _btnIniciarSesion.Location = new Point(0, 5);
+        _btnIniciarSesion.Location = Point.Empty;
         _btnIniciarSesion.AccessibleName = "Iniciar sesión";
         _btnIniciarSesion.Click += btnIniciarSesion_Click;
         _toolTip.SetToolTip(
@@ -217,7 +231,7 @@ public sealed partial class MigradorForm
 
         // El chip solo se muestra con sesión activa; la cabecera lo activa desde MigradorForm.Session.
         _chipUsuario.Visible = false;
-        _chipUsuario.Location = new Point(0, 1);
+        _chipUsuario.Location = Point.Empty;
         _chipUsuario.AccessibleName = "Menú del usuario autenticado";
         _chipUsuario.Click += btnUsuario_Click;
 
@@ -1022,9 +1036,26 @@ public sealed partial class MigradorForm
         var split = new SplitContainer
         {
             Dock = DockStyle.Fill,
-            Orientation = Orientation.Horizontal,
-            SplitterDistance = 220,
+            Orientation = Orientation.Vertical,
+            SplitterWidth = 6,
             Margin = new Padding(0)
+        };
+
+        split.HandleCreated += (s, e) =>
+        {
+            split.BeginInvoke(() =>
+            {
+                if (split.Width > 200)
+                {
+                    try
+                    {
+                        split.SplitterDistance = Math.Max(150, (int)(split.Width * 0.52));
+                    }
+                    catch
+                    {
+                    }
+                }
+            });
         };
 
         var grupoGrilla = new GroupBox

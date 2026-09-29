@@ -55,18 +55,19 @@ public sealed partial class MigradorForm
 
             _menuUsuario?.EstablecerUsuario(_sesion.NombreParaMostrar, _sesion.Login);
 
-            _chipUsuario.Visible = true;
             _btnIniciarSesion.Visible = false;
-            _areaSesion.Size = new Size(Math.Max(_chipUsuario.Width, _btnIniciarSesion.Width), 44);
+            _chipUsuario.AjustarTamano();
+            _chipUsuario.Location = Point.Empty;
+            _chipUsuario.Visible = true;
+            _areaSesion.Size = _chipUsuario.Size;
         }
         else
         {
             _chipUsuario.Visible = false;
             _btnIniciarSesion.Visible = true;
-            _areaSesion.Size = new Size(_btnIniciarSesion.Width, 44);
+            _areaSesion.Size = _btnIniciarSesion.Size;
         }
 
-        // La zona tiene tamaño explícito: se vuelve a diseñar para repintar el control visible.
         _areaSesion.PerformLayout();
         _chipUsuario.Invalidate();
         _btnIniciarSesion.Invalidate();
