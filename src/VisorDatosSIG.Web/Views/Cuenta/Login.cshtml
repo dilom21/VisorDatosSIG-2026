@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Iniciar sesión";
+}
+<section class="login-shell">
+    <div class="login-card">
+        <h1>VisorDatosSIG</h1>
+        <h2>Iniciar sesión</h2>
+        @* El formulario usa method="post" para que, si JavaScript falla, la
+           contraseña nunca viaje por la URL. El envío real lo maneja login.js. *@
+        <form id="form-login" method="post" novalidate data-return-url="@ViewData["ReturnUrl"]" data-motivo="@ViewData["Motivo"]">
+            <div class="login-campo">
+                <label for="usuario">Usuario</label>
+                <input id="usuario" name="login" type="text" autocomplete="username" maxlength="100" required autofocus />
+            </div>
+            <div class="login-campo">
+                <label for="password">Contraseña</label>
+                <div class="login-grupo-password">
+                    <input id="password" name="password" type="password" autocomplete="current-password" maxlength="200" required />
+                    <button type="button" id="btn-mostrar-password" aria-pressed="false" aria-controls="password">Mostrar</button>
+                </div>
+            </div>
+            <button type="submit" id="btn-iniciar-sesion" class="btn-primario">Iniciar sesión</button>
+            <p id="login-mensaje" class="login-mensaje" role="alert" hidden></p>
+            <p id="login-info" class="login-info" role="status" hidden></p>
+        </form>
+    </div>
+</section>
+@section Scripts {
+    <script src="~/js/auth/login.js"></script>
+}

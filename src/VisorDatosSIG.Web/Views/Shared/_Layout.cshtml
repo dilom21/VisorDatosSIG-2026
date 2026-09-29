@@ -1,3 +1,7 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    var apiBaseUrl = Configuration["Api:BaseUrl"] ?? string.Empty;
+}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,17 +10,37 @@
     <title>@ViewData["Title"] - VisorDatosSIG</title>
     @await RenderSectionAsync("Styles", required: false)
     <link rel="stylesheet" href="~/css/visor.css" />
+    <link rel="stylesheet" href="~/css/auth.css" />
 </head>
 <body>
     <header>
         <nav>
             <a asp-controller="Home" asp-action="Index">VisorDatosSIG</a>
             <a asp-controller="Visor" asp-action="Index">Visor cartográfico</a>
+            <div class="sesion">
+                <div id="sesion-anonima">
+                    <a class="btn-sesion" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
+                </div>
+                <div id="sesion-activa" hidden>
+                    <span class="sesion-datos">
+                        <span id="sesion-nombre" class="sesion-nombre"></span>
+                        <span id="sesion-rol" class="sesion-rol"></span>
+                    </span>
+                    <button type="button" id="btn-cerrar-sesion" class="btn-sesion">Cerrar sesión</button>
+                </div>
+            </div>
         </nav>
     </header>
     <main>
         @RenderBody()
     </main>
+    <script>
+        window.VisorSIG = window.VisorSIG || {};
+        window.VisorSIG.config = { apiBaseUrl: @Json.Serialize(apiBaseUrl) };
+    </script>
+    <script src="~/js/auth/sesion.js"></script>
+    <script src="~/js/auth/api.js"></script>
+    <script src="~/js/auth/guard.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

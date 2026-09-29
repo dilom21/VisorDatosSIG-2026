@@ -3,3 +3,10 @@
 }
 <h1>VisorDatosSIG 2026</h1>
 <p>Estructura inicial del proyecto.</p>
+<div class="sesion-resumen" data-sesion-anonimo>
+    <p>Inicie sesión para acceder al visor cartográfico.</p>
+    <a class="btn-sesion" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
+</div>
+<div class="sesion-resumen" data-sesion-bloque hidden>
+    <p>Ha iniciado sesión como <span class="sesion-nombre" data-sesion-nombre></span>.</p>
+</div>

@@ -6,6 +6,7 @@
 }
 <section class="visor-shell">
     <aside class="visor-panel">
+        <p id="visor-aviso" class="visor-aviso" role="status" hidden></p>
         <h2>Capas</h2>
         <p>Aquí se incorporarán Manzanas, Lotes, Códigos Fijos y Vías.</p>
     </aside>
@@ -19,4 +20,7 @@
     <script src="~/js/visor/markers.js"></script>
     <script src="~/js/visor/legend.js"></script>
     <script src="~/js/visor/identify.js"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({ returnUrl: '/Visor' });
+    </script>
 }

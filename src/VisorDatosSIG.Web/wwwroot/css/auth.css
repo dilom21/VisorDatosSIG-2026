@@ -1,0 +1,201 @@
+/* FE-AUTH 1: estilos de autenticación (login y estado de sesión).
+   Hereda la base de visor.css; no redefine tipografía ni layout global. */
+
+/* --- Bloque de sesión en la barra de navegación --- */
+.sesion {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.sesion-datos {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.2;
+}
+
+.sesion-nombre {
+    font-weight: bold;
+}
+
+.sesion-rol {
+    font-size: .75rem;
+    color: #666;
+}
+
+.btn-sesion {
+    display: inline-block;
+    padding: .4rem .9rem;
+    border: 1px solid #2f6fb3;
+    border-radius: 4px;
+    background-color: #2f6fb3;
+    color: #fff;
+    font: inherit;
+    font-size: .9rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-sesion:hover {
+    background-color: #285d97;
+}
+
+.btn-sesion:disabled {
+    opacity: .7;
+    cursor: progress;
+}
+
+/* --- Formulario de inicio de sesión --- */
+.login-shell {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 360px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 1.5rem;
+    background-color: #fff;
+}
+
+.login-card h1 {
+    margin: 0 0 .25rem;
+    font-size: 1.5rem;
+}
+
+.login-card h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: #444;
+}
+
+.login-campo {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    margin-bottom: 1rem;
+}
+
+.login-campo label {
+    font-size: .9rem;
+    font-weight: bold;
+}
+
+.login-campo input {
+    width: 100%;
+    padding: .5rem;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    font: inherit;
+    box-sizing: border-box;
+}
+
+.login-grupo-password {
+    display: flex;
+    align-items: stretch;
+    gap: .5rem;
+}
+
+.login-grupo-password input {
+    flex: 1 1 auto;
+}
+
+.login-grupo-password button {
+    flex: 0 0 auto;
+    padding: 0 .7rem;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    background-color: #f4f4f4;
+    font: inherit;
+    font-size: .85rem;
+    cursor: pointer;
+}
+
+.btn-primario {
+    width: 100%;
+    padding: .6rem 1rem;
+    border: 1px solid #2f6fb3;
+    border-radius: 4px;
+    background-color: #2f6fb3;
+    color: #fff;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-primario:hover {
+    background-color: #285d97;
+}
+
+.login-mensaje {
+    margin: .75rem 0 0;
+    font-size: .9rem;
+}
+
+.login-error {
+    color: #b00020;
+}
+
+.login-info {
+    margin: .75rem 0 0;
+    color: #285d97;
+    font-size: .9rem;
+}
+
+.login-resumen {
+    margin-top: .5rem;
+    font-size: .9rem;
+}
+
+/* Estado de carga del formulario. */
+.login-cargando {
+    opacity: .7;
+    cursor: progress;
+}
+
+/* --- Aviso de verificación de sesión en el visor --- */
+.visor-aviso {
+    margin: 0 0 .75rem;
+    padding: .5rem;
+    border: 1px solid #e0b400;
+    border-radius: 4px;
+    background-color: #fff8e1;
+    color: #7a5b00;
+    font-size: .9rem;
+}
+
+/* Fail-closed: mientras no se valide la sesión, el mapa no es utilizable. */
+body.sesion-verificando .visor-map {
+    opacity: .5;
+    pointer-events: none;
+}
+
+/* --- Resumen de estado de sesión en Home --- */
+.sesion-resumen {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    nav {
+        flex-wrap: wrap;
+    }
+
+    .sesion {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-start;
+    }
+
+    .login-card {
+        max-width: 100%;
+    }
+}
