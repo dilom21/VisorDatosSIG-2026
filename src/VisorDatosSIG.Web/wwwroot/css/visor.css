@@ -653,6 +653,27 @@ body.sesion-verificando .visor-map {
     min-height: 1.2em;
 }
 
+.visor-btn-reintento {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    margin-left: 4px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-decoration: underline;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.visor-btn-reintento:hover {
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+}
+
 .visor-resumen {
     margin: var(--space-3) 0 0;
     font-size: 0.78rem;
@@ -1003,6 +1024,58 @@ body.sesion-verificando .visor-map {
     border-radius: var(--radius-sm);
     background-color: var(--color-surface);
     font-size: 0.8rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    outline: none;
+}
+
+.visor-identificacion__entidad:hover,
+.visor-identificacion__entidad:focus-visible {
+    border-color: var(--color-accent);
+    background-color: var(--color-surface-alt);
+}
+
+.visor-identificacion__entidad--seleccionada {
+    border-color: var(--color-primary);
+    border-left: 4px solid var(--color-primary);
+    background-color: var(--color-primary-soft);
+    box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.visor-identificacion__entidad-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-1);
+    padding-bottom: 2px;
+    border-bottom: 1px dashed var(--color-border);
+}
+
+.visor-identificacion__insignia {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    letter-spacing: 0.04em;
+}
+
+.visor-identificacion__pista {
+    font-size: 0.7rem;
+    color: var(--color-muted);
+    font-style: italic;
+}
+
+.visor-identificacion__entidad--seleccionada .visor-identificacion__pista {
+    color: var(--color-primary-dark);
+    font-weight: 600;
+    font-style: normal;
+}
+
+.visor-identificacion__btn-limpiar {
+    width: 100%;
+    margin-top: var(--space-3);
+    font-size: 0.8rem;
+    padding: var(--space-2);
 }
 
 .visor-identificacion__entidad + .visor-identificacion__entidad {
@@ -1301,6 +1374,134 @@ body.sesion-verificando .visor-map {
     }
 
     h1 { font-size: 1.45rem; }
+}
+
+/* -----------------------------------------------------------------------------
+   CU11 – Gestionar Extensión (RF-VIS-05, RF-VIS-07)
+   Navegación espacial, botones de extensión y barra de estado de zoom
+   -------------------------------------------------------------------------- */
+.visor-panel__titulo-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.visor-btn-extension-general {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: var(--radius-sm);
+    color: var(--color-primary);
+    background-color: var(--color-primary-soft);
+    border: 1px solid var(--color-border-strong);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.visor-btn-extension-general:hover {
+    background-color: var(--color-surface);
+    border-color: var(--color-accent);
+    color: var(--color-accent-dark);
+}
+
+.visor-icono-extension {
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.visor-capa__acciones {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.visor-capa__btn-zoom {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 7px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.visor-capa__btn-zoom:hover {
+    color: var(--color-primary);
+    border-color: var(--color-accent);
+    background-color: var(--color-surface-alt);
+}
+
+.visor-capa__btn-zoom:focus-visible {
+    outline: 2px solid var(--color-accent);
+}
+
+/* Control en Leaflet para Extensión General */
+.leaflet-control-extension-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.leaflet-control-extension-btn:hover {
+    color: var(--color-accent-dark);
+    background-color: #f4f4f4;
+}
+
+/* Indicador de Zoom en el mapa */
+.visor-map-status {
+    padding: 3px 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text);
+    box-shadow: var(--shadow-sm);
+    pointer-events: none;
+}
+
+/* Acciones de extensión para búsqueda e identificación */
+.visor-busqueda__barra-extension,
+.visor-identificacion__barra-extension {
+    margin-bottom: var(--space-2);
+}
+
+.visor-busqueda__btn-zoom,
+.visor-identificacion__btn-zoom {
+    width: 100%;
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: center;
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.visor-busqueda__btn-zoom:hover,
+.visor-identificacion__btn-zoom:hover {
+    background-color: #d8e5f3;
+    border-color: var(--color-accent);
+    color: var(--color-accent-dark);
 }
 
 @media (max-width: 480px) {

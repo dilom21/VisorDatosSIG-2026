@@ -445,12 +445,66 @@ window.VisorSIG = window.VisorSIG || {};
         return tarjeta;
     }
 
+    // CU11 (RF-VIS-07): Ajustar el mapa a la extensión del conjunto de resultados
+    function ajustarExtensionResultados(items) {
+        var mapa = (ns.mapa && typeof ns.mapa.obtener === 'function') ? ns.mapa.obtener() : null;
+        if (!mapa || !items || items.length === 0) {
+            return false;
+        }
+        var bounds = null;
+        for (var i = 0; i < items.length; i++) {
+            var clave = claveInterna(items[i].capa);
+            var capa = buscarCapaCargada(clave, items[i].clave);
+            if (capa) {
+                var b = null;
+                if (typeof capa.getBounds === 'function') {
+                    b = capa.getBounds();
+                } else if (typeof capa.getLatLng === 'function') {
+                    var ll = capa.getLatLng();
+                    b = L.latLngBounds(ll, ll);
+                }
+                if (b && b.isValid && b.isValid()) {
+                    if (!bounds) {
+                        bounds = L.latLngBounds(b.getSouthWest(), b.getNorthEast());
+                    } else {
+                        bounds.extend(b);
+                    }
+                }
+            }
+        }
+        if (bounds && bounds.isValid && bounds.isValid()) {
+            mapa.fitBounds(bounds, { padding: [35, 35], maxZoom: 18 });
+            return true;
+        } else {
+            fijarEstado('Las geometrías de los resultados no se encuentran en la vista actual. Puede activar la capa o ampliar la vista.', 'aviso');
+            return false;
+        }
+    }
+
     function renderizarResultados(items) {
         var contenedor = obtenerNodo(ID_RESULTADOS);
         if (!contenedor) {
             return;
         }
         limpiarResultados();
+
+        if (items.length > 0) {
+            var barraAcciones = document.createElement('div');
+            barraAcciones.className = 'visor-busqueda__barra-extension';
+
+            var btnZoomResultados = document.createElement('button');
+            btnZoomResultados.type = 'button';
+            btnZoomResultados.id = 'btn-zoom-resultados-busqueda';
+            btnZoomResultados.className = 'btn-secundario visor-busqueda__btn-zoom';
+            btnZoomResultados.textContent = 'Ajustar a resultados';
+            btnZoomResultados.title = 'Ajustar mapa a las entidades encontradas en la vista';
+            btnZoomResultados.addEventListener('click', function () {
+                ajustarExtensionResultados(items);
+            });
+            barraAcciones.appendChild(btnZoomResultados);
+            contenedor.appendChild(barraAcciones);
+        }
+
         for (var i = 0; i < items.length; i++) {
             contenedor.appendChild(crearTarjeta(items[i]));
         }
@@ -623,7 +677,8 @@ window.VisorSIG = window.VisorSIG || {};
     ns.search = {
         inicializar: inicializar,
         buscar: buscar,
-        limpiar: limpiar
+        limpiar: limpiar,
+        ajustarExtensionResultados: ajustarExtensionResultados
     };
 
     if (document.readyState === 'loading') {

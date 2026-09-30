@@ -7,7 +7,13 @@
 <section class="visor-shell">
     <aside class="visor-panel">
         <div class="visor-panel__head">
-            <h2>Capas</h2>
+            <div class="visor-panel__titulo-fila">
+                <h2>Capas</h2>
+                <button type="button" id="btn-extension-general" class="btn-secundario visor-btn-extension-general" title="Ajustar a la extensión general de todo el catastro" aria-label="Extensión general del catastro">
+                    <span class="visor-icono-extension" aria-hidden="true">⛶</span>
+                    <span>Extensión general</span>
+                </button>
+            </div>
             <p>Cuatro capas disponibles con datos reales desde la base de datos.</p>
         </div>
 
@@ -21,28 +27,48 @@
                     <input type="checkbox" id="capa-manzanas" checked />
                     <span class="visor-capa__nombre">Manzanas</span>
                 </label>
-                <span id="estado-manzanas" class="visor-badge visor-badge--cargando">Cargando...</span>
+                <div class="visor-capa__acciones">
+                    <button type="button" class="visor-capa__btn-zoom" data-capa="manzanas" title="Ajustar mapa a la extensión de Manzanas" aria-label="Ajustar extensión de Manzanas">
+                        Zoom
+                    </button>
+                    <span id="estado-manzanas" class="visor-badge visor-badge--cargando">Cargando...</span>
+                </div>
             </li>
             <li class="visor-panel__item">
                 <label class="visor-capa" for="capa-lotes">
                     <input type="checkbox" id="capa-lotes" />
                     <span class="visor-capa__nombre">Lotes</span>
                 </label>
-                <span id="estado-lotes" class="visor-badge visor-badge--inactiva">Inactiva</span>
+                <div class="visor-capa__acciones">
+                    <button type="button" class="visor-capa__btn-zoom" data-capa="lotes" title="Ajustar mapa a la extensión de Lotes" aria-label="Ajustar extensión de Lotes">
+                        Zoom
+                    </button>
+                    <span id="estado-lotes" class="visor-badge visor-badge--inactiva">Inactiva</span>
+                </div>
             </li>
             <li class="visor-panel__item">
                 <label class="visor-capa" for="capa-codigos-fijos">
                     <input type="checkbox" id="capa-codigos-fijos" checked />
                     <span class="visor-capa__nombre">Códigos Fijos</span>
                 </label>
-                <span id="estado-codigos-fijos" class="visor-badge visor-badge--cargando">Cargando...</span>
+                <div class="visor-capa__acciones">
+                    <button type="button" class="visor-capa__btn-zoom" data-capa="codigosfijos" title="Ajustar mapa a la extensión de Códigos Fijos" aria-label="Ajustar extensión de Códigos Fijos">
+                        Zoom
+                    </button>
+                    <span id="estado-codigos-fijos" class="visor-badge visor-badge--cargando">Cargando...</span>
+                </div>
             </li>
             <li class="visor-panel__item">
                 <label class="visor-capa" for="capa-vias">
                     <input type="checkbox" id="capa-vias" checked />
                     <span class="visor-capa__nombre">Vías</span>
                 </label>
-                <span id="estado-vias" class="visor-badge visor-badge--cargando">Cargando...</span>
+                <div class="visor-capa__acciones">
+                    <button type="button" class="visor-capa__btn-zoom" data-capa="vias" title="Ajustar mapa a la extensión de Vías" aria-label="Ajustar extensión de Vías">
+                        Zoom
+                    </button>
+                    <span id="estado-vias" class="visor-badge visor-badge--cargando">Cargando...</span>
+                </div>
             </li>
         </ul>
 
