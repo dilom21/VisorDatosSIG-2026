@@ -58,6 +58,35 @@
         <div id="leyenda-capas" class="visor-leyenda" hidden></div>
         <p id="resumen-capas" class="visor-resumen" role="status" aria-live="polite"></p>
 
+        @* FE-SIG 5: búsqueda alfanumérica real (Manzanas, Lotes, Códigos Fijos y
+           Vías) contra el endpoint protegido api/catastro/buscar. El estado, los
+           resultados y la paginación reciben su contenido por textContent desde
+           search.js; por eso no llevan nodos hijos en el marcado. *@
+        <div id="panel-busqueda" class="visor-busqueda">
+            <h3 class="visor-busqueda__titulo">Buscar</h3>
+            <form id="form-busqueda" class="visor-busqueda__form" role="search" novalidate>
+                <label class="visor-busqueda__label" for="texto-busqueda">Buscar</label>
+                <input type="search" id="texto-busqueda" name="q" class="visor-busqueda__input"
+                       placeholder="Buscar UV, manzana, lote, código, nombre o vía"
+                       autocomplete="off" />
+                <label class="visor-busqueda__label" for="filtro-capa">Capa</label>
+                <select id="filtro-capa" name="capa" class="visor-busqueda__select">
+                    <option value="">Todas las capas</option>
+                    <option value="Manzanas">Manzanas</option>
+                    <option value="Lotes">Lotes</option>
+                    <option value="CodigosFijos">Códigos Fijos</option>
+                    <option value="Vias">Vías</option>
+                </select>
+                <div class="visor-busqueda__acciones">
+                    <button type="submit" id="btn-buscar" class="btn-primario visor-busqueda__boton">Buscar</button>
+                    <button type="button" id="btn-limpiar-busqueda" class="btn-secundario visor-busqueda__boton">Limpiar</button>
+                </div>
+            </form>
+            <p id="estado-busqueda" class="visor-busqueda__estado" role="status" aria-live="polite"></p>
+            <div id="resultados-busqueda" class="visor-busqueda__resultados"></div>
+            <div id="paginacion-busqueda" class="visor-busqueda__paginacion" hidden></div>
+        </div>
+
         @* FE-SIG 4: modo Identificar. El botón alterna aria-pressed y el panel
            solo se muestra con el modo activo. Las zonas de coordenadas, estado y
            resultados reciben su contenido por textContent desde identify.js; por
@@ -93,6 +122,7 @@
     <script src="~/js/visor/layers.js"></script>
     <script src="~/js/visor/legend.js"></script>
     <script src="~/js/visor/identify.js"></script>
+    <script src="~/js/visor/search.js"></script>
     <script>
         window.VisorSIG.guard.protegerPagina({ returnUrl: '/Visor' });
     </script>

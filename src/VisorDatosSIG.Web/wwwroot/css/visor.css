@@ -1042,7 +1042,219 @@ body.sesion-verificando .visor-map {
 }
 
 /* -----------------------------------------------------------------------------
-   11. Responsive
+   11. Búsqueda catastral (FE-SIG 5)
+   Formulario, estado, tarjetas de resultado, metadatos, paginación y la acción
+   «Ver en mapa» / aviso «Fuera de la vista actual». Reutiliza los tokens de
+   FE-UI 1: no se introducen colores ni medidas nuevas.
+   -------------------------------------------------------------------------- */
+
+.visor-busqueda {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.visor-busqueda__titulo {
+    margin: 0 0 var(--space-3);
+    font-size: 0.95rem;
+}
+
+.visor-busqueda__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.visor-busqueda__label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-muted);
+}
+
+/* Ancho contenido al panel; nunca provoca desbordamiento horizontal. */
+.visor-busqueda__input,
+.visor-busqueda__select {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.9rem;
+}
+
+.visor-busqueda__input::placeholder {
+    color: var(--color-muted);
+}
+
+.visor-busqueda__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+}
+
+.visor-busqueda__boton {
+    flex: 1 1 auto;
+}
+
+.visor-busqueda__estado {
+    margin: var(--space-3) 0 0;
+    min-height: 1.2em;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.visor-busqueda__estado--cargando {
+    color: var(--color-info);
+}
+
+.visor-busqueda__estado--exito {
+    color: var(--color-success);
+}
+
+.visor-busqueda__estado--vacio,
+.visor-busqueda__estado--aviso {
+    color: var(--color-warning);
+}
+
+.visor-busqueda__estado--error {
+    color: var(--color-error);
+}
+
+/* Lista de resultados desplazable: acotada para no hacer inutilizable el mapa. */
+.visor-busqueda__resultados {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.visor-busqueda__resultado {
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+    font-size: 0.82rem;
+}
+
+.visor-busqueda__resultado-capa {
+    margin: 0 0 var(--space-1);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-accent-dark);
+}
+
+.visor-busqueda__resultado-titulo {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.visor-busqueda__resultado-subtitulo {
+    margin: 2px 0 0;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+}
+
+/* Rejilla clave/valor: cada fila se disuelve con `display: contents` para que
+   sus dt/dd entren directamente en la rejilla y las claves queden alineadas. */
+.visor-busqueda__meta {
+    margin: var(--space-2) 0 0;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline;
+    gap: 2px var(--space-3);
+    font-size: 0.78rem;
+}
+
+.visor-busqueda__meta-fila {
+    display: contents;
+}
+
+.visor-busqueda__meta-clave {
+    margin: 0;
+    color: var(--color-muted);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.visor-busqueda__meta-valor {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.visor-busqueda__accion {
+    margin-top: var(--space-2);
+}
+
+.visor-busqueda__ver {
+    min-height: 32px;
+    padding: 0 var(--space-3);
+    font-size: 0.82rem;
+}
+
+.visor-busqueda__fuera {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 999px;
+    background-color: var(--color-surface);
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.visor-busqueda__paginacion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+}
+
+.visor-busqueda__pagina-boton {
+    min-height: 34px;
+    padding: 0 var(--space-3);
+    font-size: 0.82rem;
+}
+
+.visor-busqueda__pagina-estado {
+    flex: 1 1 auto;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--color-muted);
+}
+
+/* Responsive propio de la búsqueda (complementa la sección siguiente). */
+@media (max-width: 480px) {
+    .visor-busqueda__acciones {
+        flex-direction: column;
+    }
+
+    .visor-busqueda__boton {
+        width: 100%;
+    }
+
+    .visor-busqueda__resultados {
+        max-height: 300px;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   12. Responsive
    -------------------------------------------------------------------------- */
 @media (max-width: 900px) {
     .visor-shell {

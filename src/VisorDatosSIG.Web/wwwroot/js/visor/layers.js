@@ -586,6 +586,38 @@ window.VisorSIG = window.VisorSIG || {};
         establecerConteo(def, '');
     }
 
+    // FE-SIG 5: búsqueda de una entidad YA cargada en una capa, para la acción
+    // «Ver en mapa» del panel de búsqueda. Recorre exclusivamente los layers ya
+    // presentes en memoria y compara `feature.id` con el id recibido (la Clave
+    // del endpoint de búsqueda es el mismo identificador, serializado como
+    // cadena). No realiza peticiones, no expone ESTADO y no carga capas.
+    // Requiere que la capa esté activa: una capa desactivada no está en el mapa
+    // y su popup local no podría mostrarse.
+    function buscarFeatureCargada(claveCapa, id) {
+        if (id === null || id === undefined) {
+            return null;
+        }
+        var estado = ESTADO[claveCapa];
+        if (!estado || !estado.activa || !estado.capa
+            || typeof estado.capa.getLayers !== 'function') {
+            return null;
+        }
+        var buscado = String(id);
+        var capas = estado.capa.getLayers();
+        for (var i = 0; i < capas.length; i++) {
+            var capa = capas[i];
+            if (!capa || !capa.feature) {
+                continue;
+            }
+            var featureId = capa.feature.id;
+            if (featureId !== null && featureId !== undefined
+                && String(featureId) === buscado) {
+                return capa;
+            }
+        }
+        return null;
+    }
+
     function enlazarCheckbox(mapa, def) {
         var casilla = document.getElementById(def.idCheckbox);
         if (!casilla) {
@@ -789,6 +821,7 @@ window.VisorSIG = window.VisorSIG || {};
             var estado = ESTADO[clave];
             return (estado && estado.capa) ? estado.capa : null;
         },
+        buscarFeatureCargada: buscarFeatureCargada,
         cargarTodas: function () {
             cargarActivas(obtenerMapa());
         }
