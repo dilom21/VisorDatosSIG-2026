@@ -51,6 +51,13 @@
     --estado-baja-total: #4b5563;
     --estado-desconocido: #5a6b7d;
 
+    /* Capas vectoriales (FE-SIG 3). */
+    --capa-manzanas-stroke: #8a6d3b;
+    --capa-manzanas-fill: #d9c9a8;
+    --capa-lotes-stroke: #5a6b7d;
+    --capa-lotes-fill: #c6d0da;
+    --capa-vias-stroke: #b4451f;
+
     /* Radios. */
     --radius-sm: 6px;
     --radius-md: 10px;
@@ -548,8 +555,8 @@ body.sesion-verificando .visor-map {
 }
 
 /* -----------------------------------------------------------------------------
-   8. Capas del visor (FE-SIG 2)
-   Control de capa, badges de estado, conteo, leyenda y popup de Códigos Fijos.
+   8. Capas del visor (FE-SIG 2 y 3)
+   Control de capas, badges de estado, conteos, leyenda y popups.
    -------------------------------------------------------------------------- */
 
 .visor-capa {
@@ -566,7 +573,8 @@ body.sesion-verificando .visor-map {
     font-weight: 600;
 }
 
-#capa-codigos-fijos {
+/* Los cuatro controles de capa comparten el mismo tamaño. */
+.visor-capa input[type="checkbox"] {
     width: 16px;
     height: 16px;
     margin: 0;
@@ -616,15 +624,38 @@ body.sesion-verificando .visor-map {
     border-color: var(--color-warning-border);
 }
 
+.visor-badge--aviso {
+    color: var(--color-warning);
+    background-color: var(--color-warning-bg);
+    border-color: var(--color-warning-border);
+}
+
 .visor-badge--error {
     color: var(--color-error);
     background-color: var(--color-error-bg);
     border-color: var(--color-error-border);
 }
 
+.visor-panel__conteos {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: var(--space-2);
+}
+
 .visor-panel__conteo {
-    margin: var(--space-2) 0 0;
+    margin: 0;
     font-size: 0.8rem;
+    color: var(--color-muted);
+    min-height: 1.2em;
+}
+
+.visor-resumen {
+    margin: var(--space-3) 0 0;
+    font-size: 0.78rem;
     color: var(--color-muted);
     min-height: 1.2em;
 }
@@ -644,6 +675,19 @@ body.sesion-verificando .visor-map {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--color-muted);
+}
+
+.visor-leyenda__subtitulo {
+    margin: 0 0 var(--space-2);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+}
+
+.visor-leyenda__bloque + .visor-leyenda__bloque {
+    margin-top: var(--space-3);
 }
 
 .visor-leyenda__lista {
@@ -671,10 +715,32 @@ body.sesion-verificando .visor-map {
     border: 1px solid rgba(0, 0, 0, 0.18);
 }
 
+/* Swatch de polígono (Manzanas y Lotes): el color lo fija legend.js en línea. */
+.visor-leyenda__swatch--poligono {
+    border-radius: 2px;
+    border-width: 2px;
+    border-style: solid;
+}
+
+/* Swatch de línea (Vías): el color lo fija legend.js en línea. */
+.visor-leyenda__swatch--linea {
+    border-radius: 0;
+    height: 3px;
+    width: 14px;
+    border-width: 3px 0 0 0;
+    border-style: solid;
+}
+
 /* Popup de un Código Fijo (Leaflet lo renderiza dentro de .leaflet-popup-content). */
 .visor-popup {
     min-width: 220px;
     font-size: 0.82rem;
+    color: var(--color-text);
+}
+
+.visor-popup__titulo {
+    margin: 0 0 4px;
+    font-weight: 600;
     color: var(--color-text);
 }
 
@@ -842,6 +908,11 @@ body.sesion-verificando .visor-map {
     .visor-leyenda__lista {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    /* Cuatro controles: el apilado del conteo no necesita separación extra. */
+    .visor-panel__conteos {
+        gap: 0;
+    }
 }
 
 @media (max-width: 768px) {
@@ -891,5 +962,9 @@ body.sesion-verificando .visor-map {
 
     .visor-badge {
         margin-left: 0;
+    }
+
+    .visor-leyenda__lista {
+        grid-template-columns: 1fr;
     }
 }

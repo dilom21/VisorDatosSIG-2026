@@ -8,7 +8,7 @@
     <aside class="visor-panel">
         <div class="visor-panel__head">
             <h2>Capas</h2>
-            <p>Una capa disponible con datos reales; el resto continúa previsto para fases posteriores.</p>
+            <p>Cuatro capas disponibles con datos reales desde la base de datos.</p>
         </div>
 
         @* Zona de aviso del guard: recibe su texto por textContent, por lo que no
@@ -16,23 +16,50 @@
         <p id="visor-aviso" class="visor-aviso" role="status" hidden></p>
 
         <ul class="visor-panel__lista">
-            <li class="visor-panel__item">Manzanas<span class="visor-badge visor-badge--pendiente">Pendiente</span></li>
-            <li class="visor-panel__item">Lotes<span class="visor-badge visor-badge--pendiente">Pendiente</span></li>
+            <li class="visor-panel__item">
+                <label class="visor-capa" for="capa-manzanas">
+                    <input type="checkbox" id="capa-manzanas" checked />
+                    <span class="visor-capa__nombre">Manzanas</span>
+                </label>
+                <span id="estado-manzanas" class="visor-badge visor-badge--cargando">Cargando...</span>
+            </li>
+            <li class="visor-panel__item">
+                <label class="visor-capa" for="capa-lotes">
+                    <input type="checkbox" id="capa-lotes" />
+                    <span class="visor-capa__nombre">Lotes</span>
+                </label>
+                <span id="estado-lotes" class="visor-badge visor-badge--inactiva">Inactiva</span>
+            </li>
             <li class="visor-panel__item">
                 <label class="visor-capa" for="capa-codigos-fijos">
                     <input type="checkbox" id="capa-codigos-fijos" checked />
                     <span class="visor-capa__nombre">Códigos Fijos</span>
                 </label>
-                <span id="estado-codigos-fijos" class="visor-badge visor-badge--activa">Cargando...</span>
+                <span id="estado-codigos-fijos" class="visor-badge visor-badge--cargando">Cargando...</span>
             </li>
-            <li class="visor-panel__item">Vías<span class="visor-badge visor-badge--pendiente">Pendiente</span></li>
+            <li class="visor-panel__item">
+                <label class="visor-capa" for="capa-vias">
+                    <input type="checkbox" id="capa-vias" checked />
+                    <span class="visor-capa__nombre">Vías</span>
+                </label>
+                <span id="estado-vias" class="visor-badge visor-badge--cargando">Cargando...</span>
+            </li>
         </ul>
 
-        <p id="conteo-codigos-fijos" class="visor-panel__conteo" role="status" aria-live="polite"></p>
-        <div id="leyenda-codigos-fijos" class="visor-leyenda" hidden></div>
+        @* Los conteos reciben su texto por textContent: sin nodos hijos y sin
+           rol de región viva (el resumen consolidado es el único live region). *@
+        <ul class="visor-panel__conteos">
+            <li id="conteo-manzanas" class="visor-panel__conteo"></li>
+            <li id="conteo-lotes" class="visor-panel__conteo"></li>
+            <li id="conteo-codigos-fijos" class="visor-panel__conteo"></li>
+            <li id="conteo-vias" class="visor-panel__conteo"></li>
+        </ul>
+
+        <div id="leyenda-capas" class="visor-leyenda" hidden></div>
+        <p id="resumen-capas" class="visor-resumen" role="status" aria-live="polite"></p>
 
         <p class="visor-panel__nota">
-            Códigos Fijos ya consume información geográfica real desde la base de datos a través de la API. Manzanas, Lotes y Vías siguen pendientes.
+            Las cuatro capas consumen información geográfica real desde la base de datos a través de la API.
         </p>
     </aside>
     <div id="map" class="visor-map" aria-label="Mapa del VisorDatosSIG"></div>
@@ -41,8 +68,9 @@
     <script src="~/lib/leaflet/leaflet.js"></script>
     <script src="~/js/visor/map.js"></script>
     <script src="~/js/visor/geojson.js"></script>
-    <script src="~/js/visor/layers.js"></script>
+    <script src="~/js/visor/features.js"></script>
     <script src="~/js/visor/markers.js"></script>
+    <script src="~/js/visor/layers.js"></script>
     <script src="~/js/visor/legend.js"></script>
     <script src="~/js/visor/identify.js"></script>
     <script>
