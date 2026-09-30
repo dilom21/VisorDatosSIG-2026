@@ -893,7 +893,156 @@ body.sesion-verificando .visor-map {
 }
 
 /* -----------------------------------------------------------------------------
-   10. Responsive
+   10. Identificación por clic (FE-SIG 4)
+   Botón de modo, cursor de apuntado y panel de resultados agrupados por capa.
+   -------------------------------------------------------------------------- */
+
+.visor-identificar {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.visor-identificar__boton {
+    width: 100%;
+}
+
+/* Estado activo: el mismo botón comunica que el modo está encendido. */
+.visor-identificar__boton--activo,
+.visor-identificar__boton--activo:hover {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+}
+
+.visor-identificar__boton--activo:active {
+    background-color: var(--color-accent-dark);
+    border-color: var(--color-accent-dark);
+}
+
+/* Cursor de apuntado sobre el mapa mientras el modo está activo. `!important`
+   porque leaflet.css fija `cursor: grab` en `.leaflet-grab` y el modificador
+   es el único autorizado a cambiarlo. */
+.visor-map--identificando,
+.visor-map--identificando.leaflet-grab,
+.visor-map--identificando .leaflet-interactive {
+    cursor: crosshair !important;
+}
+
+.visor-identificacion {
+    margin-top: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+}
+
+.visor-identificacion__coords {
+    margin: 0 0 var(--space-1);
+    font-size: 0.76rem;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+}
+
+.visor-identificacion__estado {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.visor-identificacion__estado--ayuda {
+    color: var(--color-info);
+    font-weight: 500;
+}
+
+.visor-identificacion__estado--cargando {
+    color: var(--color-info);
+}
+
+.visor-identificacion__estado--exito {
+    color: var(--color-success);
+}
+
+.visor-identificacion__estado--vacio {
+    color: var(--color-warning);
+}
+
+.visor-identificacion__estado--error {
+    color: var(--color-error);
+}
+
+/* Resultados desplazables: acotado para no hacer inutilizable el mapa cuando
+   hay muchos elementos. */
+.visor-identificacion__resultados {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    max-height: 340px;
+    overflow-y: auto;
+}
+
+.visor-identificacion__grupo {
+    min-width: 0;
+}
+
+.visor-identificacion__grupo-titulo {
+    margin: 0 0 var(--space-2);
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+}
+
+.visor-identificacion__entidad {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    font-size: 0.8rem;
+}
+
+.visor-identificacion__entidad + .visor-identificacion__entidad {
+    margin-top: var(--space-2);
+}
+
+/* Rejilla clave/valor: cada fila se disuelve con `display: contents` para que
+   sus dt/dd entren directamente en la rejilla y las claves queden alineadas. */
+.visor-identificacion__lista {
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline;
+    gap: 2px var(--space-3);
+}
+
+.visor-identificacion__fila {
+    display: contents;
+}
+
+.visor-identificacion__clave {
+    margin: 0;
+    color: var(--color-muted);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.visor-identificacion__valor {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.visor-identificacion__nota {
+    margin: var(--space-3) 0 0;
+    font-size: 0.72rem;
+    color: var(--color-muted);
+}
+
+/* -----------------------------------------------------------------------------
+   11. Responsive
    -------------------------------------------------------------------------- */
 @media (max-width: 900px) {
     .visor-shell {

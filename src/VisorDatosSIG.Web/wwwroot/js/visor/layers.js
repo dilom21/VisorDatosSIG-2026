@@ -6,6 +6,9 @@
 // Cada capa Leaflet se crea UNA sola vez y se reutiliza; en cada moveend solo
 // se piden datos de las capas activas. Códigos Fijos conserva su renderer y
 // pane por defecto (por encima de los tres panes vectoriales nuevos).
+// FE-SIG 4: este modulo conserva el UNICO map.on('click') del visor. El
+// despachador delega el clic a ns.identify cuando el modo Identificar esta
+// activo; si no, mantiene intacto el hit-test local de FE-SIG 3.
 
 window.VisorSIG = window.VisorSIG || {};
 
@@ -322,6 +325,19 @@ window.VisorSIG = window.VisorSIG || {};
         if (!evento || !evento.layerPoint) {
             return;
         }
+
+        // FE-SIG 4: con el modo Identificar activo, el clic se delega por
+        // completo al modulo de identificacion y no se abre ningun popup local.
+        // Este sigue siendo el UNICO map.on('click') del visor: identify.js
+        // nunca registra el suyo. La comprobacion es defensiva por si el script
+        // de identificacion no llego a cargar.
+        if (ns.identify && typeof ns.identify.estaActivo === 'function'
+            && ns.identify.estaActivo()
+            && typeof ns.identify.manejarClic === 'function') {
+            ns.identify.manejarClic(evento);
+            return;
+        }
+
         for (var i = 0; i < ORDEN_CLIC.length; i++) {
             var def = buscarDefinicion(ORDEN_CLIC[i]);
             var estado = def ? ESTADO[def.clave] : null;

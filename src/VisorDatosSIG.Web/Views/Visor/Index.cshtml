@@ -58,6 +58,26 @@
         <div id="leyenda-capas" class="visor-leyenda" hidden></div>
         <p id="resumen-capas" class="visor-resumen" role="status" aria-live="polite"></p>
 
+        @* FE-SIG 4: modo Identificar. El botón alterna aria-pressed y el panel
+           solo se muestra con el modo activo. Las zonas de coordenadas, estado y
+           resultados reciben su contenido por textContent desde identify.js; por
+           eso no llevan nodos hijos en el marcado. *@
+        <div class="visor-identificar">
+            <button type="button" id="btn-identificar" class="btn-secundario visor-identificar__boton" aria-pressed="false">
+                Identificar
+            </button>
+            <div id="panel-identificacion" class="visor-identificacion" hidden>
+                <p id="coordenadas-identificacion" class="visor-identificacion__coords"></p>
+                <p id="estado-identificacion" class="visor-identificacion__estado" role="status" aria-live="polite"></p>
+                <div id="resultados-identificacion" class="visor-identificacion__resultados"></div>
+                <p class="visor-identificacion__nota">
+                    Los resultados corresponden al último clic, con el estado de
+                    capas activo en ese momento. La próxima identificación aplicará
+                    los cambios de capas.
+                </p>
+            </div>
+        </div>
+
         <p class="visor-panel__nota">
             Las cuatro capas consumen información geográfica real desde la base de datos a través de la API.
         </p>
