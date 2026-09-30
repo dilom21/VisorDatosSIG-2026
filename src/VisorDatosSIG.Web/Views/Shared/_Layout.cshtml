@@ -1,21 +1,78 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    var apiBaseUrl = Configuration["Api:BaseUrl"] ?? string.Empty;
+}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - VisorDatosSIG</title>
+    @await RenderSectionAsync("Styles", required: false)
     <link rel="stylesheet" href="~/css/visor.css" />
+    <link rel="stylesheet" href="~/css/auth.css" />
 </head>
 <body>
-    <header>
-        <nav>
-            <a asp-controller="Home" asp-action="Index">VisorDatosSIG</a>
-            <a asp-controller="Visor" asp-action="Index">Visor cartográfico</a>
-        </nav>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <header class="app-header">
+        <div class="app-header__inner">
+            <a class="brand" asp-controller="Home" asp-action="Index" aria-label="VisorDatosSIG, ir al inicio">
+                <span class="brand__mark" aria-hidden="true">
+                    @* Símbolo cartográfico: pin de mapa, SVG inline (sin librerías externas). *@
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                        <path d="M12 21.2s6.6-5.4 6.6-10.4a6.6 6.6 0 1 0-13.2 0c0 5 6.6 10.4 6.6 10.4Z" />
+                        <circle cx="12" cy="10.4" r="2.5" />
+                    </svg>
+                </span>
+                <span class="brand__text">
+                    <span class="brand__title">VisorDatosSIG</span>
+                    <span class="brand__subtitle">Información geográfica</span>
+                </span>
+            </a>
+
+            <nav class="app-nav" aria-label="Navegación principal">
+                <a class="app-nav__link" asp-controller="Home" asp-action="Index">Inicio</a>
+                <a class="app-nav__link" asp-controller="Visor" asp-action="Index">Visor cartográfico</a>
+            </nav>
+
+            @* Bloque de sesión: los identificadores y la estructura los controla
+               guard.js (sesion-anonima, sesion-activa, sesion-nombre, sesion-rol,
+               btn-cerrar-sesion). No alterar sin revisar ese módulo. *@
+            <div class="sesion">
+                <div id="sesion-anonima">
+                    <a class="btn-sesion" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
+                </div>
+                <div id="sesion-activa" class="sesion-chip" hidden>
+                    <span class="sesion-chip__icono" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                            <circle cx="12" cy="8.5" r="3.8" />
+                            <path d="M4.6 20.2a7.7 7.7 0 0 1 14.8 0" />
+                        </svg>
+                    </span>
+                    <span class="sesion-datos">
+                        <span id="sesion-nombre" class="sesion-nombre"></span>
+                        <span id="sesion-rol" class="sesion-rol"></span>
+                    </span>
+                    <button type="button" id="btn-cerrar-sesion" class="btn-sesion btn-sesion--ghost">Cerrar sesión</button>
+                </div>
+            </div>
+        </div>
     </header>
-    <main>
+
+    <main id="contenido" class="app-main">
         @RenderBody()
     </main>
+
+    <script>
+        window.VisorSIG = window.VisorSIG || {};
+        window.VisorSIG.config = { apiBaseUrl: @Json.Serialize(apiBaseUrl) };
+    </script>
+    <script src="~/js/auth/sesion.js"></script>
+    <script src="~/js/auth/api.js"></script>
+    <script src="~/js/auth/guard.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

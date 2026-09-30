@@ -1,0 +1,374 @@
+/* =============================================================================
+   VisorDatosSIG 2026 — Estilos de autenticación (FE-AUTH 1 / FE-UI 1)
+   Composición del login y bloque de sesión de la cabecera.
+
+   Los tokens de diseño, los botones (.btn-primario, .btn-secundario, .btn-sesion)
+   y las alertas base (.login-mensaje, .login-info, .visor-aviso) viven en
+   visor.css y se reutilizan aquí: no se duplican colores ni medidas.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. Bloque de sesión de la cabecera
+   -------------------------------------------------------------------------- */
+.sesion {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-left: auto;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+/* Chip de sesión activa: nombre y rol agrupados, no texto suelto. */
+.sesion-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    max-width: 100%;
+    padding: 4px 4px 4px 12px;
+    background-color: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+}
+
+.sesion-chip__icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.sesion-chip__icono svg {
+    display: block;
+}
+
+.sesion-datos {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.15;
+}
+
+.sesion-nombre {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 24ch;
+}
+
+.sesion-rol {
+    font-size: 0.72rem;
+    color: var(--color-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sesion-chip .btn-sesion {
+    border-radius: 999px;
+}
+
+/* -----------------------------------------------------------------------------
+   2. Composición del login
+   -------------------------------------------------------------------------- */
+.login-shell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - var(--header-height) - 6rem);
+    padding: var(--space-5) var(--space-4);
+}
+
+.login-card {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    width: 100%;
+    max-width: 880px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+/* --- Panel de identidad --- */
+.login-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    color: #fff;
+    background: linear-gradient(158deg, #0d3b66 0%, #10557c 52%, #0f8f83 100%);
+    overflow: hidden;
+}
+
+/* Trama cartográfica abstracta (decorativa). */
+.login-panel__trama {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.16;
+    pointer-events: none;
+}
+
+.login-panel__mark {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-md);
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.login-panel__mark svg {
+    display: block;
+}
+
+.login-panel__brand {
+    position: relative;
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #fff;
+}
+
+.login-panel__tagline {
+    position: relative;
+    margin: 0;
+    max-width: 24ch;
+    font-size: 0.94rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+/* --- Panel del formulario --- */
+.login-form-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--space-6);
+    background-color: var(--color-surface);
+}
+
+.login-form-panel__intro {
+    margin-bottom: var(--space-5);
+}
+
+.login-form-panel__intro h2 {
+    margin: 0 0 var(--space-1);
+    font-size: 1.35rem;
+}
+
+.login-form-panel__intro p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--color-muted);
+}
+
+/* -----------------------------------------------------------------------------
+   3. Campos del formulario
+   -------------------------------------------------------------------------- */
+.login-campo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.login-campo label {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.login-campo input {
+    width: 100%;
+    height: 46px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--color-text);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.login-campo input:hover {
+    border-color: #a4b2c0;
+}
+
+.login-campo input:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(13, 59, 102, 0.16);
+}
+
+/* --- Contraseña: campo + botón Mostrar/Ocultar integrados --- */
+.login-grupo-password {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-2);
+}
+
+.login-grupo-password input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.login-grupo-password button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    flex: 0 0 auto;
+    min-height: 46px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+    color: var(--color-muted);
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color var(--transition-fast),
+        border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.login-grupo-password button:hover {
+    background-color: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+/* Icono del ojo resuelto con máscara: el botón es text-only, porque login.js
+   reescribe su textContent con "Mostrar"/"Ocultar". */
+.login-grupo-password button::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    background-color: currentColor;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 5c-4.4 0-8.1 2.8-9.7 6.5a1 1 0 0 0 0 .9C4 16.1 7.6 19 12 19s8-2.9 9.7-6.6a1 1 0 0 0 0-.9C20.1 7.8 16.4 5 12 5Zm0 11.4A4.4 4.4 0 1 1 16.4 12 4.4 4.4 0 0 1 12 16.4Zm0-1.8A2.6 2.6 0 1 0 9.4 12 2.6 2.6 0 0 0 12 14.6Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 5c-4.4 0-8.1 2.8-9.7 6.5a1 1 0 0 0 0 .9C4 16.1 7.6 19 12 19s8-2.9 9.7-6.6a1 1 0 0 0 0-.9C20.1 7.8 16.4 5 12 5Zm0 11.4A4.4 4.4 0 1 1 16.4 12 4.4 4.4 0 0 1 12 16.4Zm0-1.8A2.6 2.6 0 1 0 9.4 12 2.6 2.6 0 0 0 12 14.6Z'/%3E%3C/svg%3E");
+}
+
+/* Estado "visible": ojo tachado. */
+.login-grupo-password button[aria-pressed="true"]::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3.3 2.3 2 3.6l2.6 2.6A11.9 11.9 0 0 0 2.3 11a1 1 0 0 0 0 .9C4 15.6 7.6 18.5 12 18.5a11.6 11.6 0 0 0 4.1-.8l3.3 3.3 1.3-1.3Zm8.7 4.9a4.3 4.3 0 0 1 2.4.7l-1 1a2.6 2.6 0 0 0-3.4 3.4l-1 1a4.3 4.3 0 0 1 3-6.1ZM12 7.7a4.3 4.3 0 0 1 4.3 4.3 4.2 4.2 0 0 1-.3 1.6l2.6 2.6A12.8 12.8 0 0 0 21.7 12a1 1 0 0 0 0-.9C20 7.4 16.4 4.5 12 4.5a11.9 11.9 0 0 0-4.2.8l3 3A4.3 4.3 0 0 1 12 7.7Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3.3 2.3 2 3.6l2.6 2.6A11.9 11.9 0 0 0 2.3 11a1 1 0 0 0 0 .9C4 15.6 7.6 18.5 12 18.5a11.6 11.6 0 0 0 4.1-.8l3.3 3.3 1.3-1.3Zm8.7 4.9a4.3 4.3 0 0 1 2.4.7l-1 1a2.6 2.6 0 0 0-3.4 3.4l-1 1a4.3 4.3 0 0 1 3-6.1ZM12 7.7a4.3 4.3 0 0 1 4.3 4.3 4.2 4.2 0 0 1-.3 1.6l2.6 2.6A12.8 12.8 0 0 0 21.7 12a1 1 0 0 0 0-.9C20 7.4 16.4 4.5 12 4.5a11.9 11.9 0 0 0-4.2.8l3 3A4.3 4.3 0 0 1 12 7.7Z'/%3E%3C/svg%3E");
+}
+
+/* --- Botón principal del formulario --- */
+.login-form-panel .btn-primario {
+    width: 100%;
+    min-height: 46px;
+    margin-top: var(--space-1);
+}
+
+/* Indicador de carga: pseudoelemento, para no pisar el textContent del botón. */
+.login-cargando::after {
+    content: "";
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: visor-girar 700ms linear infinite;
+}
+
+@keyframes visor-girar {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login-cargando::after {
+        animation: none;
+        border-top-color: rgba(255, 255, 255, 0.45);
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   4. Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+    .login-card {
+        grid-template-columns: 1fr;
+        max-width: 520px;
+    }
+
+    /* El panel de identidad pasa a ser una franja compacta; el h1 se conserva. */
+    .login-panel {
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-5);
+    }
+
+    .login-panel__trama,
+    .login-panel__tagline {
+        display: none;
+    }
+
+    .login-panel__mark {
+        width: 42px;
+        height: 42px;
+    }
+
+    .login-panel__brand {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-header__inner .sesion {
+        margin-left: auto;
+    }
+
+    .login-shell {
+        padding: var(--space-4) 0;
+        min-height: 0;
+    }
+
+    .login-form-panel {
+        padding: var(--space-5);
+    }
+}
+
+@media (max-width: 520px) {
+    .sesion-datos {
+        max-width: 12ch;
+    }
+
+    .sesion-nombre {
+        max-width: 12ch;
+    }
+
+    .login-card {
+        border-radius: var(--radius-md);
+    }
+}

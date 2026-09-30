@@ -1,0 +1,585 @@
+/* =============================================================================
+   VisorDatosSIG 2026 - Portada Pública Editorial (v4)
+   Paleta: Sage, Terracota, Oro, Agua y Beige editorial.
+   Inspirado en la visión territorial de Santa Cruz de la Sierra.
+   ============================================================================= */
+
+:root {
+  --geo-bg: #f6f2ea;
+  --geo-bg-soft: #fbf8f2;
+  --geo-card: #fffdf9;
+  --geo-stroke: #e6ddd0;
+  --geo-text: #24322c;
+  --geo-muted: #6f7a73;
+  --geo-sage: #7d9574;
+  --geo-sage-dark: #566b59;
+  --geo-terracotta: #c46f55;
+  --geo-terracotta-dark: #9d5642;
+  --geo-gold: #c8a35c;
+  --geo-water: #7caab3;
+  --geo-shadow: 0 18px 50px rgba(73, 74, 49, 0.10);
+  --geo-radius: 26px;
+  --geo-radius-sm: 18px;
+  --geo-max: 1280px;
+}
+
+/* Fondo atmosférico editorial aplicado al body cuando se visualiza la home */
+body:has(.home-v4) {
+  background:
+    radial-gradient(circle at top left, rgba(198,111,85,.10), transparent 28%),
+    radial-gradient(circle at top right, rgba(124,170,179,.11), transparent 24%),
+    linear-gradient(180deg, #faf6ef 0%, #f6f2ea 100%);
+  background-attachment: fixed;
+}
+
+/* En caso de que :has no esté soportado, la clase envolvente aplica el contexto */
+.home-v4 {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--geo-text);
+  line-height: 1.55;
+  width: 100%;
+}
+
+.home-v4 img {
+  max-width: 100%;
+  display: block;
+}
+
+.home-v4 a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Eyebrows */
+.home-v4 .eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--geo-muted);
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+/* -----------------------------------------------------------------------------
+   Hero Principal
+   -------------------------------------------------------------------------- */
+.home-v4 .hero {
+  padding: 24px 0 32px;
+}
+
+.home-v4 .hero-wrap {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 36px;
+  align-items: center;
+}
+
+.home-v4 .hero-copy {
+  padding: 10px 0;
+}
+
+.home-v4 .hero-copy h1 {
+  margin: 0 0 18px;
+  font-size: clamp(2.4rem, 4.5vw, 4.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-family: Georgia, "Times New Roman", serif;
+  color: #1f2c26;
+  font-weight: 700;
+}
+
+.home-v4 .hero-copy h1 .accent {
+  color: var(--geo-terracotta-dark);
+}
+
+.home-v4 .hero-copy p {
+  margin: 0 0 24px;
+  color: var(--geo-muted);
+  font-size: 1.05rem;
+  max-width: 64ch;
+  line-height: 1.6;
+}
+
+.home-v4 .hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.home-v4 .hero-badges span,
+.home-v4 .pill {
+  background: rgba(125, 149, 116, 0.11);
+  color: var(--geo-sage-dark);
+  border: 1px solid rgba(125, 149, 116, 0.22);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.home-v4 .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 28px;
+  align-items: center;
+}
+
+.home-v4 .hero-saludo {
+  margin: 0 0 12px;
+  font-size: 0.96rem;
+  color: var(--geo-muted);
+}
+
+.home-v4 .hero-saludo strong {
+  color: var(--geo-sage-dark);
+}
+
+.home-v4 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 0.96rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.home-v4 .btn-primary {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--geo-terracotta), var(--geo-gold));
+  box-shadow: 0 16px 30px rgba(196, 111, 85, 0.25);
+}
+
+.home-v4 .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 36px rgba(196, 111, 85, 0.32);
+  color: #ffffff;
+}
+
+.home-v4 .btn-secondary {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--geo-sage-dark);
+  border-color: var(--geo-stroke);
+}
+
+.home-v4 .btn-secondary:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+  color: var(--geo-sage-dark);
+}
+
+.home-v4 .hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.home-v4 .metric {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(120, 120, 100, 0.12);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: var(--geo-shadow);
+}
+
+.home-v4 .metric strong {
+  display: block;
+  font-size: 1.55rem;
+  line-height: 1;
+  margin-bottom: 8px;
+  color: var(--geo-sage-dark);
+  font-weight: 800;
+}
+
+.home-v4 .metric span {
+  color: var(--geo-muted);
+  font-size: 0.93rem;
+  line-height: 1.45;
+}
+
+/* Tarjeta visual derecha del Hero */
+.home-v4 .hero-visual {
+  position: relative;
+}
+
+.home-v4 .visual-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 253, 249, 0.88));
+  border: 1px solid rgba(120, 120, 100, 0.12);
+  border-radius: 32px;
+  padding: 18px;
+  box-shadow: var(--geo-shadow);
+  overflow: hidden;
+}
+
+.home-v4 .visual-card img {
+  width: 100%;
+  border-radius: 22px;
+  box-shadow: 0 18px 40px rgba(53, 60, 49, 0.14);
+}
+
+.home-v4 .visual-note {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  background: rgba(255, 250, 243, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(120, 120, 100, 0.14);
+  border-radius: 20px;
+  padding: 14px 16px;
+  max-width: 270px;
+  box-shadow: var(--geo-shadow);
+}
+
+.home-v4 .visual-note strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--geo-sage-dark);
+  font-size: 0.92rem;
+}
+
+.home-v4 .visual-note span {
+  color: var(--geo-muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+/* -----------------------------------------------------------------------------
+   Secciones Generales
+   -------------------------------------------------------------------------- */
+.home-v4 .section {
+  padding: 38px 0;
+}
+
+.home-v4 .section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.home-v4 .section-header h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 2.6vw, 2.5rem);
+  line-height: 1.1;
+  font-family: Georgia, "Times New Roman", serif;
+  color: #1f2c26;
+  font-weight: 700;
+}
+
+.home-v4 .section-header p {
+  margin: 0;
+  color: var(--geo-muted);
+  max-width: 60ch;
+  font-size: 0.98rem;
+}
+
+.home-v4 .grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.home-v4 .card {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(120, 120, 100, 0.12);
+  border-radius: var(--geo-radius);
+  box-shadow: var(--geo-shadow);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-v4 .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 55px rgba(73, 74, 49, 0.14);
+}
+
+.home-v4 .card-img {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #f0ece4;
+}
+
+.home-v4 .card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-v4 .card-body {
+  padding: 26px;
+}
+
+.home-v4 .card-body h3 {
+  margin: 0 0 10px;
+  font-size: 1.38rem;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--geo-sage-dark);
+  font-weight: 700;
+}
+
+.home-v4 .card-body p {
+  margin: 0 0 14px;
+  color: var(--geo-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.home-v4 .mini-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.home-v4 .mini-features div {
+  background: var(--geo-bg-soft);
+  border: 1px solid var(--geo-stroke);
+  border-radius: 16px;
+  padding: 14px 15px;
+}
+
+.home-v4 .mini-features strong {
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 4px;
+  color: var(--geo-sage-dark);
+}
+
+.home-v4 .mini-features span {
+  color: var(--geo-muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+/* -----------------------------------------------------------------------------
+   Capas Vectoriales (Lógica por capas)
+   -------------------------------------------------------------------------- */
+.home-v4 .layers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.home-v4 .layer-item {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(120, 120, 100, 0.12);
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: var(--geo-shadow);
+}
+
+.home-v4 .layer-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-bottom: 14px;
+}
+
+.home-v4 .layer-item h4 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  color: #1f2c26;
+  font-weight: 700;
+}
+
+.home-v4 .layer-item p {
+  margin: 0;
+  color: var(--geo-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+/* -----------------------------------------------------------------------------
+   Arquitectura
+   -------------------------------------------------------------------------- */
+.home-v4 .architecture {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.85));
+  border: 1px solid rgba(120, 120, 100, 0.12);
+  border-radius: 32px;
+  padding: 30px;
+  box-shadow: var(--geo-shadow);
+}
+
+.home-v4 .arch-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.home-v4 .arch-step {
+  position: relative;
+  background: var(--geo-card);
+  border: 1px solid var(--geo-stroke);
+  border-radius: 24px;
+  padding: 22px 18px 20px;
+  min-height: 190px;
+}
+
+.home-v4 .arch-step::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  width: 24px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--geo-terracotta), var(--geo-gold));
+  transform: translateY(-50%);
+  opacity: 0.55;
+}
+
+.home-v4 .arch-step:last-child::after {
+  display: none;
+}
+
+.home-v4 .step-badge {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(196, 111, 85, 0.18), rgba(200, 163, 92, 0.20));
+  color: var(--geo-terracotta-dark);
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.home-v4 .arch-step h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  color: var(--geo-sage-dark);
+  font-weight: 700;
+}
+
+.home-v4 .arch-step p {
+  margin: 0;
+  color: var(--geo-muted);
+  font-size: 0.91rem;
+  line-height: 1.45;
+}
+
+/* -----------------------------------------------------------------------------
+   Banner de Acción (CTA)
+   -------------------------------------------------------------------------- */
+.home-v4 .cta-banner {
+  margin: 40px 0 36px;
+  padding: 34px;
+  background: linear-gradient(135deg, rgba(86, 107, 89, 0.96), rgba(124, 170, 179, 0.94));
+  color: #ffffff;
+  border-radius: 32px;
+  box-shadow: 0 20px 50px rgba(86, 107, 89, 0.22);
+  display: grid;
+  grid-template-columns: 1.4fr auto;
+  gap: 24px;
+  align-items: center;
+}
+
+.home-v4 .cta-banner h3 {
+  margin: 0 0 10px;
+  font-size: clamp(1.6rem, 2.4vw, 2.3rem);
+  font-family: Georgia, "Times New Roman", serif;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.home-v4 .cta-banner p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 68ch;
+  line-height: 1.55;
+  font-size: 0.98rem;
+}
+
+.home-v4 .cta-banner .btn-secondary {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.home-v4 .cta-banner .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+
+/* -----------------------------------------------------------------------------
+   Pie de Página Editorial
+   -------------------------------------------------------------------------- */
+.home-v4 .footer-box {
+  border-top: 1px solid rgba(120, 120, 100, 0.16);
+  padding: 22px 0 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--geo-muted);
+  font-size: 0.92rem;
+}
+
+/* -----------------------------------------------------------------------------
+   Responsividad
+   -------------------------------------------------------------------------- */
+@media (max-width: 1120px) {
+  .home-v4 .hero-wrap,
+  .home-v4 .grid-2,
+  .home-v4 .cta-banner {
+    grid-template-columns: 1fr;
+  }
+  .home-v4 .hero-copy {
+    order: 1;
+  }
+  .home-v4 .hero-visual {
+    order: 2;
+  }
+  .home-v4 .arch-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .home-v4 .arch-step:nth-child(2)::after,
+  .home-v4 .arch-step:nth-child(4)::after {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .home-v4 .hero-metrics,
+  .home-v4 .layers,
+  .home-v4 .mini-features,
+  .home-v4 .arch-grid {
+    grid-template-columns: 1fr;
+  }
+  .home-v4 .visual-note {
+    position: static;
+    margin-top: 14px;
+    max-width: none;
+  }
+  .home-v4 .section {
+    padding: 26px 0;
+  }
+  .home-v4 .hero {
+    padding-top: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .home-v4 .btn {
+    width: 100%;
+  }
+  .home-v4 .hero-actions {
+    flex-direction: column;
+  }
+  .home-v4 .card-body,
+  .home-v4 .architecture,
+  .home-v4 .cta-banner {
+    padding: 20px;
+  }
+}

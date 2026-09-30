@@ -1,12 +1,1331 @@
-html { font-family: Arial, sans-serif; }
-body { margin: 0; }
-header { padding: 1rem; border-bottom: 1px solid #ddd; }
-nav { display: flex; gap: 1rem; }
-main { padding: 1rem; }
-.visor-shell { display: grid; grid-template-columns: minmax(220px, 280px) 1fr; gap: 1rem; }
-.visor-panel, .visor-map { min-width: 0; border: 1px solid #ddd; padding: 1rem; }
-.visor-map { min-height: 520px; }
+/* =============================================================================
+   VisorDatosSIG 2026 — Base visual global
+   FE-UI 1: identidad visual (tokens, layout, componentes comunes y visor).
+
+   Este archivo es la base visual del sistema: define las variables de diseño,
+   la tipografía, el layout global, los botones y las alertas, y los estilos del
+   visor cartográfico. Los estilos específicos de autenticación viven en auth.css
+   y reutilizan estos tokens; no se duplican valores.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. Tokens de diseño
+   -------------------------------------------------------------------------- */
+:root {
+    /* Marca: azul profundo como color principal, teal SIG como acento. */
+    --color-primary: #0d3b66;
+    --color-primary-dark: #092b4c;
+    --color-primary-soft: #e8eff6;
+    --color-accent: #0f8f83;
+    --color-accent-dark: #0b6f66;
+
+    /* Superficies y fondos. */
+    --color-background: #f4f6f9;
+    --color-surface: #ffffff;
+    --color-surface-alt: #f8fafc;
+
+    /* Texto. */
+    --color-text: #17293d;
+    --color-muted: #5a6b7d;
+    --color-border: #dce3ea;
+    --color-border-strong: #c6d0da;
+
+    /* Estados accesibles (texto sobre fondo). */
+    --color-error: #a4231c;
+    --color-error-bg: #fdeceb;
+    --color-error-border: #f3c4c0;
+    --color-warning: #7a5600;
+    --color-warning-bg: #fff6e0;
+    --color-warning-border: #f0d99a;
+    --color-success: #1a6a3a;
+    --color-success-bg: #e9f5ee;
+    --color-info: #1b5c94;
+    --color-info-bg: #eaf2fa;
+    --color-info-border: #c3d9ee;
+
+    /* Estados de Código Fijo (FE-SIG 2). */
+    --estado-normal: #1a6a3a;
+    --estado-para-corte: #c98a00;
+    --estado-cortado: #a4231c;
+    --estado-baja-parcial: #c2571a;
+    --estado-baja-total: #4b5563;
+    --estado-desconocido: #5a6b7d;
+
+    /* Capas vectoriales (FE-SIG 3). */
+    --capa-manzanas-stroke: #8a6d3b;
+    --capa-manzanas-fill: #d9c9a8;
+    --capa-lotes-stroke: #5a6b7d;
+    --capa-lotes-fill: #c6d0da;
+    --capa-vias-stroke: #b4451f;
+
+    /* Radios. */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+
+    /* Sombras. */
+    --shadow-sm: 0 1px 2px rgba(15, 40, 64, 0.06), 0 1px 3px rgba(15, 40, 64, 0.07);
+    --shadow-md: 0 4px 14px rgba(15, 40, 64, 0.08), 0 2px 4px rgba(15, 40, 64, 0.05);
+    --shadow-lg: 0 16px 40px rgba(15, 40, 64, 0.14);
+
+    /* Espaciados. */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
+
+    /* Layout. */
+    --header-height: 64px;
+    --container-width: 1280px;
+
+    /* Tipografía: stack del sistema, sin fuentes externas. */
+    --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    /* Transiciones muy sutiles. */
+    --transition-fast: 120ms ease;
+}
+
+/* -----------------------------------------------------------------------------
+   2. Reset mínimo y base
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--color-text);
+    background-color: var(--color-background);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+    line-height: 1.25;
+    margin: 0 0 var(--space-3);
+    color: var(--color-text);
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1rem; }
+
+p { margin: 0 0 var(--space-3); }
+
+a {
+    color: var(--color-primary);
+}
+
+a:hover {
+    color: var(--color-primary-dark);
+}
+
+/* El atributo `hidden` debe ganar siempre: varios contenedores se muestran y
+   ocultan desde JavaScript y algunos usan display flex/grid. */
+[hidden] {
+    display: none !important;
+}
+
+/* Foco visible consistente en todo el sistema. */
+:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* Enlace de salto para navegación por teclado. */
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    padding: var(--space-2) var(--space-4);
+    background-color: var(--color-primary);
+    color: #fff;
+    border-radius: 0 0 var(--radius-sm) 0;
+    text-decoration: none;
+}
+
+.skip-link:focus {
+    left: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   3. Cabecera de la aplicación
+   -------------------------------------------------------------------------- */
+.app-header {
+    position: relative;
+    z-index: 500;
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+}
+
+.app-header__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    width: 100%;
+    max-width: var(--container-width);
+    min-height: var(--header-height);
+    margin: 0 auto;
+    padding: var(--space-2) var(--space-5);
+}
+
+/* Marca: símbolo cartográfico + nombre. */
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    text-decoration: none;
+    color: var(--color-text);
+    flex: 0 0 auto;
+}
+
+.brand__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(150deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+.brand__mark svg {
+    display: block;
+}
+
+.brand__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.brand__title {
+    font-size: 1.02rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.brand__subtitle {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* Navegación principal. */
+.app-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 1 1 auto;
+}
+
+.app-nav__link {
+    display: inline-block;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    font-size: 0.94rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.app-nav__link:hover {
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   4. Layout del contenido
+   -------------------------------------------------------------------------- */
+.app-main {
+    width: 100%;
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: var(--space-5);
+}
+
+/* -----------------------------------------------------------------------------
+   5. Botones
+   -------------------------------------------------------------------------- */
+.btn-primario,
+.btn-secundario,
+.btn-sesion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 40px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font: inherit;
+    font-size: 0.94rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--transition-fast),
+        border-color var(--transition-fast), color var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+.btn-primario {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+.btn-primario:hover {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: #fff;
+}
+
+.btn-primario:active {
+    background-color: #072038;
+    border-color: #072038;
+}
+
+.btn-secundario {
+    background-color: var(--color-surface);
+    border-color: var(--color-border-strong);
+    color: var(--color-primary);
+}
+
+.btn-secundario:hover {
+    background-color: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    color: var(--color-primary-dark);
+}
+
+.btn-sesion {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    font-size: 0.88rem;
+}
+
+.btn-sesion:hover {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: #fff;
+}
+
+/* Variante discreta sobre superficie blanca (cerrar sesión). */
+.btn-sesion--ghost {
+    background-color: transparent;
+    border-color: var(--color-border-strong);
+    color: var(--color-primary);
+}
+
+.btn-sesion--ghost:hover {
+    background-color: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    color: var(--color-primary-dark);
+}
+
+.btn-primario:disabled,
+.btn-secundario:disabled,
+.btn-sesion:disabled,
+.btn-primario[aria-busy="true"],
+.btn-secundario[aria-busy="true"],
+.btn-sesion[aria-busy="true"] {
+    opacity: 0.62;
+    cursor: progress;
+    box-shadow: none;
+}
+
+/* -----------------------------------------------------------------------------
+   6. Alertas (error / aviso / información)
+   Las tres zonas de mensaje del sistema reciben su texto por `textContent`
+   desde JavaScript, por eso la iconografía se resuelve con `::before` y nunca
+   con nodos hijos.
+   -------------------------------------------------------------------------- */
+.login-mensaje,
+.login-info,
+.visor-aviso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-left-width: 4px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.login-mensaje::before,
+.login-info::before,
+.visor-aviso::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    background-color: currentColor;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+/* Variante de error (login.js agrega la clase `login-error`). */
+.login-error {
+    color: var(--color-error);
+    background-color: var(--color-error-bg);
+    border-color: var(--color-error-border);
+    border-left-color: var(--color-error);
+}
+
+.login-error::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.6a1.3 1.3 0 0 1 1.3 1.3v5.2a1.3 1.3 0 0 1-2.6 0V7.9A1.3 1.3 0 0 1 12 6.6Zm0 10.4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.6a1.3 1.3 0 0 1 1.3 1.3v5.2a1.3 1.3 0 0 1-2.6 0V7.9A1.3 1.3 0 0 1 12 6.6Zm0 10.4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z'/%3E%3C/svg%3E");
+}
+
+/* Variante informativa. */
+.login-info {
+    color: var(--color-info);
+    background-color: var(--color-info-bg);
+    border-color: var(--color-info-border);
+    border-left-color: var(--color-info);
+}
+
+.login-info::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm1.3 11.2h-2.6v-6.5h2.6v6.5Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm1.3 11.2h-2.6v-6.5h2.6v6.5Z'/%3E%3C/svg%3E");
+}
+
+/* Variante de aviso: la usa el guard cuando no puede validar la sesión. */
+.visor-aviso {
+    color: var(--color-warning);
+    background-color: var(--color-warning-bg);
+    border-color: var(--color-warning-border);
+    border-left-color: var(--color-warning);
+}
+
+.visor-aviso::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.6 1.7 20.4h20.6L12 2.6Zm0 5.6a1.3 1.3 0 0 1 1.3 1.3v4.4a1.3 1.3 0 0 1-2.6 0V9.5A1.3 1.3 0 0 1 12 8.2Zm0 8.2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.6 1.7 20.4h20.6L12 2.6Zm0 5.6a1.3 1.3 0 0 1 1.3 1.3v4.4a1.3 1.3 0 0 1-2.6 0V9.5A1.3 1.3 0 0 1 12 8.2Zm0 8.2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z'/%3E%3C/svg%3E");
+}
+
+/* Variante de éxito (disponible para usos futuros). */
+.alerta-exito {
+    color: var(--color-success);
+    background-color: var(--color-success-bg);
+    border-color: var(--color-success);
+    border-left-color: var(--color-success);
+}
+
+.alerta-exito::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm5 7.2-6.2 6.6a1.2 1.2 0 0 1-1.7 0L6.4 13a1.2 1.2 0 0 1 1.7-1.7l1.9 2 5.3-5.7A1.2 1.2 0 0 1 17 9.2Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm5 7.2-6.2 6.6a1.2 1.2 0 0 1-1.7 0L6.4 13a1.2 1.2 0 0 1 1.7-1.7l1.9 2 5.3-5.7A1.2 1.2 0 0 1 17 9.2Z'/%3E%3C/svg%3E");
+}
+
+/* -----------------------------------------------------------------------------
+   7. Visor cartográfico
+   -------------------------------------------------------------------------- */
+.visor-shell {
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+}
+
+.visor-panel {
+    min-width: 0;
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.visor-panel__head {
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-3);
+}
+
+.visor-panel__head h2 {
+    margin: 0 0 var(--space-2);
+    font-size: 1.05rem;
+}
+
+.visor-panel__head p {
+    margin: 0;
+    font-size: 0.86rem;
+    color: var(--color-muted);
+}
+
+.visor-panel__lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.visor-panel__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+    font-size: 0.88rem;
+    color: var(--color-muted);
+}
+
+.visor-panel__item::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-accent);
+    opacity: 0.55;
+}
+
+.visor-panel__nota {
+    margin: var(--space-3) 0 0;
+    font-size: 0.78rem;
+    color: var(--color-muted);
+}
+
+/* Contenedor de Leaflet: sin padding y con altura explícita. */
+.visor-map {
+    min-width: 0;
+    height: 560px;
+    min-height: 420px;
+    background-color: #e9eef3;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+@media (min-width: 900px) {
+    .visor-map {
+        height: calc(100vh - var(--header-height) - 6rem);
+        min-height: 480px;
+    }
+}
+
+/* Fail-closed: mientras no se valide la sesión, el mapa no es utilizable. */
+body.sesion-verificando .visor-map {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* -----------------------------------------------------------------------------
+   8. Capas del visor (FE-SIG 2 y 3)
+   Control de capas, badges de estado, conteos, leyenda y popups.
+   -------------------------------------------------------------------------- */
+
+.visor-capa {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.visor-capa__nombre {
+    font-weight: 600;
+}
+
+/* Los cuatro controles de capa comparten el mismo tamaño. */
+.visor-capa input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+}
+
+.visor-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.visor-badge--activa {
+    color: var(--color-success);
+    background-color: var(--color-success-bg);
+    border-color: var(--color-success);
+}
+
+.visor-badge--cargando {
+    color: var(--color-info);
+    background-color: var(--color-info-bg);
+    border-color: var(--color-info-border);
+}
+
+.visor-badge--pendiente {
+    color: var(--color-muted);
+    background-color: var(--color-surface-alt);
+    border-color: var(--color-border);
+}
+
+.visor-badge--inactiva {
+    color: var(--color-muted);
+    background-color: var(--color-surface-alt);
+    border-color: var(--color-border-strong);
+}
+
+.visor-badge--vacia {
+    color: var(--color-warning);
+    background-color: var(--color-warning-bg);
+    border-color: var(--color-warning-border);
+}
+
+.visor-badge--aviso {
+    color: var(--color-warning);
+    background-color: var(--color-warning-bg);
+    border-color: var(--color-warning-border);
+}
+
+.visor-badge--error {
+    color: var(--color-error);
+    background-color: var(--color-error-bg);
+    border-color: var(--color-error-border);
+}
+
+.visor-panel__conteos {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: var(--space-2);
+}
+
+.visor-panel__conteo {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--color-muted);
+    min-height: 1.2em;
+}
+
+.visor-resumen {
+    margin: var(--space-3) 0 0;
+    font-size: 0.78rem;
+    color: var(--color-muted);
+    min-height: 1.2em;
+}
+
+.visor-leyenda {
+    margin-top: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+}
+
+.visor-leyenda__titulo {
+    margin: 0 0 var(--space-2);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+}
+
+.visor-leyenda__subtitulo {
+    margin: 0 0 var(--space-2);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+}
+
+.visor-leyenda__bloque + .visor-leyenda__bloque {
+    margin-top: var(--space-3);
+}
+
+.visor-leyenda__lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+}
+
+.visor-leyenda__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.8rem;
+    color: var(--color-text);
+}
+
+.visor-leyenda__swatch {
+    flex: 0 0 auto;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+/* Swatch de polígono (Manzanas y Lotes): el color lo fija legend.js en línea. */
+.visor-leyenda__swatch--poligono {
+    border-radius: 2px;
+    border-width: 2px;
+    border-style: solid;
+}
+
+/* Swatch de línea (Vías): el color lo fija legend.js en línea. */
+.visor-leyenda__swatch--linea {
+    border-radius: 0;
+    height: 3px;
+    width: 14px;
+    border-width: 3px 0 0 0;
+    border-style: solid;
+}
+
+/* Popup de un Código Fijo (Leaflet lo renderiza dentro de .leaflet-popup-content). */
+.visor-popup {
+    min-width: 220px;
+    font-size: 0.82rem;
+    color: var(--color-text);
+}
+
+.visor-popup__titulo {
+    margin: 0 0 4px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+/* La lista es la rejilla clave/valor y cada fila se disuelve con
+   `display: contents` para que sus dt/dd entren directamente en esa rejilla.
+   Asi las claves y los valores quedan alineados entre todas las filas. */
+.visor-popup__lista {
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline;
+    gap: 2px var(--space-3);
+}
+
+.visor-popup__fila {
+    display: contents;
+}
+
+/* max-content en la columna de claves: evita que "Código fijo" o "ID interno"
+   se partan en dos lineas cuando el valor de otra fila es largo. */
+.visor-popup__clave {
+    margin: 0;
+    color: var(--color-muted);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.visor-popup__valor {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+/* -----------------------------------------------------------------------------
+   9. Página de inicio
+   -------------------------------------------------------------------------- */
+.home-hero {
+    padding: var(--space-6);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.home-hero__eyebrow {
+    margin: 0 0 var(--space-2);
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent-dark);
+}
+
+.home-hero h1 {
+    margin: 0 0 var(--space-3);
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+}
+
+.home-hero__lead {
+    max-width: 62ch;
+    margin: 0 0 var(--space-5);
+    font-size: 1.02rem;
+    color: var(--color-muted);
+}
+
+.home-hero__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.home-hero__saludo {
+    margin: 0;
+    font-size: 0.94rem;
+    color: var(--color-muted);
+}
+
+.home-capas {
+    margin-top: var(--space-5);
+}
+
+.home-capas h2 {
+    margin: 0 0 var(--space-1);
+}
+
+.home-capas__nota {
+    margin: 0 0 var(--space-4);
+    font-size: 0.88rem;
+    color: var(--color-muted);
+}
+
+.capas-grid {
+    display: grid;
+    /* min(220px, 100%) evita desbordamiento horizontal en pantallas estrechas. */
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.capa-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.capa-card__icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin-bottom: var(--space-3);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.capa-card__icono svg {
+    display: block;
+}
+
+.capa-card h3 {
+    margin: 0 0 var(--space-1);
+    font-size: 0.98rem;
+}
+
+.capa-card p {
+    margin: 0;
+    font-size: 0.84rem;
+    color: var(--color-muted);
+}
+
+.capa-card__estado {
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: auto;
+    padding: 2px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background-color: var(--color-surface-alt);
+    font-size: 0.72rem;
+    color: var(--color-muted);
+}
+
+/* -----------------------------------------------------------------------------
+   10. Identificación por clic (FE-SIG 4)
+   Botón de modo, cursor de apuntado y panel de resultados agrupados por capa.
+   -------------------------------------------------------------------------- */
+
+.visor-identificar {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.visor-identificar__boton {
+    width: 100%;
+}
+
+/* Estado activo: el mismo botón comunica que el modo está encendido. */
+.visor-identificar__boton--activo,
+.visor-identificar__boton--activo:hover {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+}
+
+.visor-identificar__boton--activo:active {
+    background-color: var(--color-accent-dark);
+    border-color: var(--color-accent-dark);
+}
+
+/* Cursor de apuntado sobre el mapa mientras el modo está activo. `!important`
+   porque leaflet.css fija `cursor: grab` en `.leaflet-grab` y el modificador
+   es el único autorizado a cambiarlo. */
+.visor-map--identificando,
+.visor-map--identificando.leaflet-grab,
+.visor-map--identificando .leaflet-interactive {
+    cursor: crosshair !important;
+}
+
+.visor-identificacion {
+    margin-top: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+}
+
+.visor-identificacion__coords {
+    margin: 0 0 var(--space-1);
+    font-size: 0.76rem;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+}
+
+.visor-identificacion__estado {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.visor-identificacion__estado--ayuda {
+    color: var(--color-info);
+    font-weight: 500;
+}
+
+.visor-identificacion__estado--cargando {
+    color: var(--color-info);
+}
+
+.visor-identificacion__estado--exito {
+    color: var(--color-success);
+}
+
+.visor-identificacion__estado--vacio {
+    color: var(--color-warning);
+}
+
+.visor-identificacion__estado--error {
+    color: var(--color-error);
+}
+
+/* Resultados desplazables: acotado para no hacer inutilizable el mapa cuando
+   hay muchos elementos. */
+.visor-identificacion__resultados {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    max-height: 340px;
+    overflow-y: auto;
+}
+
+.visor-identificacion__grupo {
+    min-width: 0;
+}
+
+.visor-identificacion__grupo-titulo {
+    margin: 0 0 var(--space-2);
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+}
+
+.visor-identificacion__entidad {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    font-size: 0.8rem;
+}
+
+.visor-identificacion__entidad + .visor-identificacion__entidad {
+    margin-top: var(--space-2);
+}
+
+/* Rejilla clave/valor: cada fila se disuelve con `display: contents` para que
+   sus dt/dd entren directamente en la rejilla y las claves queden alineadas. */
+.visor-identificacion__lista {
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline;
+    gap: 2px var(--space-3);
+}
+
+.visor-identificacion__fila {
+    display: contents;
+}
+
+.visor-identificacion__clave {
+    margin: 0;
+    color: var(--color-muted);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.visor-identificacion__valor {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.visor-identificacion__nota {
+    margin: var(--space-3) 0 0;
+    font-size: 0.72rem;
+    color: var(--color-muted);
+}
+
+/* -----------------------------------------------------------------------------
+   11. Búsqueda catastral (FE-SIG 5)
+   Formulario, estado, tarjetas de resultado, metadatos, paginación y la acción
+   «Ver en mapa» / aviso «Fuera de la vista actual». Reutiliza los tokens de
+   FE-UI 1: no se introducen colores ni medidas nuevas.
+   -------------------------------------------------------------------------- */
+
+.visor-busqueda {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.visor-busqueda__titulo {
+    margin: 0 0 var(--space-3);
+    font-size: 0.95rem;
+}
+
+.visor-busqueda__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.visor-busqueda__label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-muted);
+}
+
+/* Ancho contenido al panel; nunca provoca desbordamiento horizontal. */
+.visor-busqueda__input,
+.visor-busqueda__select {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.9rem;
+}
+
+.visor-busqueda__input::placeholder {
+    color: var(--color-muted);
+}
+
+.visor-busqueda__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+}
+
+.visor-busqueda__boton {
+    flex: 1 1 auto;
+}
+
+.visor-busqueda__estado {
+    margin: var(--space-3) 0 0;
+    min-height: 1.2em;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.visor-busqueda__estado--cargando {
+    color: var(--color-info);
+}
+
+.visor-busqueda__estado--exito {
+    color: var(--color-success);
+}
+
+.visor-busqueda__estado--vacio,
+.visor-busqueda__estado--aviso {
+    color: var(--color-warning);
+}
+
+.visor-busqueda__estado--error {
+    color: var(--color-error);
+}
+
+/* Lista de resultados desplazable: acotada para no hacer inutilizable el mapa. */
+.visor-busqueda__resultados {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.visor-busqueda__resultado {
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+    font-size: 0.82rem;
+}
+
+.visor-busqueda__resultado-capa {
+    margin: 0 0 var(--space-1);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-accent-dark);
+}
+
+.visor-busqueda__resultado-titulo {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.visor-busqueda__resultado-subtitulo {
+    margin: 2px 0 0;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+}
+
+/* Rejilla clave/valor: cada fila se disuelve con `display: contents` para que
+   sus dt/dd entren directamente en la rejilla y las claves queden alineadas. */
+.visor-busqueda__meta {
+    margin: var(--space-2) 0 0;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline;
+    gap: 2px var(--space-3);
+    font-size: 0.78rem;
+}
+
+.visor-busqueda__meta-fila {
+    display: contents;
+}
+
+.visor-busqueda__meta-clave {
+    margin: 0;
+    color: var(--color-muted);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.visor-busqueda__meta-valor {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.visor-busqueda__accion {
+    margin-top: var(--space-2);
+}
+
+.visor-busqueda__ver {
+    min-height: 32px;
+    padding: 0 var(--space-3);
+    font-size: 0.82rem;
+}
+
+.visor-busqueda__fuera {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 999px;
+    background-color: var(--color-surface);
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.visor-busqueda__paginacion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+}
+
+.visor-busqueda__pagina-boton {
+    min-height: 34px;
+    padding: 0 var(--space-3);
+    font-size: 0.82rem;
+}
+
+.visor-busqueda__pagina-estado {
+    flex: 1 1 auto;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--color-muted);
+}
+
+/* Responsive propio de la búsqueda (complementa la sección siguiente). */
+@media (max-width: 480px) {
+    .visor-busqueda__acciones {
+        flex-direction: column;
+    }
+
+    .visor-busqueda__boton {
+        width: 100%;
+    }
+
+    .visor-busqueda__resultados {
+        max-height: 300px;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   12. Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+    .visor-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .visor-map {
+        height: 440px;
+        min-height: 420px;
+    }
+
+    .visor-leyenda__lista {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Cuatro controles: el apilado del conteo no necesita separación extra. */
+    .visor-panel__conteos {
+        gap: 0;
+    }
+}
+
 @media (max-width: 768px) {
-    .visor-shell { grid-template-columns: 1fr; }
-    .visor-map { min-height: 420px; }
+    .app-header__inner {
+        flex-wrap: wrap;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+    }
+
+    .app-nav {
+        order: 3;
+        width: 100%;
+    }
+
+    .app-main {
+        padding: var(--space-4);
+    }
+
+    .home-hero {
+        padding: var(--space-5);
+    }
+
+    .home-hero h1 {
+        font-size: 1.6rem;
+    }
+
+    h1 { font-size: 1.45rem; }
+}
+
+@media (max-width: 480px) {
+    .app-nav {
+        gap: var(--space-1);
+    }
+
+    .app-nav__link {
+        padding: var(--space-2);
+        font-size: 0.9rem;
+    }
+
+    .visor-map {
+        height: 420px;
+    }
+
+    .visor-panel__item {
+        flex-wrap: wrap;
+    }
+
+    .visor-badge {
+        margin-left: 0;
+    }
+
+    .visor-leyenda__lista {
+        grid-template-columns: 1fr;
+    }
 }

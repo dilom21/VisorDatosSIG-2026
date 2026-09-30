@@ -20,9 +20,10 @@ internal static class Program
         ApplicationConfiguration.Initialize();
 
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
-            .Build();
+        .SetBasePath(AppContext.BaseDirectory)
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+        .AddEnvironmentVariables()
+        .Build();
 
         var connectionString = configuration.GetConnectionString("VisorDatosSIG")
             ?? throw new InvalidOperationException("No se configuró ConnectionStrings:VisorDatosSIG.");

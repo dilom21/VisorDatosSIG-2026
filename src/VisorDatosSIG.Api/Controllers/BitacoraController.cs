@@ -34,7 +34,7 @@ public sealed class BitacoraController : ControllerBase
         [FromQuery] string? resultado = null,
         [FromQuery] bool excluirMigrador = true,
         CancellationToken cancellationToken = default)
-    {
+    {   // FILTRO PARA VER LOS MODULOS MENOS EL 4
         var moduloExcluido = excluirMigrador && string.IsNullOrWhiteSpace(modulo)
             ? ModulosSistema.MigradorDeDatosGeograficos
             : null;
