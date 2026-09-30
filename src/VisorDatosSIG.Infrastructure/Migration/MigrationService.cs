@@ -308,7 +308,7 @@ public sealed class MigrationService : IMigrationService
                 IdUsuario = idUsuario ?? 1,
                 FechaHora = DateTime.UtcNow,
                 Modulo = ModulosSistema.MigradorDeDatosGeograficos,
-                Accion = resultado.Mode == MigrationMode.Replace ? "MIGRACION_REPLACE" : "MIGRACION_APPEND",
+                Accion = "Gestionar Migración",
                 Entidad = resultado.DestinationTable,
                 Resultado = resultado.Status,
                 Detalle = detalle,
