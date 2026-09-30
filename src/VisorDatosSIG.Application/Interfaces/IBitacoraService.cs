@@ -19,7 +19,7 @@ public interface IBitacoraService
     Task<IReadOnlyList<BitacoraItemDto>> ObtenerHistorialAsync(int limite = 100, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Consulta los últimos registros de la bitácora filtrados por módulo.
+    /// Consulta los registros de la bitácora permitiendo filtrar por módulo a incluir y/o módulo a excluir.
     /// </summary>
-    Task<IReadOnlyList<BitacoraItemDto>> ObtenerHistorialAsync(string? modulo, int limite = 100, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<BitacoraItemDto>> ObtenerHistorialAsync(string? modulo, string? moduloExcluido, int limite = 100, CancellationToken cancellationToken = default);
 }

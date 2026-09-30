@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VisorDatosSIG.Application.Common;
 using VisorDatosSIG.Application.DTOs;
 using VisorDatosSIG.Application.Interfaces;
 
 namespace VisorDatosSIG.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
@@ -19,7 +22,8 @@ public sealed class BitacoraController : ControllerBase
     }
 
     /// <summary>
-    /// Consulta el historial de eventos y migraciones de la bitácora del sistema (CU07, CU30, CU34).
+    /// Consulta el historial de eventos de la bitácora del sistema Web (CU05 - Consultar Bitácora).
+    /// Por defecto excluye las operaciones técnicas del 'Migrador de Datos Geográficos'.
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<BitacoraItemDto>), StatusCodes.Status200OK)]
@@ -28,9 +32,14 @@ public sealed class BitacoraController : ControllerBase
         [FromQuery] string? modulo = null,
         [FromQuery] string? tabla = null,
         [FromQuery] string? resultado = null,
+        [FromQuery] bool excluirMigrador = true,
         CancellationToken cancellationToken = default)
     {
-        var items = await _bitacoraService.ObtenerHistorialAsync(limite, cancellationToken);
+        var moduloExcluido = excluirMigrador && string.IsNullOrWhiteSpace(modulo)
+            ? ModulosSistema.MigradorDeDatosGeograficos
+            : null;
+
+        var items = await _bitacoraService.ObtenerHistorialAsync(modulo, moduloExcluido, limite, cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(modulo))
         {

@@ -58,9 +58,9 @@ public sealed class BitacoraService : IBitacoraService
     }
 
     public Task<IReadOnlyList<BitacoraItemDto>> ObtenerHistorialAsync(int limite = 100, CancellationToken cancellationToken = default) =>
-        ObtenerHistorialAsync(modulo: null, limite, cancellationToken);
+        ObtenerHistorialAsync(modulo: null, moduloExcluido: null, limite, cancellationToken);
 
-    public async Task<IReadOnlyList<BitacoraItemDto>> ObtenerHistorialAsync(string? modulo, int limite = 100, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<BitacoraItemDto>> ObtenerHistorialAsync(string? modulo, string? moduloExcluido, int limite = 100, CancellationToken cancellationToken = default)
     {
         var lista = new List<BitacoraItemDto>();
         try
@@ -75,6 +75,7 @@ public sealed class BitacoraService : IBitacoraService
                         IdBitacora, IdUsuario, FechaHora, Modulo, Accion, Entidad, IdEntidad, Resultado, Detalle, IP
                     FROM dbo.Bitacora
                     WHERE (@Modulo IS NULL OR Modulo = @Modulo OR (@Modulo = 'Migrador de Datos Geográficos' AND Modulo = 'MIGRADOR'))
+                      AND (@ModuloExcluido IS NULL OR (Modulo <> @ModuloExcluido AND Modulo <> 'MIGRADOR'))
                     ORDER BY FechaHora DESC;
                 END
                 """;
@@ -82,6 +83,7 @@ public sealed class BitacoraService : IBitacoraService
             await using var command = new SqlCommand(sql, connection);
             command.Parameters.Add(new SqlParameter("@Limite", SqlDbType.Int) { Value = limite });
             command.Parameters.Add(new SqlParameter("@Modulo", SqlDbType.NVarChar, 100) { Value = (object?)modulo ?? DBNull.Value });
+            command.Parameters.Add(new SqlParameter("@ModuloExcluido", SqlDbType.NVarChar, 100) { Value = (object?)moduloExcluido ?? DBNull.Value });
 
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))

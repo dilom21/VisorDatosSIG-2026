@@ -245,7 +245,7 @@ public sealed partial class MigradorForm : Form
         {
             _btnRefrescarBitacora.Enabled = false;
             _lblResumenBitacora.Text = "Consultando dbo.Bitacora...";
-            var historial = await _bitacoraService.ObtenerHistorialAsync(ModulosSistema.MigradorDeDatosGeograficos, 100);
+            var historial = await _bitacoraService.ObtenerHistorialAsync(ModulosSistema.MigradorDeDatosGeograficos, moduloExcluido: null, limite: 100);
             _historialBitacora = historial;
 
             var total = historial.Count;
