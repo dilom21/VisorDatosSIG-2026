@@ -8,3 +8,4 @@ Plan, casos, resultados, incidencias, seguridad y rendimiento.
 - [P-FE-03 — Códigos Fijos reales en el visor](P-FE-03_CodigosFijos.md)
 - [P-FE-04 — Capas vectoriales reales en el visor](P-FE-04_Capas_Vectoriales.md)
 - [P-FE-05 — Identificación de elementos geográficos](P-FE-05_Identificacion.md)
+- [P-FE-06 — Búsqueda catastral real](P-FE-06_Busqueda.md)
