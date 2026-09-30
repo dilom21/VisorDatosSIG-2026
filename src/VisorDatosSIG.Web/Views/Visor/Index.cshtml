@@ -8,7 +8,7 @@
     <aside class="visor-panel">
         <div class="visor-panel__head">
             <h2>Capas</h2>
-            <p>Contenido previsto para las siguientes fases del visor.</p>
+            <p>Una capa disponible con datos reales; el resto continúa previsto para fases posteriores.</p>
         </div>
 
         @* Zona de aviso del guard: recibe su texto por textContent, por lo que no
@@ -16,15 +16,23 @@
         <p id="visor-aviso" class="visor-aviso" role="status" hidden></p>
 
         <ul class="visor-panel__lista">
-            <li class="visor-panel__item">Manzanas</li>
-            <li class="visor-panel__item">Lotes</li>
-            <li class="visor-panel__item">Códigos Fijos</li>
-            <li class="visor-panel__item">Vías</li>
+            <li class="visor-panel__item">Manzanas<span class="visor-badge visor-badge--pendiente">Pendiente</span></li>
+            <li class="visor-panel__item">Lotes<span class="visor-badge visor-badge--pendiente">Pendiente</span></li>
+            <li class="visor-panel__item">
+                <label class="visor-capa" for="capa-codigos-fijos">
+                    <input type="checkbox" id="capa-codigos-fijos" checked />
+                    <span class="visor-capa__nombre">Códigos Fijos</span>
+                </label>
+                <span id="estado-codigos-fijos" class="visor-badge visor-badge--activa">Cargando...</span>
+            </li>
+            <li class="visor-panel__item">Vías<span class="visor-badge visor-badge--pendiente">Pendiente</span></li>
         </ul>
 
+        <p id="conteo-codigos-fijos" class="visor-panel__conteo" role="status" aria-live="polite"></p>
+        <div id="leyenda-codigos-fijos" class="visor-leyenda" hidden></div>
+
         <p class="visor-panel__nota">
-            Las capas aún no están disponibles en la Web; el mapa muestra únicamente
-            el mapa base de OpenStreetMap.
+            Códigos Fijos ya consume información geográfica real desde la base de datos a través de la API. Manzanas, Lotes y Vías siguen pendientes.
         </p>
     </aside>
     <div id="map" class="visor-map" aria-label="Mapa del VisorDatosSIG"></div>

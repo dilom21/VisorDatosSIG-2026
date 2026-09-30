@@ -43,6 +43,14 @@
     --color-info-bg: #eaf2fa;
     --color-info-border: #c3d9ee;
 
+    /* Estados de Código Fijo (FE-SIG 2). */
+    --estado-normal: #1a6a3a;
+    --estado-para-corte: #c98a00;
+    --estado-cortado: #a4231c;
+    --estado-baja-parcial: #c2571a;
+    --estado-baja-total: #4b5563;
+    --estado-desconocido: #5a6b7d;
+
     /* Radios. */
     --radius-sm: 6px;
     --radius-md: 10px;
@@ -540,7 +548,167 @@ body.sesion-verificando .visor-map {
 }
 
 /* -----------------------------------------------------------------------------
-   8. Página de inicio
+   8. Capas del visor (FE-SIG 2)
+   Control de capa, badges de estado, conteo, leyenda y popup de Códigos Fijos.
+   -------------------------------------------------------------------------- */
+
+.visor-capa {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.visor-capa__nombre {
+    font-weight: 600;
+}
+
+#capa-codigos-fijos {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+}
+
+.visor-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.visor-badge--activa {
+    color: var(--color-success);
+    background-color: var(--color-success-bg);
+    border-color: var(--color-success);
+}
+
+.visor-badge--cargando {
+    color: var(--color-info);
+    background-color: var(--color-info-bg);
+    border-color: var(--color-info-border);
+}
+
+.visor-badge--pendiente {
+    color: var(--color-muted);
+    background-color: var(--color-surface-alt);
+    border-color: var(--color-border);
+}
+
+.visor-badge--inactiva {
+    color: var(--color-muted);
+    background-color: var(--color-surface-alt);
+    border-color: var(--color-border-strong);
+}
+
+.visor-badge--vacia {
+    color: var(--color-warning);
+    background-color: var(--color-warning-bg);
+    border-color: var(--color-warning-border);
+}
+
+.visor-badge--error {
+    color: var(--color-error);
+    background-color: var(--color-error-bg);
+    border-color: var(--color-error-border);
+}
+
+.visor-panel__conteo {
+    margin: var(--space-2) 0 0;
+    font-size: 0.8rem;
+    color: var(--color-muted);
+    min-height: 1.2em;
+}
+
+.visor-leyenda {
+    margin-top: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+}
+
+.visor-leyenda__titulo {
+    margin: 0 0 var(--space-2);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+}
+
+.visor-leyenda__lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+}
+
+.visor-leyenda__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.8rem;
+    color: var(--color-text);
+}
+
+.visor-leyenda__swatch {
+    flex: 0 0 auto;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+/* Popup de un Código Fijo (Leaflet lo renderiza dentro de .leaflet-popup-content). */
+.visor-popup {
+    min-width: 220px;
+    font-size: 0.82rem;
+    color: var(--color-text);
+}
+
+/* La lista es la rejilla clave/valor y cada fila se disuelve con
+   `display: contents` para que sus dt/dd entren directamente en esa rejilla.
+   Asi las claves y los valores quedan alineados entre todas las filas. */
+.visor-popup__lista {
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline;
+    gap: 2px var(--space-3);
+}
+
+.visor-popup__fila {
+    display: contents;
+}
+
+/* max-content en la columna de claves: evita que "Código fijo" o "ID interno"
+   se partan en dos lineas cuando el valor de otra fila es largo. */
+.visor-popup__clave {
+    margin: 0;
+    color: var(--color-muted);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.visor-popup__valor {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+/* -----------------------------------------------------------------------------
+   9. Página de inicio
    -------------------------------------------------------------------------- */
 .home-hero {
     padding: var(--space-6);
@@ -659,7 +827,7 @@ body.sesion-verificando .visor-map {
 }
 
 /* -----------------------------------------------------------------------------
-   9. Responsive
+   10. Responsive
    -------------------------------------------------------------------------- */
 @media (max-width: 900px) {
     .visor-shell {
@@ -669,6 +837,10 @@ body.sesion-verificando .visor-map {
     .visor-map {
         height: 440px;
         min-height: 420px;
+    }
+
+    .visor-leyenda__lista {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -711,5 +883,13 @@ body.sesion-verificando .visor-map {
 
     .visor-map {
         height: 420px;
+    }
+
+    .visor-panel__item {
+        flex-wrap: wrap;
+    }
+
+    .visor-badge {
+        margin-left: 0;
     }
 }
