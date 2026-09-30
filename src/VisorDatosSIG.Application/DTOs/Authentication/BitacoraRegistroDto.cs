@@ -1,3 +1,5 @@
+using VisorDatosSIG.Application.Common;
+
 namespace VisorDatosSIG.Application.DTOs.Authentication;
 
 /// <summary>
@@ -5,14 +7,14 @@ namespace VisorDatosSIG.Application.DTOs.Authentication;
 /// </summary>
 public static class BitacoraEventos
 {
-    /// <summary>Módulo de autenticación.</summary>
-    public const string ModuloAutenticacion = "AUTENTICACION";
+    /// <summary>Módulo oficial: Usuarios y Seguridad.</summary>
+    public const string ModuloAutenticacion = ModulosSistema.UsuariosYSeguridad;
 
-    /// <summary>Acción de inicio de sesión.</summary>
-    public const string AccionInicioSesion = "INICIO_SESION";
+    /// <summary>Acción de inicio de sesión (CU01 - Gestionar Acceso al Sistema).</summary>
+    public const string AccionInicioSesion = "Inicio de Sesión";
 
-    /// <summary>Acción de cierre de sesión.</summary>
-    public const string AccionCierreSesion = "CIERRE_SESION";
+    /// <summary>Acción de cierre de sesión (CU01 - Gestionar Acceso al Sistema).</summary>
+    public const string AccionCierreSesion = "Cierre de Sesión";
 
     /// <summary>Resultado exitoso.</summary>
     public const string ResultadoExitoso = "EXITOSO";

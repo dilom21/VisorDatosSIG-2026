@@ -17,4 +17,9 @@ public interface IBitacoraService
     /// Consulta los últimos registros de la bitácora ordenados del más reciente al más antiguo.
     /// </summary>
     Task<IReadOnlyList<BitacoraItemDto>> ObtenerHistorialAsync(int limite = 100, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Consulta los últimos registros de la bitácora filtrados por módulo.
+    /// </summary>
+    Task<IReadOnlyList<BitacoraItemDto>> ObtenerHistorialAsync(string? modulo, int limite = 100, CancellationToken cancellationToken = default);
 }

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using VisorDatosSIG.Application.Common;
 using VisorDatosSIG.Application.DTOs;
 using VisorDatosSIG.Application.Interfaces;
 using VisorDatosSIG.Infrastructure.Persistence;
@@ -72,7 +73,7 @@ public sealed class MigrationService : IMigrationService
                     warnings,
                     errors);
 
-                await RegistrarBitacoraAsync(failure, options.ShapefilePath);
+                await RegistrarBitacoraAsync(failure, options.ShapefilePath, options.IdUsuario);
                 return failure;
             }
 
@@ -230,7 +231,7 @@ public sealed class MigrationService : IMigrationService
                 Errors = errors
             };
 
-            await RegistrarBitacoraAsync(result, options.ShapefilePath);
+            await RegistrarBitacoraAsync(result, options.ShapefilePath, options.IdUsuario);
             return result;
         }
         catch (OperationCanceledException)
@@ -252,7 +253,7 @@ public sealed class MigrationService : IMigrationService
                 Errors = ["La migración fue cancelada. La transacción fue revertida."]
             };
 
-            await RegistrarBitacoraAsync(cancelResult, options.ShapefilePath);
+            await RegistrarBitacoraAsync(cancelResult, options.ShapefilePath, options.IdUsuario);
             return cancelResult;
         }
         catch (Exception exception)
@@ -273,12 +274,12 @@ public sealed class MigrationService : IMigrationService
                 omittedRecords,
                 failedRecords);
 
-            await RegistrarBitacoraAsync(errorResult, options.ShapefilePath);
+            await RegistrarBitacoraAsync(errorResult, options.ShapefilePath, options.IdUsuario);
             return errorResult;
         }
     }
 
-    private async Task RegistrarBitacoraAsync(MigrationResult resultado, string rutaArchivo)
+    private async Task RegistrarBitacoraAsync(MigrationResult resultado, string rutaArchivo, int? idUsuario = null)
     {
         if (_bitacoraService is null)
         {
@@ -304,9 +305,9 @@ public sealed class MigrationService : IMigrationService
 
             await _bitacoraService.RegistrarAsync(new BitacoraEntryDto
             {
-                IdUsuario = 1,
+                IdUsuario = idUsuario ?? 1,
                 FechaHora = DateTime.UtcNow,
-                Modulo = "MIGRADOR",
+                Modulo = ModulosSistema.MigradorDeDatosGeograficos,
                 Accion = resultado.Mode == MigrationMode.Replace ? "MIGRACION_REPLACE" : "MIGRACION_APPEND",
                 Entidad = resultado.DestinationTable,
                 Resultado = resultado.Status,

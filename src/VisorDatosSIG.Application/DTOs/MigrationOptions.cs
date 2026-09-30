@@ -6,4 +6,5 @@ public sealed class MigrationOptions
     public required ShapefileLayer Layer { get; init; }
     public required MigrationMode Mode { get; init; }
     public int BatchSize { get; init; } = 500;
+    public int? IdUsuario { get; init; } = 1;
 }

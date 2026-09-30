@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Windows.Forms;
+using VisorDatosSIG.Application.Common;
 using VisorDatosSIG.Application.DTOs;
 using VisorDatosSIG.Application.Interfaces;
 using VisorDatosSIG.Infrastructure.Migration;
@@ -244,7 +245,7 @@ public sealed partial class MigradorForm : Form
         {
             _btnRefrescarBitacora.Enabled = false;
             _lblResumenBitacora.Text = "Consultando dbo.Bitacora...";
-            var historial = await _bitacoraService.ObtenerHistorialAsync(100);
+            var historial = await _bitacoraService.ObtenerHistorialAsync(ModulosSistema.MigradorDeDatosGeograficos, 100);
             _historialBitacora = historial;
 
             var total = historial.Count;
@@ -517,7 +518,8 @@ public sealed partial class MigradorForm : Form
                     ShapefilePath = info.FilePath,
                     Layer = info.Layer,
                     Mode = mode,
-                    BatchSize = _batchSize
+                    BatchSize = _batchSize,
+                    IdUsuario = _sesion.IdUsuario ?? 1
                 },
                 progress,
                 _cancelacionMigracion.Token);

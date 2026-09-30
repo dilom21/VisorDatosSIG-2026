@@ -39,11 +39,11 @@ public sealed class BitacoraService : IBitacoraService
             await using var command = new SqlCommand(sql, connection);
             command.Parameters.Add(new SqlParameter("@IdUsuario", SqlDbType.Int) { Value = (object?)entrada.IdUsuario ?? DBNull.Value });
             command.Parameters.Add(new SqlParameter("@FechaHora", SqlDbType.DateTime2) { Value = entrada.FechaHora });
-            command.Parameters.Add(new SqlParameter("@Modulo", SqlDbType.NVarChar, 50) { Value = entrada.Modulo });
-            command.Parameters.Add(new SqlParameter("@Accion", SqlDbType.NVarChar, 100) { Value = entrada.Accion });
-            command.Parameters.Add(new SqlParameter("@Entidad", SqlDbType.NVarChar, 100) { Value = entrada.Entidad });
+            command.Parameters.Add(new SqlParameter("@Modulo", SqlDbType.NVarChar, 100) { Value = entrada.Modulo });
+            command.Parameters.Add(new SqlParameter("@Accion", SqlDbType.NVarChar, 200) { Value = entrada.Accion });
+            command.Parameters.Add(new SqlParameter("@Entidad", SqlDbType.NVarChar, 200) { Value = entrada.Entidad });
             command.Parameters.Add(new SqlParameter("@IdEntidad", SqlDbType.BigInt) { Value = (object?)entrada.IdEntidad ?? DBNull.Value });
-            command.Parameters.Add(new SqlParameter("@Resultado", SqlDbType.NVarChar, 30) { Value = entrada.Resultado });
+            command.Parameters.Add(new SqlParameter("@Resultado", SqlDbType.NVarChar, 60) { Value = entrada.Resultado });
             command.Parameters.Add(new SqlParameter("@Detalle", SqlDbType.NVarChar, -1) { Value = entrada.Detalle });
             command.Parameters.Add(new SqlParameter("@IP", SqlDbType.VarChar, 45) { Value = (object?)entrada.IP ?? Environment.MachineName });
 
@@ -57,7 +57,10 @@ public sealed class BitacoraService : IBitacoraService
         }
     }
 
-    public async Task<IReadOnlyList<BitacoraItemDto>> ObtenerHistorialAsync(int limite = 100, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<BitacoraItemDto>> ObtenerHistorialAsync(int limite = 100, CancellationToken cancellationToken = default) =>
+        ObtenerHistorialAsync(modulo: null, limite, cancellationToken);
+
+    public async Task<IReadOnlyList<BitacoraItemDto>> ObtenerHistorialAsync(string? modulo, int limite = 100, CancellationToken cancellationToken = default)
     {
         var lista = new List<BitacoraItemDto>();
         try
@@ -71,12 +74,14 @@ public sealed class BitacoraService : IBitacoraService
                     SELECT TOP (@Limite)
                         IdBitacora, IdUsuario, FechaHora, Modulo, Accion, Entidad, IdEntidad, Resultado, Detalle, IP
                     FROM dbo.Bitacora
+                    WHERE (@Modulo IS NULL OR Modulo = @Modulo OR (@Modulo = 'Migrador de Datos Geográficos' AND Modulo = 'MIGRADOR'))
                     ORDER BY FechaHora DESC;
                 END
                 """;
 
             await using var command = new SqlCommand(sql, connection);
             command.Parameters.Add(new SqlParameter("@Limite", SqlDbType.Int) { Value = limite });
+            command.Parameters.Add(new SqlParameter("@Modulo", SqlDbType.NVarChar, 100) { Value = (object?)modulo ?? DBNull.Value });
 
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))
