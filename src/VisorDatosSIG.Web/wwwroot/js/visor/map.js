@@ -161,6 +161,10 @@ window.VisorSIG = window.VisorSIG || {};
             window.addEventListener('resize', refrescarTamano);
             ns._resizeEnlazado = true;
         }
+        if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(refrescarTamano);
+        }
+        setTimeout(refrescarTamano, 250);
     }
 
     if (document.readyState === 'loading') {

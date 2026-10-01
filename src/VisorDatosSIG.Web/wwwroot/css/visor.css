@@ -12,36 +12,37 @@
    1. Tokens de diseño
    -------------------------------------------------------------------------- */
 :root {
-    /* Marca: azul profundo como color principal, teal SIG como acento. */
-    --color-primary: #0d3b66;
-    --color-primary-dark: #092b4c;
-    --color-primary-soft: #e8eff6;
-    --color-accent: #0f8f83;
-    --color-accent-dark: #0b6f66;
+    /* Marca: verde bosque editorial como primario, terracota cálido como acento. */
+    --color-primary: #183d37;
+    --color-primary-dark: #102e2a;
+    --color-primary-soft: #e5eeea;
+    --color-accent: #cf8057;
+    --color-accent-dark: #b66a42;
+    --color-accent-soft: #f7ebe4;
 
-    /* Superficies y fondos. */
-    --color-background: #f4f6f9;
+    /* Superficies y fondos: tonos cálidos y editoriales de Santa Cruz */
+    --color-background: #f4efe6;
     --color-surface: #ffffff;
-    --color-surface-alt: #f8fafc;
+    --color-surface-alt: #faf7f2;
 
-    /* Texto. */
-    --color-text: #17293d;
-    --color-muted: #5a6b7d;
-    --color-border: #dce3ea;
-    --color-border-strong: #c6d0da;
+    /* Texto y bordes. */
+    --color-text: #1d332d;
+    --color-muted: #5e7069;
+    --color-border: #dedfd8;
+    --color-border-strong: #c8cecb;
 
     /* Estados accesibles (texto sobre fondo). */
     --color-error: #a4231c;
     --color-error-bg: #fdeceb;
     --color-error-border: #f3c4c0;
-    --color-warning: #7a5600;
-    --color-warning-bg: #fff6e0;
-    --color-warning-border: #f0d99a;
-    --color-success: #1a6a3a;
-    --color-success-bg: #e9f5ee;
-    --color-info: #1b5c94;
-    --color-info-bg: #eaf2fa;
-    --color-info-border: #c3d9ee;
+    --color-warning: #875c00;
+    --color-warning-bg: #fef7e6;
+    --color-warning-border: #f3dfae;
+    --color-success: #18523c;
+    --color-success-bg: #e2f0e9;
+    --color-info: #1a5675;
+    --color-info-bg: #e5f2f7;
+    --color-info-border: #bcd9e5;
 
     /* Estados de Código Fijo (FE-SIG 2). */
     --estado-normal: #1a6a3a;
@@ -52,11 +53,11 @@
     --estado-desconocido: #5a6b7d;
 
     /* Capas vectoriales (FE-SIG 3). */
-    --capa-manzanas-stroke: #8a6d3b;
-    --capa-manzanas-fill: #d9c9a8;
-    --capa-lotes-stroke: #5a6b7d;
-    --capa-lotes-fill: #c6d0da;
-    --capa-vias-stroke: #b4451f;
+    --capa-manzanas-stroke: #5d7867;
+    --capa-manzanas-fill: #dbebe2;
+    --capa-lotes-stroke: #3f6c88;
+    --capa-lotes-fill: #d5e6f0;
+    --capa-vias-stroke: #cf8057;
 
     /* Radios. */
     --radius-sm: 6px;
@@ -210,9 +211,15 @@ a:hover {
     width: 38px;
     height: 38px;
     border-radius: var(--radius-md);
-    background: linear-gradient(150deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    background: transparent;
     color: #fff;
-    box-shadow: var(--shadow-sm);
+}
+
+.brand__logo-img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    display: block;
 }
 
 .brand__mark svg {
@@ -459,20 +466,65 @@ a:hover {
 /* -----------------------------------------------------------------------------
    7. Visor cartográfico
    -------------------------------------------------------------------------- */
+body.visor-page,
+body:has(.visor-shell) {
+    overflow: hidden;
+}
+
+body.visor-page .app-header,
+body:has(.visor-shell) .app-header {
+    border-bottom: 1px solid var(--color-border);
+}
+
+body.visor-page .app-header__inner,
+body:has(.visor-shell) .app-header__inner {
+    max-width: 100%;
+    padding: var(--space-2) var(--space-4);
+}
+
+.app-main--full,
+.app-main:has(.visor-shell) {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 .visor-shell {
     display: grid;
-    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
-    gap: var(--space-4);
-    align-items: start;
+    grid-template-columns: 360px 1fr;
+    gap: 0;
+    width: 100%;
+    height: calc(100vh - var(--header-height));
+    align-items: stretch;
+    background-color: var(--color-background);
 }
 
 .visor-panel {
     min-width: 0;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--space-4);
     background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    border: none;
+    border-right: 1px solid var(--color-border);
+    border-radius: 0;
+    box-shadow: 2px 0 10px rgba(15, 40, 64, 0.04);
+    z-index: 10;
+}
+
+.visor-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.visor-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.visor-panel::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-strong);
+    border-radius: 3px;
 }
 
 .visor-panel__head {
@@ -529,23 +581,17 @@ a:hover {
     color: var(--color-muted);
 }
 
-/* Contenedor de Leaflet: sin padding y con altura explícita. */
+/* Contenedor de Leaflet: punta a punta (edge-to-edge), altura completa */
 .visor-map {
     min-width: 0;
-    height: 560px;
-    min-height: 420px;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     background-color: #e9eef3;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
     overflow: hidden;
-}
-
-@media (min-width: 900px) {
-    .visor-map {
-        height: calc(100vh - var(--header-height) - 6rem);
-        min-height: 480px;
-    }
 }
 
 /* Fail-closed: mientras no se valide la sesión, el mapa no es utilizable. */
@@ -1330,12 +1376,27 @@ body.sesion-verificando .visor-map {
    12. Responsive
    -------------------------------------------------------------------------- */
 @media (max-width: 900px) {
+    body.visor-page,
+    body:has(.visor-shell) {
+        overflow: auto;
+    }
+
     .visor-shell {
         grid-template-columns: 1fr;
+        height: auto;
+        min-height: calc(100vh - var(--header-height));
+    }
+
+    .visor-panel {
+        height: auto;
+        max-height: 480px;
+        overflow-y: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
     }
 
     .visor-map {
-        height: 440px;
+        height: 60vh;
         min-height: 420px;
     }
 

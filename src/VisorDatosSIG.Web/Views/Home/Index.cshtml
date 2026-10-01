@@ -7,46 +7,39 @@
 }
 
 <div class="home-v4" id="inicio">
-    @* 1. Hero Principal *@
-    <section class="hero">
+    <section class="hero" aria-labelledby="hero-title">
         <div class="hero-wrap">
             <div class="hero-copy">
-                <div class="eyebrow">Inicio público • VisorDatosSIG 2026</div>
-                <h1>Plataforma <span class="accent">Geoespacial</span><br>Inteligente</h1>
-                <p>
-                    Un entorno digital pensado para presentar, explorar y comprender el territorio de forma clara,
-                    visual y estratégica. Esta portada pública muestra la propuesta geoespacial del proyecto sin exponer
-                    la parte interna del sistema, manteniendo una experiencia elegante, institucional y orientada a la toma de decisiones.
+                <div class="eyebrow">Inicio público para invitados y clientes</div>
+                <h1 id="hero-title">Plataforma <span class="accent">Geoespacial</span><br />Inteligente</h1>
+                <p class="hero-lead">
+                    Explora, consulta y comprende la información geográfica de Santa Cruz desde una plataforma
+                    clara, visual y preparada para transformar datos territoriales en mejores decisiones.
                 </p>
 
-                <div class="hero-badges">
+                <div class="hero-badges" aria-label="Características principales">
                     <span>Web y móvil</span>
                     <span>Cartografía inteligente</span>
                     <span>Capas vectoriales integradas</span>
                     <span>Visualización territorial</span>
                 </div>
 
-                @* Acciones de sesión integradas con guard.js *@
                 <div class="hero-actions">
                     <div data-sesion-anonimo>
                         <a class="btn btn-primary" asp-controller="Cuenta" asp-action="Login">
                             <span>Acceder a la plataforma</span>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                <polyline points="12 5 19 12 12 19"></polyline>
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M5 12h14M13 6l6 6-6 6" />
                             </svg>
                         </a>
                     </div>
 
                     <div data-sesion-bloque hidden>
-                        <p class="hero-saludo">
-                            Sesión iniciada como: <strong data-sesion-nombre></strong>
-                        </p>
+                        <p class="hero-saludo">Sesión iniciada como: <strong data-sesion-nombre></strong></p>
                         <a class="btn btn-primary" asp-controller="Visor" asp-action="Index">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-                                <line x1="8" y1="2" x2="8" y2="18"></line>
-                                <line x1="16" y1="6" x2="16" y2="22"></line>
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" />
+                                <path d="M9 3v15M15 6v15" />
                             </svg>
                             <span>Abrir visor cartográfico</span>
                         </a>
@@ -59,148 +52,144 @@
                 <div class="hero-metrics">
                     <article class="metric">
                         <strong>4</strong>
-                        <span>capas vectoriales integradas para consulta y análisis.</span>
+                        <span>capas vectoriales listas para consultar y analizar.</span>
                     </article>
                     <article class="metric">
                         <strong>24/7</strong>
-                        <span>disponibilidad de acceso desde navegador en escritorio, tablet y móvil.</span>
+                        <span>acceso desde escritorio, tablet o dispositivo móvil.</span>
                     </article>
                     <article class="metric">
                         <strong>1</strong>
-                        <span>visión unificada del territorio para invitados, clientes y actores clave.</span>
+                        <span>visión integrada para comprender mejor el territorio.</span>
                     </article>
                 </div>
             </div>
 
-            <div class="hero-visual">
-                <div class="visual-card">
-                    <img src="~/images/scz-hero-clean.png" alt="Visual cartográfica principal de Santa Cruz de la Sierra" />
-                </div>
-                <div class="visual-note">
-                    <strong>Visual principal</strong>
-                    <span>Mapa editorial limpio inspirado en Santa Cruz de la Sierra, con centralidades, conectividad y estructura urbana.</span>
-                </div>
-            </div>
+            <figure class="hero-visual">
+                <img src="~/images/scrz-solo.png"
+                     alt="Representación cartográfica de Santa Cruz de la Sierra organizada por capas" />
+                <figcaption>Santa Cruz de la Sierra · información organizada por capas</figcaption>
+            </figure>
         </div>
     </section>
 
-    @* 2. Sección Visión *@
-    <section class="section" id="vision">
+    <section class="section" id="vision" aria-labelledby="vision-title">
         <div class="section-header">
             <div>
-                <div class="eyebrow">Visión del producto</div>
-                <h2>Una portada pública con lenguaje geoespacial</h2>
+                <div class="eyebrow">Visión territorial</div>
+                <h2 id="vision-title">Del país a la ciudad, sin perder el contexto</h2>
             </div>
             <p>
-                Se eliminó la lógica de panel interno, el antiguo login y el menú lateral de módulos para convertir la experiencia
-                en una página de inicio institucional, más apropiada para invitados, clientes y usuarios no autenticados.
+                VisorDatosSIG conecta la escala nacional con el detalle urbano para presentar la información
+                geográfica de manera ordenada, comprensible y útil.
             </p>
         </div>
 
-        <div class="grid-2">
-            <article class="card">
+        <div class="grid-2 vision-grid">
+            <article class="card card--content">
                 <div class="card-body">
-                    <h3>Qué comunica esta portada</h3>
+                    <span class="section-number">01 · Una lectura más clara</span>
+                    <h3>Información territorial que se entiende</h3>
                     <p>
-                        La página está diseñada para presentar el valor del sistema: organización territorial, integración de datos, cartografía urbana,
-                        análisis espacial y acceso multiplataforma. La composición visual pone el foco en la información y no en controles internos de operación.
+                        La plataforma reúne organización territorial, cartografía urbana y análisis espacial
+                        en una experiencia pensada tanto para especialistas como para nuevos usuarios.
                     </p>
                     <div class="mini-features">
                         <div>
-                            <strong>Sin panel interno</strong>
-                            <span>No se muestran módulos operativos como Principal, Mi perfil, Servicios o Filtros.</span>
+                            <strong>Lectura simple</strong>
+                            <span>Datos complejos presentados con una jerarquía visual clara.</span>
                         </div>
                         <div>
-                            <strong>Paleta editorial</strong>
-                            <span>Se adoptan tonos beige, terracota, salvia y azul suave en coherencia con las nuevas imágenes.</span>
+                            <strong>Escala conectada</strong>
+                            <span>Del contexto general al detalle de cada elemento urbano.</span>
                         </div>
                         <div>
-                            <strong>Imagen protagonista</strong>
-                            <span>El visual principal aparece junto al título para reforzar el carácter geoespacial desde el primer vistazo.</span>
+                            <strong>Consulta visual</strong>
+                            <span>La información se descubre directamente sobre el mapa.</span>
                         </div>
                         <div>
-                            <strong>Experiencia pública</strong>
-                            <span>Lenguaje claro, institucional y listo para mostrar el proyecto a terceros.</span>
+                            <strong>Acceso flexible</strong>
+                            <span>Una experiencia consistente en escritorio, tablet y móvil.</span>
                         </div>
                     </div>
                 </div>
             </article>
 
-            <article class="card">
+            <article class="card card--territory">
                 <div class="card-img">
-                    <img src="~/images/bolivia-scz-clean.png" alt="Conexión territorial entre Bolivia y Santa Cruz de la Sierra" />
+                    <img src="~/images/bolivia-scrz.png"
+                         alt="Mapa de Bolivia conectado con la cartografía urbana de Santa Cruz" />
                 </div>
                 <div class="card-body">
-                    <h3>Lectura territorial ampliada</h3>
+                    <span class="section-number">02 · Escala territorial</span>
+                    <h3>Bolivia y Santa Cruz en una misma narrativa</h3>
                     <p>
-                        La portada también puede mostrar la relación entre la escala país y la escala ciudad, conectando la visión nacional con el
-                        enfoque urbano de Santa Cruz de la Sierra. Esto ayuda a presentar el proyecto con una narrativa más estratégica y comprensible.
+                        Una transición visual que ubica la ciudad dentro del país y acerca la lectura hasta su
+                        estructura urbana, sus redes y sus unidades catastrales.
                     </p>
                 </div>
             </article>
         </div>
     </section>
 
-    @* 3. Sección Capas Vectoriales *@
-    <section class="section" id="capas">
+    <section class="section" id="capas" aria-labelledby="layers-title">
         <div class="section-header">
             <div>
                 <div class="eyebrow">Capas vectoriales integradas</div>
-                <h2>Base geográfica organizada para visualización y análisis</h2>
+                <h2 id="layers-title">Cada capa revela una parte del territorio</h2>
             </div>
             <p>
-                La información territorial se puede presentar por niveles temáticos que permiten comprender la ciudad, sus unidades espaciales,
-                sus redes y sus puntos de interés, manteniendo una experiencia visual coherente y fácil de interpretar.
+                Activa la información que necesitas y construye una lectura precisa de la ciudad sin perder
+                claridad en el mapa.
             </p>
         </div>
 
-        <article class="card">
-            <div class="grid-2" style="gap:0; align-items:stretch;">
-                <div class="card-img" style="aspect-ratio:auto; min-height:100%;">
-                    <img src="~/images/scz-layers-clean.png" alt="Ilustración limpia de capas GIS integradas" />
-                </div>
-                <div class="card-body" style="display:flex; flex-direction:column; justify-content:center;">
-                    <h3>Lectura por capas y estructura GIS</h3>
-                    <p>
-                        La visual narrativa del sistema se apoya en una lógica de capas: manzanas, lotes, vías y códigos fijos. Esto permite explicar
-                        de forma intuitiva cómo se construye el modelo espacial y cómo se habilitan consultas, análisis y futuras visualizaciones.
-                    </p>
-                    <div class="layers">
-                        <div class="layer-item">
-                            <div class="layer-dot" style="background:#d38a6c"></div>
-                            <h4>Manzanas</h4>
-                            <p>Unidades base del tejido urbano para lectura morfológica y análisis territorial.</p>
-                        </div>
-                        <div class="layer-item">
-                            <div class="layer-dot" style="background:#d8bc7a"></div>
-                            <h4>Lotes</h4>
-                            <p>División predial y detalle parcelario para una visión más fina de la ciudad.</p>
-                        </div>
-                        <div class="layer-item">
-                            <div class="layer-dot" style="background:#78a3ba"></div>
-                            <h4>Vías</h4>
-                            <p>Red de conectividad, jerarquías viales, accesos urbanos y estructura de movilidad.</p>
-                        </div>
-                        <div class="layer-item">
-                            <div class="layer-dot" style="background:#8fa17c"></div>
-                            <h4>Códigos fijos</h4>
-                            <p>Puntos de interés, equipamientos y servicios que enriquecen la consulta geográfica.</p>
-                        </div>
-                    </div>
-                </div>
+        <div class="layers-panel">
+            <div class="layers-panel__intro">
+                <span class="section-number">03 · Estructura cartográfica multicapa</span>
+                <h3>Cuatro niveles integrados para explorar Santa Cruz</h3>
+                <p>
+                    El modelo espacial del sistema se fundamenta en cuatro capas vectoriales normalizadas: delimitación física, división predial, conectividad vial y acometidas de servicio. Cada nivel opera de forma autónoma o superpuesta para un diagnóstico territorial preciso.
+                </p>
             </div>
-        </article>
+            <div class="layers">
+                <article class="layer-item layer-item--green">
+                    <div class="layer-dot" aria-hidden="true"></div>
+                    <span>01 · Polígonos</span>
+                    <h4>Manzanas</h4>
+                    <p>863 unidades que delimitan la morfología urbana, distritos y unidades vecinales (UV). Esenciales para la zonificación, análisis de densidad y planificación territorial.</p>
+                </article>
+                <article class="layer-item layer-item--blue">
+                    <div class="layer-dot" aria-hidden="true"></div>
+                    <span>02 · Parcelas</span>
+                    <h4>Lotes</h4>
+                    <p>15.280 parcelas catastrales con identificación predial directa (UV, Manzana y Nro. de Lote). Permite la consulta precisa de superficie, linderos y catastro individual.</p>
+                </article>
+                <article class="layer-item layer-item--orange">
+                    <div class="layer-dot" aria-hidden="true"></div>
+                    <span>03 · Líneas</span>
+                    <h4>Vías</h4>
+                    <p>578 ejes viales estructurados por anillos concéntricos, radiales y vías secundarias. Modela la red de movilidad urbana, accesibilidad y conectividad de la ciudad.</p>
+                </article>
+                <article class="layer-item layer-item--sky">
+                    <div class="layer-dot" aria-hidden="true"></div>
+                    <span>04 · Puntos</span>
+                    <h4>Códigos Fijos</h4>
+                    <p>6.261 acometidas georreferenciadas con semáforo de estado operativo (Normal, Para Corte, Cortado, Baja). Soporta identificación al clic y consulta de atributos en campo.</p>
+                </article>
+            </div>
+        </div>
     </section>
 
-    @* 4. Sección Arquitectura *@
-    <section class="section" id="arquitectura">
+    <section class="section" id="arquitectura" aria-labelledby="architecture-title">
         <div class="section-header">
             <div>
                 <div class="eyebrow">Arquitectura de solución</div>
-                <h2>Una estructura clara, escalable y lista para evolucionar</h2>
+                <h2 id="architecture-title">Una base sólida y preparada para crecer</h2>
             </div>
             <p>
-                La portada pública también puede reforzar técnicamente el proyecto mostrando, de forma resumida, cómo se organiza la solución desde la experiencia del usuario hasta la persistencia de datos y servicios geográficos.
+                La experiencia visual se sostiene sobre una solución organizada por responsabilidades, fácil de
+                mantener y lista para incorporar nuevas capacidades geográficas.
             </p>
         </div>
 
@@ -209,52 +198,132 @@
                 <article class="arch-step">
                     <span class="step-badge">1</span>
                     <h3>Presentación</h3>
-                    <p>Interfaz web responsive para escritorio, tablet y móvil, con una experiencia limpia y orientada a consulta territorial.</p>
+                    <p>Interfaz web responsive para consultar el territorio desde cualquier dispositivo.</p>
                 </article>
                 <article class="arch-step">
                     <span class="step-badge">2</span>
-                    <h3>Servicios y aplicación</h3>
-                    <p>Lógica de negocio, consultas espaciales, filtros, endpoints y exposición controlada de información geográfica.</p>
+                    <h3>Servicios</h3>
+                    <p>Consultas, filtros y servicios que conectan la experiencia con los datos.</p>
                 </article>
                 <article class="arch-step">
                     <span class="step-badge">3</span>
                     <h3>Dominio geoespacial</h3>
-                    <p>Modelo estructurado alrededor de capas vectoriales, atributos, relaciones espaciales y reglas funcionales.</p>
+                    <p>Capas, atributos, relaciones espaciales y reglas del territorio.</p>
                 </article>
                 <article class="arch-step">
                     <span class="step-badge">4</span>
-                    <h3>Infraestructura y datos</h3>
-                    <p>Persistencia, carga de información, servicios cartográficos y administración de la base geográfica integrada en SQL Server.</p>
+                    <h3>Infraestructura</h3>
+                    <p>Persistencia y administración segura de la información geográfica.</p>
                 </article>
             </div>
         </div>
     </section>
 
-    @* 5. Banner de Acción (CTA) *@
-    <section class="cta-banner" id="contacto">
-        <div>
-            <h3>Lista para presentar la plataforma a invitados y clientes</h3>
+    <section class="home-mobile" id="movil" aria-labelledby="mobile-title">
+        <div class="home-mobile__copy">
+            <span class="home-mobile__pill">Experiencia adaptable</span>
+            <h2 id="mobile-title">El visor también va contigo.</h2>
             <p>
-                Esta versión está enfocada en una home pública: visual, elegante, geoespacial y sin elementos de navegación interna.
-                Accede directamente al visor cartográfico o inicia sesión con tu usuario institucional.
+                Consulta el territorio desde el móvil con la misma información del sistema: mapa, búsqueda,
+                identificación y control de capas en una interfaz adaptada a pantallas pequeñas.
             </p>
+            <ul class="home-mobile__features">
+                <li><span aria-hidden="true">✓</span> Navegación cartográfica táctil</li>
+                <li><span aria-hidden="true">✓</span> Capas vectoriales siempre disponibles</li>
+                <li><span aria-hidden="true">✓</span> Búsqueda e identificación en campo</li>
+            </ul>
+            <div class="home-mobile__availability">
+                <span aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3" /><path d="M10 18h4" /></svg>
+                </span>
+                <div><strong>Diseño responsive</strong><small>Web · tablet · móvil</small></div>
+            </div>
         </div>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-            <div data-sesion-anonimo>
-                <a class="btn btn-primary" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
+
+        <div class="home-phone-wrap" aria-label="Vista móvil del sistema VisorDatosSIG">
+            <div class="home-phone-glow" aria-hidden="true"></div>
+            <div class="home-phone">
+                <div class="home-phone__screen">
+                    <div class="home-phone__island" aria-hidden="true"></div>
+                    <div class="home-phone__status">
+                        <span>9:41</span>
+                        <span class="home-phone__signals" aria-hidden="true">
+                            <i></i><i></i><i></i><b></b>
+                            <svg viewBox="0 0 24 24"><path d="M3 9a13 13 0 0 1 18 0M6 12a9 9 0 0 1 12 0M9.5 15.5a4 4 0 0 1 5 0" /><circle cx="12" cy="19" r="1" /></svg>
+                        </span>
+                    </div>
+                    <div class="home-phone__appbar">
+                        <span class="home-phone__logo" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M12 21s6-5 6-11a6 6 0 1 0-12 0c0 6 6 11 6 11Z" /><circle cx="12" cy="10" r="2" /></svg>
+                        </span>
+                        <span><strong>VisorDatosSIG</strong><small>Visor cartográfico</small></span>
+                        <button type="button" aria-label="Abrir menú" tabindex="-1"><i></i><i></i><i></i></button>
+                    </div>
+                    <div class="home-phone__map">
+                        <div class="home-phone__search">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+                            <span>Buscar lote, vía o código</span>
+                        </div>
+                        <div class="home-phone__zoom" aria-hidden="true"><span>+</span><span>−</span></div>
+                        <span class="home-phone__marker home-phone__marker--one" aria-hidden="true"></span>
+                        <span class="home-phone__marker home-phone__marker--two" aria-hidden="true"></span>
+                        <span class="home-phone__marker home-phone__marker--three" aria-hidden="true"></span>
+                        <div class="home-phone__location" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="m12 2 7 19-7-4-7 4 7-19Z" /></svg>
+                        </div>
+                    </div>
+                    <div class="home-phone__sheet">
+                        <span class="home-phone__handle" aria-hidden="true"></span>
+                        <div class="home-phone__sheet-title">
+                            <div><strong>Capas del mapa</strong><small>3 de 4 visibles</small></div>
+                            <span aria-hidden="true">⌃</span>
+                        </div>
+                        <div class="home-phone__layers">
+                            <span><i class="is-block"></i>Manzanas<b class="is-on"></b></span>
+                            <span><i class="is-lot"></i>Lotes<b></b></span>
+                            <span><i class="is-road"></i>Vías<b class="is-on"></b></span>
+                            <span><i class="is-point"></i>Códigos fijos<b class="is-on"></b></span>
+                        </div>
+                    </div>
+                    <span class="home-phone__homebar" aria-hidden="true"></span>
+                </div>
             </div>
-            <div data-sesion-bloque hidden>
-                <a class="btn btn-primary" asp-controller="Visor" asp-action="Index">Ir al Visor Cartográfico</a>
-            </div>
-            <a class="btn btn-secondary" href="#inicio">Volver al inicio</a>
         </div>
     </section>
 
-    @* 6. Pie de Página *@
+    <section class="cta-banner" id="contacto">
+        <div>
+            <h3>Explora Santa Cruz con una visión más clara</h3>
+            <p>Accede al visor y convierte la información geográfica en una herramienta útil para comprender y decidir.</p>
+        </div>
+        <div class="cta-actions">
+            <div data-sesion-anonimo>
+                <a class="btn btn-light" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
+            </div>
+            <div data-sesion-bloque hidden>
+                <a class="btn btn-light" asp-controller="Visor" asp-action="Index">Ir al visor cartográfico</a>
+            </div>
+            <a class="btn btn-ghost" href="#inicio">Volver al inicio</a>
+        </div>
+    </section>
+
     <footer>
         <div class="footer-box">
-            <span>Propuesta visual de inicio público • Plataforma Geoespacial Inteligente VisorDatosSIG 2026</span>
-            <span>Diseño orientado a invitados, clientes y presentación institucional</span>
+            <div class="footer-legal">
+                <strong>© 2026 VisorDatosSIG · Todos los derechos reservados.</strong>
+                <p>Plataforma Geoespacial Inteligente para la gestión, migración y visualización del catastro territorial de Santa Cruz de la Sierra. La información cartográfica y alfanumérica se presenta con fines de planificación y consulta técnica territorial.</p>
+                <div class="footer-links">
+                    <a href="#vision">Visión territorial</a> · 
+                    <a href="#capas">Capas vectoriales</a> · 
+                    <a href="#arquitectura">Arquitectura</a> · 
+                    <span>Términos de servicio</span> · 
+                    <span>Política de privacidad</span> · 
+                    <span>Gobernanza de datos espaciales</span>
+                </div>
+            </div>
+            <div class="footer-meta">
+                <span>Versión 2026 Editorial · Santa Cruz de la Sierra, Bolivia</span>
+            </div>
         </div>
     </footer>
 </div>
