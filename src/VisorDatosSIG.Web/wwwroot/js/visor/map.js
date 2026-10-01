@@ -59,6 +59,71 @@ window.VisorSIG = window.VisorSIG || {};
         capaBase = crearCapaBase();
         capaBase.addTo(mapa);
 
+        // CU11 (RF-VIS-05): Escala gráfica visible en el visor
+        if (typeof L.control.scale === 'function') {
+            L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(mapa);
+        }
+
+        // CU11 (RF-VIS-05): Botón de navegación rápida a Extensión General integrado en mapa
+        var ControlExtensionGeneral = L.Control.extend({
+            options: { position: 'topleft' },
+            onAdd: function () {
+                var contenedor = document.createElement('div');
+                contenedor.className = 'leaflet-bar leaflet-control';
+
+                var boton = document.createElement('a');
+                boton.href = '#';
+                boton.className = 'leaflet-control-extension-btn';
+                boton.title = 'Ajustar a extensión general (todo el catastro)';
+                boton.setAttribute('role', 'button');
+                boton.setAttribute('aria-label', 'Extensión general');
+
+                var icono = document.createElement('span');
+                icono.className = 'leaflet-control-extension-icono';
+                icono.textContent = '⛶';
+                icono.setAttribute('aria-hidden', 'true');
+                boton.appendChild(icono);
+
+                L.DomEvent.disableClickPropagation(contenedor);
+                L.DomEvent.disableScrollPropagation(contenedor);
+
+                boton.addEventListener('click', function (e) {
+                    if (e && e.preventDefault) { e.preventDefault(); }
+                    if (ns.capas && typeof ns.capas.ajustarExtensionGeneral === 'function') {
+                        ns.capas.ajustarExtensionGeneral();
+                    }
+                });
+
+                contenedor.appendChild(boton);
+                return contenedor;
+            }
+        });
+        new ControlExtensionGeneral().addTo(mapa);
+
+        // CU11: Indicador de nivel de zoom y estado espacial
+        var ControlIndicadorZoom = L.Control.extend({
+            options: { position: 'bottomright' },
+            onAdd: function () {
+                var contenedor = document.createElement('div');
+                contenedor.className = 'visor-map-status';
+                contenedor.id = 'visor-map-status';
+
+                var texto = document.createElement('span');
+                texto.className = 'visor-map-status__zoom';
+                texto.id = 'visor-map-status-zoom';
+                texto.textContent = 'Zoom: ' + mapa.getZoom();
+                contenedor.appendChild(texto);
+
+                function actualizar() {
+                    texto.textContent = 'Zoom: ' + mapa.getZoom();
+                }
+
+                mapa.on('zoomend', actualizar);
+                return contenedor;
+            }
+        });
+        new ControlIndicadorZoom().addTo(mapa);
+
         ns._mapa = mapa;
         ns._capaBase = capaBase;
         return mapa;
@@ -96,6 +161,10 @@ window.VisorSIG = window.VisorSIG || {};
             window.addEventListener('resize', refrescarTamano);
             ns._resizeEnlazado = true;
         }
+        if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(refrescarTamano);
+        }
+        setTimeout(refrescarTamano, 250);
     }
 
     if (document.readyState === 'loading') {

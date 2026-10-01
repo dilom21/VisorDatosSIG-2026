@@ -126,6 +126,45 @@ window.VisorSIG = window.VisorSIG || {};
         }
         nodo.textContent = texto;
         nodo.className = 'visor-badge visor-badge--' + modificador;
+        if (modificador !== 'error') {
+            nodo.style.cursor = '';
+            nodo.title = '';
+            nodo.onclick = null;
+        }
+    }
+
+    // CU09: Si ocurre un error recuperable al obtener una capa, el sistema
+    // informa la situación y permite reintentar interactivamente.
+    function mostrarErrorConReintento(mapa, def, estado) {
+        establecerEstado(def, 'Error', 'error');
+        var nodoBadge = document.getElementById(def.idEstado);
+        if (nodoBadge) {
+            nodoBadge.title = 'Error al cargar. Haga clic para reintentar';
+            nodoBadge.style.cursor = 'pointer';
+            nodoBadge.onclick = function () {
+                cargar(mapa, def, estado);
+            };
+        }
+
+        var nodo = document.getElementById(def.idConteo);
+        if (nodo) {
+            nodo.textContent = '';
+            var textoAviso = document.createElement('span');
+            textoAviso.textContent = 'No fue posible cargar ' + def.etiqueta + '. ';
+            nodo.appendChild(textoAviso);
+
+            var botonReintentar = document.createElement('button');
+            botonReintentar.type = 'button';
+            botonReintentar.className = 'visor-btn-reintento';
+            botonReintentar.textContent = 'Reintentar';
+            botonReintentar.setAttribute('aria-label', 'Reintentar cargar capa ' + def.etiqueta);
+            botonReintentar.onclick = function (e) {
+                if (e && e.preventDefault) { e.preventDefault(); }
+                cargar(mapa, def, estado);
+            };
+            nodo.appendChild(botonReintentar);
+        }
+        actualizarResumen();
     }
 
     function establecerConteo(def, texto) {
@@ -511,9 +550,7 @@ window.VisorSIG = window.VisorSIG || {};
                 return;
             }
             if (!resultado.ok) {
-                establecerEstado(def, 'Error', 'error');
-                establecerConteo(def, 'No fue posible cargar ' + def.etiqueta + '.');
-                actualizarResumen();
+                mostrarErrorConReintento(mapa, def, estado);
                 return;
             }
             aplicar(def, estado, resultado.coleccion);
@@ -579,6 +616,10 @@ window.VisorSIG = window.VisorSIG || {};
         }
         if (mapa && estado.capa && mapa.hasLayer(estado.capa)) {
             mapa.removeLayer(estado.capa);
+        }
+        // CU10: Si la entidad seleccionada pertenece a la capa desactivada, se limpia la selección.
+        if (ns.identify && typeof ns.identify.notificarCapaDesactivada === 'function') {
+            ns.identify.notificarCapaDesactivada(def.clave);
         }
         actualizarLeyenda();
         actualizarResumen();
@@ -795,8 +836,123 @@ window.VisorSIG = window.VisorSIG || {};
                 actualizarResumen();
                 cargarCatalogo();
                 cargaInicial(mapa);
+                enlazarBotonesExtension(mapa);
             });
         });
+    }
+
+    // CU11 (RF-VIS-05): Regresar a la extensión general del conjunto cartográfico
+    function ajustarExtensionGeneral() {
+        var mapa = obtenerMapa();
+        if (!mapa || !ns.geojson || typeof ns.geojson.obtenerExtension !== 'function') {
+            return Promise.resolve(false);
+        }
+        var nodoResumen = document.getElementById(ID_RESUMEN);
+        if (nodoResumen) {
+            nodoResumen.textContent = 'Calculando extensión general...';
+        }
+        return ns.geojson.obtenerExtension().then(function (resultado) {
+            if (!resultado.ok || !resultado.extension) {
+                if (nodoResumen) {
+                    nodoResumen.textContent = 'No fue posible obtener la extensión general del catastro.';
+                }
+                return false;
+            }
+            var bounds = L.latLngBounds(
+                [resultado.extension.minY, resultado.extension.minX],
+                [resultado.extension.maxY, resultado.extension.maxX]
+            );
+            mapa.fitBounds(bounds, { padding: PADDING_FIT });
+            if (nodoResumen) {
+                nodoResumen.textContent = 'Vista ajustada a la extensión general del catastro.';
+            }
+            return true;
+        }).catch(function () {
+            if (nodoResumen) {
+                nodoResumen.textContent = 'Error al consultar la extensión general del catastro.';
+            }
+            return false;
+        });
+    }
+
+    // CU11 (RF-VIS-07): Ajustar el mapa a la extensión de una capa específica
+    function ajustarExtensionCapa(claveCapa) {
+        var mapa = obtenerMapa();
+        if (!mapa || !ns.geojson || typeof ns.geojson.obtenerExtension !== 'function') {
+            return Promise.resolve(false);
+        }
+        var def = buscarDefinicion(claveCapa);
+        if (!def) {
+            return Promise.resolve(false);
+        }
+
+        var nodoResumen = document.getElementById(ID_RESUMEN);
+        if (nodoResumen) {
+            nodoResumen.textContent = 'Calculando extensión de ' + def.etiqueta + '...';
+        }
+
+        return ns.geojson.obtenerExtension(def.catalogo).then(function (resultado) {
+            if (!resultado.ok || !resultado.extension) {
+                // Excepción CU11: Si la capa no contiene geometrías disponibles, conserva la vista y avisa
+                if (nodoResumen) {
+                    nodoResumen.textContent = 'No se encontraron geometrías para calcular la extensión de ' + def.etiqueta + '.';
+                }
+                return false;
+            }
+
+            // Si la capa estaba inactiva, la activamos automáticamente para visualizarla
+            var estado = ESTADO[def.clave];
+            if (estado && !estado.activa) {
+                var casilla = document.getElementById(def.idCheckbox);
+                if (casilla) {
+                    casilla.checked = true;
+                }
+                activar(mapa, def);
+            }
+
+            var bounds = L.latLngBounds(
+                [resultado.extension.minY, resultado.extension.minX],
+                [resultado.extension.maxY, resultado.extension.maxX]
+            );
+            mapa.fitBounds(bounds, { padding: PADDING_FIT, maxZoom: 18 });
+            if (nodoResumen) {
+                nodoResumen.textContent = 'Vista ajustada a la extensión de ' + def.etiqueta + '.';
+            }
+            return true;
+        }).catch(function () {
+            if (nodoResumen) {
+                nodoResumen.textContent = 'Error al calcular la extensión de ' + def.etiqueta + '.';
+            }
+            return false;
+        });
+    }
+
+    function enlazarBotonesExtension(mapa) {
+        var btnGeneral = document.getElementById('btn-extension-general');
+        if (btnGeneral && btnGeneral.getAttribute('data-extension-enlazado') !== '1') {
+            btnGeneral.setAttribute('data-extension-enlazado', '1');
+            btnGeneral.addEventListener('click', function (e) {
+                if (e && e.preventDefault) { e.preventDefault(); }
+                ajustarExtensionGeneral();
+            });
+        }
+
+        var botonesZoomCapa = document.querySelectorAll('.visor-capa__btn-zoom');
+        for (var i = 0; i < botonesZoomCapa.length; i++) {
+            (function (btn) {
+                if (btn.getAttribute('data-zoom-enlazado') === '1') {
+                    return;
+                }
+                btn.setAttribute('data-zoom-enlazado', '1');
+                btn.addEventListener('click', function (e) {
+                    if (e && e.preventDefault) { e.preventDefault(); }
+                    var clave = btn.getAttribute('data-capa');
+                    if (clave) {
+                        ajustarExtensionCapa(clave);
+                    }
+                });
+            })(botonesZoomCapa[i]);
+        }
     }
 
     ns.capas = {
@@ -824,7 +980,9 @@ window.VisorSIG = window.VisorSIG || {};
         buscarFeatureCargada: buscarFeatureCargada,
         cargarTodas: function () {
             cargarActivas(obtenerMapa());
-        }
+        },
+        ajustarExtensionGeneral: ajustarExtensionGeneral,
+        ajustarExtensionCapa: ajustarExtensionCapa
     };
 
     if (document.readyState === 'loading') {
