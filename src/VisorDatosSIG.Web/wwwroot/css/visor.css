@@ -491,17 +491,27 @@ body:has(.visor-shell) .app-header__inner {
 }
 
 .visor-shell {
+    position: relative;
     display: grid;
     grid-template-columns: 360px 1fr;
     gap: 0;
     width: 100%;
-    height: calc(100vh - var(--header-height));
+    height: 100vh;
+    max-height: 100vh;
     align-items: stretch;
     background-color: var(--color-background);
+    overflow: hidden;
+    transition: grid-template-columns 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estado del panel colapsado/oculto: el mapa toma el ancho completo */
+.visor-shell--panel-oculto {
+    grid-template-columns: 0px 1fr;
 }
 
 .visor-panel {
     min-width: 0;
+    width: 360px;
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
@@ -512,6 +522,22 @@ body:has(.visor-shell) .app-header__inner {
     border-radius: 0;
     box-shadow: 2px 0 10px rgba(15, 40, 64, 0.04);
     z-index: 10;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.2s ease,
+                padding 0.28s ease,
+                border-color 0.2s ease;
+}
+
+.visor-shell--panel-oculto .visor-panel {
+    width: 0;
+    max-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-right-color: transparent;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-100%);
 }
 
 .visor-panel::-webkit-scrollbar {
@@ -1376,18 +1402,18 @@ body.sesion-verificando .visor-map {
    12. Responsive
    -------------------------------------------------------------------------- */
 @media (max-width: 900px) {
-    body.visor-page,
-    body:has(.visor-shell) {
+    body.visor-page:not(:has(.sidebar)),
+    body:has(.visor-shell):not(:has(.sidebar)) {
         overflow: auto;
     }
 
-    .visor-shell {
+    body:not(:has(.sidebar)) .visor-shell {
         grid-template-columns: 1fr;
         height: auto;
         min-height: calc(100vh - var(--header-height));
     }
 
-    .visor-panel {
+    body:not(:has(.sidebar)) .visor-panel {
         height: auto;
         max-height: 480px;
         overflow-y: auto;
@@ -1395,7 +1421,7 @@ body.sesion-verificando .visor-map {
         border-bottom: 1px solid var(--color-border);
     }
 
-    .visor-map {
+    body:not(:has(.sidebar)) .visor-map {
         height: 60vh;
         min-height: 420px;
     }
@@ -1446,6 +1472,100 @@ body.sesion-verificando .visor-map {
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
+}
+
+.visor-panel__titulo-grupo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.visor-panel__titulo-grupo h2 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.visor-panel__btn-fijar {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: var(--radius-sm);
+    color: var(--color-muted);
+    background-color: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.visor-panel__btn-fijar:hover {
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
+    background-color: var(--color-surface);
+}
+
+.visor-panel__btn-fijar[aria-pressed="true"] {
+    color: var(--color-accent);
+    background-color: rgba(15, 143, 131, 0.12);
+    border-color: rgba(15, 143, 131, 0.35);
+}
+
+.visor-panel__btn-fijar .icono-pin {
+    flex-shrink: 0;
+    transition: transform var(--transition-fast);
+}
+
+.visor-panel__btn-fijar[aria-pressed="true"] .icono-pin {
+    transform: rotate(0deg);
+}
+
+.visor-panel__btn-fijar[aria-pressed="false"] .icono-pin {
+    transform: rotate(45deg);
+    opacity: 0.6;
+}
+
+/* Botón flotante para reabrir el panel de capas cuando esté oculto */
+.visor-btn-reabrir {
+    position: absolute;
+    top: 12px;
+    left: 56px;
+    z-index: 1000;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0f8f83 0%, #0a6b62 100%);
+    border: none;
+    border-radius: 9999px;
+    box-shadow: 0 4px 14px rgba(15, 143, 131, 0.35), 0 2px 6px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                background 0.2s ease;
+}
+
+.visor-btn-reabrir:hover {
+    background: linear-gradient(135deg, #12a597 0%, #0d7f74 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(15, 143, 131, 0.45), 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.visor-btn-reabrir:active {
+    transform: translateY(0);
+}
+
+.visor-btn-reabrir[hidden] {
+    display: none !important;
+}
+
+.visor-btn-reabrir svg {
+    flex-shrink: 0;
 }
 
 .visor-btn-extension-general {

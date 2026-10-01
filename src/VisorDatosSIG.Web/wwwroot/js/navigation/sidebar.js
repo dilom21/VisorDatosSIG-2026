@@ -387,6 +387,167 @@ window.VisorSIG = window.VisorSIG || {};
         });
     }
 
+    // ------------------------------------------------------------------------
+    // Panel de administración: fijar (recorrer pantalla) y ocultar
+    // ------------------------------------------------------------------------
+
+    var CLAVE_SIDEBAR_FIJO = 'visorSIG.sidebarFijo';
+    var CLAVE_SIDEBAR_OCULTO = 'visorSIG.sidebarOculto';
+
+    function refrescarMapa() {
+        if (ns.mapa && typeof ns.mapa.refrescarTamano === 'function') {
+            ns.mapa.refrescarTamano();
+            setTimeout(function () {
+                if (ns.mapa && typeof ns.mapa.refrescarTamano === 'function') {
+                    ns.mapa.refrescarTamano();
+                }
+            }, 120);
+            setTimeout(function () {
+                if (ns.mapa && typeof ns.mapa.refrescarTamano === 'function') {
+                    ns.mapa.refrescarTamano();
+                }
+            }, 260);
+        }
+    }
+
+    function aplicarEstadoSidebar(fijo, oculto) {
+        var shell = document.querySelector('.app-shell');
+        var sidebar = document.getElementById('sidebar');
+        var btnFijar = document.getElementById('btn-sidebar-fijar');
+        var btnFijarPie = document.getElementById('btn-sidebar-fijar-pie');
+        var textoFijar = document.getElementById('texto-sidebar-fijar');
+        var btnReabrir = document.getElementById('btn-sidebar-reabrir');
+
+        if (!shell || !sidebar) {
+            return;
+        }
+
+        if (oculto) {
+            sidebar.classList.add('sidebar--oculto');
+            sidebar.classList.remove('sidebar--fijo');
+            shell.classList.add('app-shell--sidebar-oculto');
+            shell.classList.remove('app-shell--sidebar-fijo');
+            if (btnReabrir) { btnReabrir.hidden = false; }
+            try {
+                window.localStorage.setItem(CLAVE_SIDEBAR_OCULTO, '1');
+            } catch (e) {}
+        } else {
+            sidebar.classList.remove('sidebar--oculto');
+            shell.classList.remove('app-shell--sidebar-oculto');
+            if (btnReabrir) { btnReabrir.hidden = true; }
+            try {
+                window.localStorage.setItem(CLAVE_SIDEBAR_OCULTO, '0');
+            } catch (e) {}
+
+            if (fijo) {
+                sidebar.classList.add('sidebar--fijo');
+                shell.classList.add('app-shell--sidebar-fijo');
+                if (btnFijar) {
+                    btnFijar.setAttribute('aria-pressed', 'true');
+                    btnFijar.title = 'Desanclar menú lateral';
+                }
+                if (btnFijarPie) {
+                    btnFijarPie.setAttribute('aria-pressed', 'true');
+                    btnFijarPie.title = 'Desanclar menú lateral';
+                }
+                if (textoFijar) {
+                    textoFijar.textContent = 'Desfijar menú';
+                }
+                try {
+                    window.localStorage.setItem(CLAVE_SIDEBAR_FIJO, '1');
+                } catch (e) {}
+            } else {
+                sidebar.classList.remove('sidebar--fijo');
+                shell.classList.remove('app-shell--sidebar-fijo');
+                if (btnFijar) {
+                    btnFijar.setAttribute('aria-pressed', 'false');
+                    btnFijar.title = 'Fijar menú lateral y recorrer pantalla';
+                }
+                if (btnFijarPie) {
+                    btnFijarPie.setAttribute('aria-pressed', 'false');
+                    btnFijarPie.title = 'Fijar menú lateral y recorrer pantalla';
+                }
+                if (textoFijar) {
+                    textoFijar.textContent = 'Fijar menú';
+                }
+                try {
+                    window.localStorage.setItem(CLAVE_SIDEBAR_FIJO, '0');
+                } catch (e) {}
+            }
+        }
+
+        refrescarMapa();
+    }
+
+    function alternarFijo() {
+        var sidebar = document.getElementById('sidebar');
+        if (!sidebar) { return; }
+        var esFijo = sidebar.classList.contains('sidebar--fijo');
+        aplicarEstadoSidebar(!esFijo, false);
+    }
+
+    function enlazarControlesFijo() {
+        var btnFijar = document.getElementById('btn-sidebar-fijar');
+        var btnFijarPie = document.getElementById('btn-sidebar-fijar-pie');
+        var btnOcultar = document.getElementById('btn-sidebar-ocultar');
+        var btnReabrir = document.getElementById('btn-sidebar-reabrir');
+
+        if (btnFijar && btnFijar.getAttribute(ENLAZADO) !== '1') {
+            btnFijar.setAttribute(ENLAZADO, '1');
+            btnFijar.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                alternarFijo();
+            });
+        }
+
+        if (btnFijarPie && btnFijarPie.getAttribute(ENLAZADO) !== '1') {
+            btnFijarPie.setAttribute(ENLAZADO, '1');
+            btnFijarPie.addEventListener('click', function (e) {
+                e.preventDefault();
+                alternarFijo();
+            });
+        }
+
+        if (btnOcultar && btnOcultar.getAttribute(ENLAZADO) !== '1') {
+            btnOcultar.setAttribute(ENLAZADO, '1');
+            btnOcultar.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var sidebar = document.getElementById('sidebar');
+                var esFijo = sidebar && sidebar.classList.contains('sidebar--fijo');
+                aplicarEstadoSidebar(esFijo, true);
+            });
+        }
+
+        if (btnReabrir && btnReabrir.getAttribute(ENLAZADO) !== '1') {
+            btnReabrir.setAttribute(ENLAZADO, '1');
+            btnReabrir.addEventListener('click', function (e) {
+                e.preventDefault();
+                var guardadoFijo = false;
+                try {
+                    guardadoFijo = window.localStorage.getItem(CLAVE_SIDEBAR_FIJO) === '1';
+                } catch (err) {}
+                aplicarEstadoSidebar(guardadoFijo, false);
+            });
+        }
+
+        // Restaurar estado guardado en localStorage (por defecto fijo para mantener textos y menú visibles)
+        var guardadoOculto = false;
+        var guardadoFijo = true;
+        try {
+            guardadoOculto = window.localStorage.getItem(CLAVE_SIDEBAR_OCULTO) === '1';
+            var valFijo = window.localStorage.getItem(CLAVE_SIDEBAR_FIJO);
+            if (valFijo === '0') {
+                guardadoFijo = false;
+            } else {
+                guardadoFijo = true;
+            }
+        } catch (e) {}
+
+        aplicarEstadoSidebar(guardadoFijo, guardadoOculto);
+    }
+
     var iniciado = false;
 
     function iniciar() {
@@ -396,6 +557,7 @@ window.VisorSIG = window.VisorSIG || {};
 
         iniciado = true;
         enlazarBotonAlterno();
+        enlazarControlesFijo();
         cargar();
     }
 
@@ -411,6 +573,8 @@ window.VisorSIG = window.VisorSIG || {};
         cargar: cargar,
         renderizar: renderizar,
         normalizarRuta: normalizarRuta,
-        esRutaActiva: esRutaActiva
+        esRutaActiva: esRutaActiva,
+        aplicarEstado: aplicarEstadoSidebar,
+        alternarFijo: alternarFijo
     };
 })(window.VisorSIG);

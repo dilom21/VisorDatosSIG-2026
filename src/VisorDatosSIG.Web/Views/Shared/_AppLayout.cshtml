@@ -56,7 +56,7 @@
 
     @await Html.PartialAsync("_IconosSidebar")
 
-    <div class="app-shell">
+    <div class="app-shell @(ViewData["FullWidth"] as bool? == true ? "app-shell--fullwidth" : "")">
         <aside id="sidebar" class="sidebar" aria-label="Barra de navegación del sistema">
             <div class="sidebar__marca">
                 <a class="sidebar__logo" asp-controller="Visor" asp-action="Index"
@@ -73,6 +73,24 @@
                         <span class="sidebar__logo-sub">Información geográfica</span>
                     </span>
                 </a>
+
+                @* Controles para fijar y ocultar el panel azul del admin *@
+                <div class="sidebar__controles-fijo">
+                    <button type="button" id="btn-sidebar-fijar" class="sidebar__btn-accion"
+                            title="Fijar menú lateral y recorrer pantalla" aria-label="Fijar menú lateral" aria-pressed="false">
+                        <svg class="icono-pin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="12" y1="17" x2="12" y2="22"></line>
+                            <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path>
+                        </svg>
+                    </button>
+                    <button type="button" id="btn-sidebar-ocultar" class="sidebar__btn-accion"
+                            title="Ocultar menú lateral" aria-label="Ocultar menú lateral">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="11 17 6 12 11 7"></polyline>
+                            <polyline points="18 17 13 12 18 7"></polyline>
+                        </svg>
+                    </button>
+                </div>
 
                 @* Alternativa al hover para pantallas táctiles (CSS la muestra solo
                    cuando no hay hover). No es el botón "Colapsar" del diseño de
@@ -112,6 +130,16 @@
                     </div>
                 </div>
 
+                <button type="button" id="btn-sidebar-fijar-pie" class="sidebar__accion" aria-pressed="false" title="Fijar menú lateral y recorrer pantalla">
+                    <span class="sidebar__accion-icono" aria-hidden="true">
+                        <svg class="icono-pin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="17" x2="12" y2="22"></line>
+                            <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path>
+                        </svg>
+                    </span>
+                    <span id="texto-sidebar-fijar" class="sidebar__texto sidebar__accion-texto">Fijar menú</span>
+                </button>
+
                 <button type="button" id="btn-tema" class="sidebar__accion" aria-pressed="false">
                     <span class="sidebar__accion-icono" aria-hidden="true">
                         <svg class="icono-modo icono-modo--luna" viewBox="0 0 24 24" focusable="false">
@@ -137,8 +165,19 @@
             </div>
         </aside>
 
-        <div class="app-shell__contenido">
-            <main id="contenido" class="app-main app-main--app">
+        @* Botón flotante para reabrir el menú de administración cuando esté oculto *@
+        <button type="button" id="btn-sidebar-reabrir" class="sidebar-btn-reabrir"
+                title="Mostrar menú de administración" aria-label="Mostrar menú de administración" hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            <span>Menú</span>
+        </button>
+
+        <div class="app-shell__contenido @(ViewData["FullWidth"] as bool? == true ? "app-shell__contenido--fullwidth" : "")">
+            <main id="contenido" class="app-main app-main--app @(ViewData["FullWidth"] as bool? == true ? "app-main--fullwidth" : "")">
                 @* Zona de aviso del guard (fail-closed): recibe su texto por
                    textContent, por eso no lleva nodos hijos en el marcado. *@
                 <p class="visor-aviso" id="app-aviso" data-visor-aviso role="status" hidden></p>

@@ -1,0 +1,5 @@
+<Project>
+  <Target Name="AutoSignSmartAppControl" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$cert = Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -like '*AntigravityDev*' } | Select-Object -First 1; if ($cert) { Get-ChildItem -Path '$(TargetDir)*.dll','$(TargetDir)*.exe' | ForEach-Object { Set-AuthenticodeSignature -FilePath $_.FullName -Certificate $cert | Out-Null } }&quot;" ContinueOnError="true" />
+  </Target>
+</Project>

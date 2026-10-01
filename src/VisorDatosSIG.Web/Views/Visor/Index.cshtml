@@ -13,10 +13,20 @@
     <aside class="visor-panel">
         <div class="visor-panel__head">
             <div class="visor-panel__titulo-fila">
-                <h2>Capas</h2>
+                <div class="visor-panel__titulo-grupo">
+                    <h2>Capas</h2>
+                    <button type="button" id="btn-fijar-panel" class="visor-panel__btn-fijar"
+                            title="Ocultar o fijar panel de control" aria-label="Ocultar o fijar panel" aria-pressed="true">
+                        <svg class="icono-pin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="12" y1="17" x2="12" y2="22"></line>
+                            <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path>
+                        </svg>
+                        <span class="visor-panel__btn-fijar-texto">Fijo</span>
+                    </button>
+                </div>
                 <button type="button" id="btn-extension-general" class="btn-secundario visor-btn-extension-general" title="Ajustar a la extensión general de todo el catastro" aria-label="Extensión general del catastro">
                     <span class="visor-icono-extension" aria-hidden="true">⛶</span>
-                    <span>Extensión general</span>
+                    <span>Extensión</span>
                 </button>
             </div>
             <p>Cuatro capas disponibles con datos reales desde la base de datos.</p>
@@ -144,11 +154,24 @@
             Las cuatro capas consumen información geográfica real desde la base de datos a través de la API.
         </p>
     </aside>
+
+    @* Botón flotante para reabrir/fijar el panel cuando esté oculto *@
+    <button type="button" id="btn-reabrir-panel" class="visor-btn-reabrir"
+            title="Abrir panel de capas" aria-label="Abrir panel de control de capas" hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <span>Capas</span>
+    </button>
+
     <div id="map" class="visor-map" aria-label="Mapa del VisorDatosSIG"></div>
 </section>
 @section Scripts {
     <script src="~/lib/leaflet/leaflet.js"></script>
     <script src="~/js/visor/map.js"></script>
+    <script src="~/js/visor/panel.js"></script>
     <script src="~/js/visor/geojson.js"></script>
     <script src="~/js/visor/features.js"></script>
     <script src="~/js/visor/markers.js"></script>

@@ -40,9 +40,48 @@
     min-height: 100vh;
 }
 
-/* El contenido nunca se recalcula: el sidebar se superpone al expandirse. */
+/* Soporte fullwidth para el visor cartográfico: edge-to-edge sin padding ni desborde vertical */
+html:has(.app-shell--fullwidth),
+body:has(.app-shell--fullwidth),
+html:has(.visor-shell),
+body:has(.visor-shell) {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.app-shell--fullwidth,
+.app-shell:has(.visor-shell) {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+}
+
+/* El contenido recorre la pantalla fluidamente cuando el sidebar se fija o se oculta */
 .app-shell__contenido {
     margin-left: var(--sidebar-ancho-contraido);
+    transition: margin-left var(--sidebar-transicion);
+}
+
+.app-shell__contenido--fullwidth,
+.app-shell:has(.visor-shell) .app-shell__contenido {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+}
+
+/* Cuando el sidebar de admin está FIJO, empuja el contenido hacia la derecha (recorre la pantalla) */
+.app-shell--sidebar-fijo .app-shell__contenido {
+    margin-left: var(--sidebar-ancho-expandido) !important;
+}
+
+/* Cuando el sidebar de admin está OCULTO, el contenido ocupa el 100% del ancho */
+.app-shell--sidebar-oculto .app-shell__contenido {
+    margin-left: 0 !important;
 }
 
 /* El layout autenticado no usa cabecera ni ancho máximo de contenedor. */
@@ -50,6 +89,44 @@
     max-width: none;
     margin: 0;
     padding: var(--space-4);
+}
+
+.app-main--fullwidth,
+.app-main--app:has(.visor-shell) {
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+}
+
+.app-main--fullwidth .visor-shell,
+.app-main--app:has(.visor-shell) .visor-shell {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+}
+
+.app-main--fullwidth .visor-map,
+.app-main--app:has(.visor-shell) .visor-map {
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.app-main--fullwidth .visor-panel,
+.app-main--app:has(.visor-shell) .visor-panel {
+    height: 100% !important;
+    max-height: 100vh !important;
+}
+
+.app-main--fullwidth .visor-aviso,
+.app-main--app:has(.visor-shell) .visor-aviso {
+    margin: 0 !important;
 }
 
 /* Fail-closed del guard: mientras no se valide la sesión el contenido se atenúa,
@@ -87,19 +164,41 @@ body.sesion-verificando .app-shell__contenido {
     box-shadow: var(--shadow-md);
     overflow-x: hidden;
     overflow-y: auto;
-    transition: width var(--sidebar-transicion), box-shadow var(--sidebar-transicion);
+    transition: width var(--sidebar-transicion), box-shadow var(--sidebar-transicion), transform var(--sidebar-transicion);
 }
 
-/* Expansión por hover del mouse o por toque explícito (clase sidebar--abierto).
-   Deliberadamente NO se usa :focus-within: un clic del mouse deja el foco en el
-   control pulsado (botón de tema, agrupador, cerrar sesión) y el sidebar quedaría
-   expandido de forma permanente, sin volver a responder al mouse hasta recargar.
-   El foco de teclado sí expande, pero solo el visible (:focus-visible), que es el
-   único que se produce con Tab y nunca con un clic. */
+/* Expansión por hover del mouse o por toque explícito (clase sidebar--abierto). */
 .sidebar:hover,
 .sidebar.sidebar--abierto {
     width: var(--sidebar-ancho-expandido);
     box-shadow: var(--shadow-lg);
+}
+
+/* Sidebar FIJO: permanece expandido a 264px y todo su contenido es 100% visible permanentemente */
+.sidebar.sidebar--fijo {
+    width: var(--sidebar-ancho-expandido) !important;
+    box-shadow: var(--shadow-lg);
+}
+
+.sidebar.sidebar--fijo .sidebar__texto,
+.sidebar.sidebar--fijo .sesion-datos,
+.sidebar.sidebar--fijo .sidebar__controles-fijo,
+.sidebar.sidebar--fijo .sidebar__logo-texto {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
+}
+
+.sidebar.sidebar--fijo .sidebar__chevron {
+    opacity: 0.75 !important;
+    visibility: visible !important;
+}
+
+/* Sidebar OCULTO: se desliza fuera de pantalla hacia la izquierda */
+.sidebar.sidebar--oculto {
+    transform: translateX(-100%);
+    box-shadow: none;
+    pointer-events: none;
 }
 
 @supports selector(:has(*)) {
@@ -183,8 +282,9 @@ body.sesion-verificando .app-shell__contenido {
 }
 
 .sidebar:hover .sidebar__texto,
-.sidebar.sidebar--abierto .sidebar__texto {
-    opacity: 1;
+.sidebar.sidebar--abierto .sidebar__texto,
+.sidebar.sidebar--fijo .sidebar__texto {
+    opacity: 1 !important;
     transition-delay: 90ms;
 }
 
@@ -233,15 +333,18 @@ body.sesion-verificando .app-shell__contenido {
     gap: 2px;
 }
 
-/* Colapsado solo se muestran los iconos de primer nivel. Con foco de teclado el
-   submenú permanece visible; el foco que deja un clic del mouse no cuenta. */
-.sidebar:not(:hover):not(.sidebar--abierto):not(:has(:focus-visible)) .sidebar__sublista {
-    display: none;
+.sidebar__sublista[hidden] {
+    display: none !important;
+}
+
+/* Colapsado solo se muestran los iconos de primer nivel. */
+.sidebar:not(:hover):not(.sidebar--abierto):not(.sidebar--fijo):not(:has(:focus-visible)) .sidebar__sublista {
+    display: none !important;
 }
 
 @supports not selector(:has(*)) {
-    .sidebar:not(:hover):not(.sidebar--abierto):not(:focus-within) .sidebar__sublista {
-        display: none;
+    .sidebar:not(:hover):not(.sidebar--abierto):not(.sidebar--fijo):not(:focus-within) .sidebar__sublista {
+        display: none !important;
     }
 }
 
@@ -308,8 +411,9 @@ body.sesion-verificando .app-shell__contenido {
 }
 
 .sidebar:hover .sidebar__chevron,
-.sidebar.sidebar--abierto .sidebar__chevron {
-    opacity: 0.75;
+.sidebar.sidebar--abierto .sidebar__chevron,
+.sidebar.sidebar--fijo .sidebar__chevron {
+    opacity: 0.75 !important;
 }
 
 @supports selector(:has(*)) {
@@ -445,8 +549,9 @@ body.sesion-verificando .app-shell__contenido {
 }
 
 .sidebar:hover .sesion-datos,
-.sidebar.sidebar--abierto .sesion-datos {
-    opacity: 1;
+.sidebar.sidebar--abierto .sesion-datos,
+.sidebar.sidebar--fijo .sesion-datos {
+    opacity: 1 !important;
     transition-delay: 90ms;
 }
 
@@ -613,15 +718,110 @@ html[data-theme="dark"] .icono-modo--luna {
    7. Responsive
    -------------------------------------------------------------------------- */
 @media (min-width: 900px) {
-    .app-main--app {
+    .app-main--app:not(.app-main--fullwidth):not(:has(.visor-shell)) {
         padding: var(--space-5);
     }
 
-    /* Sin cabecera en el workspace: el mapa aprovecha el alto disponible. */
+    /* En el visor el mapa aprovecha el 100% del alto sin espacios inferiores */
     .app-main--app .visor-map {
-        height: calc(100vh - 4rem);
-        min-height: 480px;
+        height: 100% !important;
+        min-height: 0 !important;
     }
+}
+
+/* --- Controles de fijar y ocultar en la cabecera del sidebar --- */
+.sidebar__controles-fijo {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--sidebar-transicion);
+}
+
+.sidebar:hover .sidebar__controles-fijo,
+.sidebar.sidebar--abierto .sidebar__controles-fijo,
+.sidebar.sidebar--fijo .sidebar__controles-fijo {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sidebar__btn-accion {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--sidebar-borde);
+    border-radius: var(--radius-sm);
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--sidebar-texto-suave);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.sidebar__btn-accion:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+    color: var(--sidebar-texto-fuerte);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.sidebar__btn-accion[aria-pressed="true"],
+.sidebar__accion[aria-pressed="true"] {
+    background-color: var(--sidebar-activo-fondo) !important;
+    color: #ffffff !important;
+    border-color: var(--sidebar-activo-fondo) !important;
+}
+
+.sidebar__btn-accion[aria-pressed="true"] .icono-pin,
+.sidebar__accion[aria-pressed="true"] .icono-pin {
+    transform: rotate(0deg);
+}
+
+.sidebar__btn-accion[aria-pressed="false"] .icono-pin,
+.sidebar__accion[aria-pressed="false"] .icono-pin {
+    transform: rotate(45deg);
+    opacity: 0.75;
+}
+
+/* Botón flotante para reabrir el menú de administración cuando esté oculto */
+.sidebar-btn-reabrir {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1200;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0d3b66 0%, #082642 100%);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: all var(--sidebar-transicion);
+}
+
+.sidebar-btn-reabrir:hover {
+    background: linear-gradient(135deg, #124d85 0%, #0d3b66 100%);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    transform: translateY(-1px);
+}
+
+.sidebar-btn-reabrir:active {
+    transform: translateY(0);
+}
+
+.sidebar-btn-reabrir[hidden] {
+    display: none !important;
+}
+
+.app-shell--sidebar-oculto .leaflet-top.leaflet-left {
+    top: 56px;
 }
 
 /* Sin hover (táctil): el sidebar se abre y cierra con el botón de la marca. */
@@ -656,7 +856,7 @@ html[data-theme="dark"] .icono-modo--luna {
 }
 
 @media (max-width: 768px) {
-    .app-main--app {
+    .app-main--app:not(.app-main--fullwidth):not(:has(.visor-shell)) {
         padding: var(--space-3);
     }
 
