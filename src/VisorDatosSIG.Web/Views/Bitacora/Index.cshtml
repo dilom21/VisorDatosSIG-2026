@@ -1,0 +1,147 @@
+@*
+    Consultar Bitácora (CU05) — pantalla de SOLO LECTURA.
+
+    Los filtros, la paginación y el detalle los resuelve la API en SQL Server:
+      GET api/bitacora            -> página de eventos (nunca el historial completo)
+      GET api/bitacora/catalogos  -> valores reales de los combos
+      GET api/bitacora/{id}       -> detalle del evento
+
+    Los combos se llenan con los valores que devuelve el servidor: no hay módulos,
+    acciones, entidades, resultados ni usuarios escritos en esta vista. js/bitacora/
+    bitacora.js pinta cada celda con textContent, por lo que los textos del backend
+    (detalle incluido) nunca se interpretan como HTML.
+
+    Contratos de los elementos:
+      #bitacora-buscar / #bitacora-usuario / #bitacora-modulo / #bitacora-accion /
+      #bitacora-entidad / #bitacora-resultado / #bitacora-desde / #bitacora-hasta -> filtros
+      #bitacora-cuerpo      -> filas de la página actual
+      #bitacora-conteo      -> "Mostrando X–Y de TOTAL"
+      #bitacora-paginacion  -> Anterior / Página X de Y / Siguiente
+      #bitacora-tamano      -> filas por página (25, 50 o 100)
+      #bitacora-aviso       -> avisos de validación, error o falta de permiso
+*@
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "Consultar Bitácora";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/bitacora.css" asp-append-version="true" />
+}
+
+<section class="bitacora">
+    <header class="bitacora__head">
+        <div>
+            <p class="bitacora__modulo">Usuarios y Seguridad</p>
+            <h1>Bitácora del sistema</h1>
+            <p class="bitacora__intro">
+                Registro de auditoría del sistema web, ordenado del evento más reciente al
+                más antiguo. La consulta es de solo lectura: no se crean, editan ni eliminan
+                eventos desde esta pantalla.
+            </p>
+        </div>
+        <span class="bitacora__chip">Solo lectura</span>
+    </header>
+
+    @* Avisos de la página (validación de fechas, error de consulta o falta de permiso). *@
+    <p id="bitacora-aviso" class="visor-aviso bitacora__aviso" role="status" hidden></p>
+
+    <form id="form-bitacora" class="bitacora__filtros" role="search" novalidate>
+        <div class="bitacora__campo bitacora__campo--buscar">
+            <label class="bitacora__etiqueta" for="bitacora-buscar">Buscar</label>
+            <input type="search" id="bitacora-buscar" name="buscar" class="bitacora__control"
+                   placeholder="Módulo, acción, entidad, detalle o usuario" autocomplete="off"
+                   maxlength="200" />
+        </div>
+
+        <div class="bitacora__campo">
+            <label class="bitacora__etiqueta" for="bitacora-usuario">Usuario</label>
+            <select id="bitacora-usuario" name="idUsuario" class="bitacora__control"></select>
+        </div>
+
+        <div class="bitacora__campo">
+            <label class="bitacora__etiqueta" for="bitacora-modulo">Módulo</label>
+            <select id="bitacora-modulo" name="modulo" class="bitacora__control"></select>
+        </div>
+
+        <div class="bitacora__campo">
+            <label class="bitacora__etiqueta" for="bitacora-accion">Acción</label>
+            <select id="bitacora-accion" name="accion" class="bitacora__control"></select>
+        </div>
+
+        <div class="bitacora__campo">
+            <label class="bitacora__etiqueta" for="bitacora-entidad">Entidad</label>
+            <select id="bitacora-entidad" name="entidad" class="bitacora__control"></select>
+        </div>
+
+        <div class="bitacora__campo">
+            <label class="bitacora__etiqueta" for="bitacora-resultado">Resultado</label>
+            <select id="bitacora-resultado" name="resultado" class="bitacora__control"></select>
+        </div>
+
+        <div class="bitacora__campo">
+            <label class="bitacora__etiqueta" for="bitacora-desde">Desde</label>
+            <input type="datetime-local" id="bitacora-desde" name="fechaDesde"
+                   class="bitacora__control" />
+        </div>
+
+        <div class="bitacora__campo">
+            <label class="bitacora__etiqueta" for="bitacora-hasta">Hasta</label>
+            <input type="datetime-local" id="bitacora-hasta" name="fechaHasta"
+                   class="bitacora__control" />
+        </div>
+
+        <div class="bitacora__acciones">
+            <button type="submit" id="btn-bitacora-buscar" class="btn-primario">Buscar</button>
+            <button type="button" id="btn-bitacora-limpiar" class="btn-secundario">
+                Limpiar filtros
+            </button>
+        </div>
+    </form>
+
+    <p id="bitacora-estado" class="bitacora__estado" role="status" aria-live="polite"></p>
+
+    <div class="bitacora__tabla-envoltura">
+        <table class="bitacora__tabla">
+            <caption class="bitacora__tabla-caption">
+                Eventos de auditoría de la página consultada
+            </caption>
+            <thead>
+                <tr>
+                    <th scope="col">Fecha y hora</th>
+                    <th scope="col">Usuario</th>
+                    <th scope="col">Módulo</th>
+                    <th scope="col">Acción</th>
+                    <th scope="col">Entidad</th>
+                    <th scope="col">Resultado</th>
+                    <th scope="col">Detalle</th>
+                    <th scope="col" class="bitacora__col-accion">
+                        <span class="bitacora__oculto">Acciones</span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="bitacora-cuerpo"></tbody>
+        </table>
+    </div>
+
+    <div class="bitacora__pie">
+        <p id="bitacora-conteo" class="bitacora__conteo"></p>
+
+        <label class="bitacora__tamano" for="bitacora-tamano">
+            Filas por página
+            <select id="bitacora-tamano" class="bitacora__control bitacora__control--corto">
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </label>
+
+        <div id="bitacora-paginacion" class="bitacora__paginacion" hidden></div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/bitacora/bitacora.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({ returnUrl: '/Bitacora' });
+    </script>
+}

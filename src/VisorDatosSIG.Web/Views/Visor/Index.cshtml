@@ -1,4 +1,8 @@
 @{
+    // El visor pasa al workspace autenticado: obtiene el sidebar dinámico, el modo
+    // oscuro y el pie de sesión del layout _AppLayout. El mapa, las capas y el guard
+    // de sesión no cambian.
+    Layout = "_AppLayout";
     ViewData["Title"] = "Visor cartográfico";
 }
 @section Styles {
@@ -11,8 +15,10 @@
             <p>Cuatro capas disponibles con datos reales desde la base de datos.</p>
         </div>
 
-        @* Zona de aviso del guard: recibe su texto por textContent, por lo que no
-           debe contener nodos hijos en el marcado. *@
+        @* Aviso heredado del visor. El guard de sesión escribe ahora en el aviso del
+           layout (#app-aviso, marcado con data-visor-aviso) porque es único para todas
+           las páginas del workspace; este elemento se conserva por compatibilidad con
+           el contrato documentado del visor y permanece oculto. *@
         <p id="visor-aviso" class="visor-aviso" role="status" hidden></p>
 
         <ul class="visor-panel__lista">

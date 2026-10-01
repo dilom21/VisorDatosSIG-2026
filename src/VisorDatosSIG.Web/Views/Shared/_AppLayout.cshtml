@@ -1,0 +1,165 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    var apiBaseUrl = Configuration["Api:BaseUrl"] ?? string.Empty;
+}
+@*
+    Layout del workspace autenticado (Visor, Usuarios, Roles, Bitácora, Consultas,
+    Reportes).
+
+    Home y Login conservan el layout público (_Layout): la navegación pública no se
+    mezcla con el workspace.
+
+    Contratos que este layout debe preservar para no romper el flujo de sesión
+    existente (guard.js / api.js / sesion.js):
+      - #sesion-anonima y #sesion-activa  -> visibilidad según la sesión
+      - #sesion-nombre y #sesion-rol      -> nombre y roles del usuario actual
+      - #btn-cerrar-sesion                -> guard.js enlaza el cierre de sesión
+    El menú lateral NO está hardcodeado: lo construye sidebar.js con GET /api/menu.
+*@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - VisorDatosSIG</title>
+
+    @* Preferencia de tema antes del primer pintado: evita el destello claro/oscuro.
+       Solo guarda la preferencia visual; el token JWT nunca sale de sessionStorage. *@
+    <script>
+        (function () {
+            try {
+                if (window.localStorage.getItem('visorSIG.tema') === 'oscuro') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {
+                // Sin localStorage disponible se conserva el tema claro.
+            }
+        })();
+    </script>
+
+    @await RenderSectionAsync("Styles", required: false)
+    @* Los activos propios se referencian con asp-append-version: la URL cambia
+       cuando el archivo cambia, de modo que el navegador no puede seguir usando
+       una copia antigua de un CSS/JS ya corregido (Kestrel sirve los estáticos
+       sin Cache-Control y Chromium aplica caché heurística: con la URL fija, un
+       cambio en disco puede tardar horas en llegar). *@
+    <link rel="stylesheet" href="~/css/visor.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/sidebar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    @* Componentes comunes del workspace: el diálogo modal reutilizable que usan
+       /Roles y /Bitacora. Se cargan después de los tokens (visor.css / theme.css). *@
+    <link rel="stylesheet" href="~/css/comun.css" asp-append-version="true" />
+</head>
+<body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    @await Html.PartialAsync("_IconosSidebar")
+
+    <div class="app-shell">
+        <aside id="sidebar" class="sidebar" aria-label="Barra de navegación del sistema">
+            <div class="sidebar__marca">
+                <a class="sidebar__logo" asp-controller="Visor" asp-action="Index"
+                   aria-label="VisorDatosSIG, ir al visor cartográfico">
+                    <span class="sidebar__logo-mark" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                            <path d="M12 21.2s6.6-5.4 6.6-10.4a6.6 6.6 0 1 0-13.2 0c0 5 6.6 10.4 6.6 10.4Z" />
+                            <circle cx="12" cy="10.4" r="2.5" />
+                        </svg>
+                    </span>
+                    <span class="sidebar__logo-texto">
+                        <span class="sidebar__logo-titulo">VisorDatosSIG</span>
+                        <span class="sidebar__logo-sub">Información geográfica</span>
+                    </span>
+                </a>
+
+                @* Alternativa al hover para pantallas táctiles (CSS la muestra solo
+                   cuando no hay hover). No es el botón "Colapsar" del diseño de
+                   escritorio: en escritorio la expansión es por hover/foco. *@
+                <button type="button" id="btn-sidebar" class="sidebar__btn-alterno"
+                        aria-expanded="false" aria-controls="sidebar-nav" aria-label="Abrir o cerrar el menú">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <use href="#icono-menu" xlink:href="#icono-menu"></use>
+                    </svg>
+                </button>
+            </div>
+
+            <nav id="sidebar-nav" class="sidebar__nav" aria-label="Módulos del sistema">
+                @* Estado del menú (cargando / vacío / error). sidebar.js lo llena por
+                   textContent; por eso no lleva nodos hijos en el marcado. *@
+                <p id="sidebar-estado" class="sidebar__estado" role="status" aria-live="polite" hidden></p>
+                <ul id="sidebar-lista" class="sidebar__lista"></ul>
+            </nav>
+
+            <div class="sidebar__pie">
+                <div class="sidebar__usuario">
+                    <span class="sidebar__avatar" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <use href="#icono-usuario" xlink:href="#icono-usuario"></use>
+                        </svg>
+                    </span>
+
+                    @* Se conserva la estructura que espera guard.js. Ambos bloques
+                       arrancan ocultos para no mostrar un estado falso mientras la
+                       sesión se valida. *@
+                    <div id="sesion-anonima" hidden>
+                        <a class="sidebar__accion" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
+                    </div>
+                    <div id="sesion-activa" class="sesion-datos" hidden>
+                        <span id="sesion-nombre" class="sesion-nombre"></span>
+                        <span id="sesion-rol" class="sesion-rol"></span>
+                    </div>
+                </div>
+
+                <button type="button" id="btn-tema" class="sidebar__accion" aria-pressed="false">
+                    <span class="sidebar__accion-icono" aria-hidden="true">
+                        <svg class="icono-modo icono-modo--luna" viewBox="0 0 24 24" focusable="false">
+                            <use href="#icono-luna" xlink:href="#icono-luna"></use>
+                        </svg>
+                        <svg class="icono-modo icono-modo--sol" viewBox="0 0 24 24" focusable="false">
+                            <use href="#icono-sol" xlink:href="#icono-sol"></use>
+                        </svg>
+                    </span>
+                    <span class="sidebar__texto sidebar__accion-texto">Modo oscuro</span>
+                </button>
+
+                @* guard.js enlaza este botón en DOMContentLoaded y usa
+                   window.VisorSIG.guard.cerrarSesion(): no hay lógica paralela. *@
+                <button type="button" id="btn-cerrar-sesion" class="sidebar__accion">
+                    <span class="sidebar__accion-icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <use href="#icono-cerrar-sesion" xlink:href="#icono-cerrar-sesion"></use>
+                        </svg>
+                    </span>
+                    <span class="sidebar__texto sidebar__accion-texto">Cerrar sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="app-shell__contenido">
+            <main id="contenido" class="app-main app-main--app">
+                @* Zona de aviso del guard (fail-closed): recibe su texto por
+                   textContent, por eso no lleva nodos hijos en el marcado. *@
+                <p class="visor-aviso" id="app-aviso" data-visor-aviso role="status" hidden></p>
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script>
+        window.VisorSIG = window.VisorSIG || {};
+        window.VisorSIG.config = { apiBaseUrl: @Json.Serialize(apiBaseUrl) };
+    </script>
+    <script src="~/js/auth/sesion.js" asp-append-version="true"></script>
+    <script src="~/js/auth/api.js" asp-append-version="true"></script>
+    <script src="~/js/auth/guard.js" asp-append-version="true"></script>
+    <script src="~/js/theme/theme.js" asp-append-version="true"></script>
+    <script src="~/js/navigation/sidebar.js" asp-append-version="true"></script>
+    @* Helpers comunes: diálogo modal y formato de fechas. No dependen de la página
+       y no duplican la sesión ni el cliente HTTP (api.js / sesion.js). *@
+    <script src="~/js/comun/fechas.js" asp-append-version="true"></script>
+    <script src="~/js/comun/modal.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

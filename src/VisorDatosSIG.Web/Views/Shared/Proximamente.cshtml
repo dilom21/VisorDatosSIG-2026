@@ -1,0 +1,39 @@
+@*
+    Página compartida para las rutas del menú cuya funcionalidad todavía no está
+    implementada (Usuarios, Roles, Bitácora, Consultas, Reportes).
+
+    Evita duplicar HTML en ocho vistas y mantiene una única maqueta coherente dentro
+    del layout autenticado. La ruta existe para que el menú dinámico nunca lleve a un
+    404; NO se inventa ningún CRUD.
+
+    La página queda protegida por el mismo guard de sesión que el visor.
+*@
+@model VisorDatosSIG.Web.Models.PaginaProximamenteViewModel
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = Model.Funcionalidad;
+}
+
+<section class="proximamente">
+    <p class="proximamente__modulo">@Model.Modulo</p>
+
+    <span class="proximamente__icono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+            <use href="#icono-construccion" xlink:href="#icono-construccion"></use>
+        </svg>
+    </span>
+
+    <h1>@Model.Funcionalidad</h1>
+
+    <p class="proximamente__descripcion">
+        Funcionalidad en desarrollo. @Model.Descripcion
+    </p>
+
+    <p class="proximamente__ruta">@Model.RutaActual</p>
+</section>
+
+@section Scripts {
+    <script>
+        window.VisorSIG.guard.protegerPagina({ returnUrl: @Json.Serialize(Model.RutaActual) });
+    </script>
+}

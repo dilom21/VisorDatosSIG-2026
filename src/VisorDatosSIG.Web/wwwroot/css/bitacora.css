@@ -1,0 +1,302 @@
+/* =============================================================================
+   VisorDatosSIG 2026 — Consultar Bitácora (/Bitacora).
+
+   Pantalla de solo lectura: filtros, tabla paginada y pie con el conteo. Reutiliza
+   los tokens de visor.css y las clases base de botones; el modo oscuro no necesita
+   reglas propias porque theme.css redefine los tokens.
+   ============================================================================= */
+
+.bitacora {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.bitacora__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.bitacora__head h1 {
+    margin: 0 0 var(--space-1);
+    font-size: 1.5rem;
+    letter-spacing: -0.01em;
+}
+
+.bitacora__modulo {
+    margin: 0 0 var(--space-1);
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent-dark);
+}
+
+.bitacora__intro {
+    max-width: 84ch;
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-muted);
+}
+
+.bitacora__chip {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: 999px;
+    background-color: var(--color-surface-alt);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    white-space: nowrap;
+}
+
+/* Los avisos de la página llevan doble clase para imponerse al estilo base. */
+.bitacora__aviso.bitacora__aviso--error {
+    color: var(--color-error);
+    background-color: var(--color-error-bg);
+    border-color: var(--color-error-border);
+    border-left-color: var(--color-error);
+}
+
+.bitacora__aviso.bitacora__aviso--info {
+    color: var(--color-info);
+    background-color: var(--color-info-bg);
+    border-color: var(--color-info-border);
+    border-left-color: var(--color-info);
+}
+
+/* --- Filtros --- */
+.bitacora__filtros {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.bitacora__campo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.bitacora__campo--buscar {
+    grid-column: 1 / -1;
+}
+
+.bitacora__etiqueta {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-muted);
+}
+
+.bitacora__control {
+    width: 100%;
+    min-height: 38px;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.88rem;
+}
+
+.bitacora__control:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 1px;
+}
+
+.bitacora__control--corto {
+    width: auto;
+    min-width: 84px;
+}
+
+.bitacora__acciones {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding-top: var(--space-1);
+    border-top: 1px solid var(--color-border);
+}
+
+.bitacora__estado {
+    margin: 0;
+    min-height: 1.1em;
+    font-size: 0.85rem;
+    color: var(--color-muted);
+}
+
+.bitacora__estado--cargando {
+    color: var(--color-info);
+}
+
+.bitacora__estado--vacio {
+    color: var(--color-warning);
+}
+
+/* --- Tabla --- */
+.bitacora__tabla-envoltura {
+    overflow-x: auto;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.bitacora__tabla {
+    width: 100%;
+    /* En pantallas estrechas la tabla conserva un ancho mínimo y la envoltura
+       permite desplazamiento horizontal en lugar de aplastar las columnas. */
+    min-width: 860px;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+}
+
+.bitacora__tabla-caption {
+    padding: var(--space-3) var(--space-4) 0;
+    text-align: left;
+    font-size: 0.78rem;
+    color: var(--color-muted);
+    caption-side: top;
+}
+
+.bitacora__tabla thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: var(--space-2) var(--space-3);
+    background-color: var(--color-surface-alt);
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.bitacora__fila td {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
+}
+
+.bitacora__fila:last-child td {
+    border-bottom: 0;
+}
+
+.bitacora__fila:hover td {
+    background-color: var(--color-surface-alt);
+}
+
+.bitacora__celda {
+    overflow-wrap: anywhere;
+}
+
+.bitacora__celda--fecha {
+    white-space: nowrap;
+}
+
+.bitacora__celda--detalle {
+    max-width: 320px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bitacora__celda--accion {
+    width: 84px;
+    text-align: center;
+}
+
+.bitacora__ver {
+    min-height: 32px;
+    padding: 0 var(--space-3);
+    font-size: 0.82rem;
+}
+
+.bitacora__col-accion {
+    width: 84px;
+}
+
+/* Texto solo para lectores de pantalla (encabezado de la columna de acciones). */
+.bitacora__oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* --- Pie: conteo, tamaño de página y paginación --- */
+.bitacora__pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+}
+
+.bitacora__conteo {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-muted);
+}
+
+.bitacora__tamano {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-left: auto;
+    font-size: 0.82rem;
+    color: var(--color-muted);
+}
+
+.bitacora__paginacion {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.bitacora__pagina {
+    min-height: 32px;
+    padding: 0 var(--space-3);
+    font-size: 0.82rem;
+}
+
+.bitacora__pagina-estado {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .bitacora__tamano {
+        margin-left: 0;
+    }
+
+    .bitacora__paginacion {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .bitacora__celda--detalle {
+        max-width: 220px;
+    }
+}

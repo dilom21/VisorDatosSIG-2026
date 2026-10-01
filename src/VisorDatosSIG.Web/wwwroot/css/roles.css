@@ -1,0 +1,468 @@
+/* =============================================================================
+   VisorDatosSIG 2026 — Gestionar Roles y Permisos (/Roles).
+
+   Reutiliza los tokens de visor.css (colores, radios, sombras y espaciados) y las
+   clases base de botones; el modo oscuro no necesita reglas propias porque theme.css
+   redefine los tokens. Diseño de escritorio: panel de roles + matriz de permisos.
+   ============================================================================= */
+
+.roles {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.roles__head h1 {
+    margin: 0 0 var(--space-1);
+    font-size: 1.5rem;
+    letter-spacing: -0.01em;
+}
+
+.roles__modulo {
+    margin: 0 0 var(--space-1);
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent-dark);
+}
+
+.roles__intro {
+    max-width: 84ch;
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-muted);
+}
+
+/* Los avisos de la página llevan doble clase para imponerse al estilo base. */
+.roles__aviso.roles__aviso--error {
+    color: var(--color-error);
+    background-color: var(--color-error-bg);
+    border-color: var(--color-error-border);
+    border-left-color: var(--color-error);
+}
+
+.roles__aviso.roles__aviso--info {
+    color: var(--color-info);
+    background-color: var(--color-info-bg);
+    border-color: var(--color-info-border);
+    border-left-color: var(--color-info);
+}
+
+.roles__aviso.roles__aviso--exito {
+    color: var(--color-success);
+    background-color: var(--color-success-bg);
+    border-color: var(--color-success);
+    border-left-color: var(--color-success);
+}
+
+/* --- Rejilla principal --- */
+.roles__grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+}
+
+.roles__panel {
+    min-width: 0;
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.roles__panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.roles__panel-head h2 {
+    margin: 0 0 var(--space-1);
+    font-size: 1.05rem;
+}
+
+.roles__boton {
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    font-size: 0.88rem;
+}
+
+.roles__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.roles__matriz-rol {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+/* --- Listado de roles --- */
+.roles__lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 46vh;
+    overflow-y: auto;
+}
+
+.roles__rol {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    color: var(--color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.roles__rol:hover {
+    background-color: var(--color-surface-alt);
+    border-color: var(--color-border);
+}
+
+.roles__rol:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: -2px;
+}
+
+.roles__rol[aria-pressed="true"] {
+    background-color: var(--color-primary-soft);
+    border-color: var(--color-primary);
+}
+
+.roles__rol-nombre {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.roles__rol-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.78rem;
+}
+
+.roles__rol-usuarios {
+    color: var(--color-muted);
+}
+
+.roles__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+
+.roles__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background-color: var(--color-surface-alt);
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.roles__badge--activo {
+    color: var(--color-success);
+    background-color: var(--color-success-bg);
+    border-color: var(--color-success);
+}
+
+.roles__badge--inactivo {
+    color: var(--color-muted);
+    background-color: var(--color-surface-alt);
+    border-color: var(--color-border-strong);
+}
+
+.roles__badge--sistema {
+    color: var(--color-info);
+    background-color: var(--color-info-bg);
+    border-color: var(--color-info-border);
+}
+
+/* --- Detalle del rol seleccionado --- */
+.roles__detalle {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.roles__detalle-titulo {
+    margin: 0 0 var(--space-1);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+}
+
+.roles__detalle-descripcion {
+    margin: 0 0 var(--space-3);
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.roles__detalle-lista {
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: var(--space-1) var(--space-3);
+    align-items: center;
+}
+
+.roles__detalle-fila {
+    display: contents;
+}
+
+.roles__detalle-clave {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    white-space: nowrap;
+}
+
+.roles__detalle-valor {
+    margin: 0;
+    font-size: 0.86rem;
+    overflow-wrap: anywhere;
+}
+
+.roles__detalle-nota {
+    margin: var(--space-3) 0 0;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-info-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-info-bg);
+    color: var(--color-info);
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+/* --- Matriz de permisos --- */
+.roles__nota {
+    margin: 0 0 var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-info-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-info-bg);
+    color: var(--color-info);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.roles__estado {
+    margin: 0 0 var(--space-2);
+    font-size: 0.82rem;
+    color: var(--color-muted);
+    min-height: 1.1em;
+}
+
+.roles__estado--aviso {
+    color: var(--color-warning);
+    font-weight: 600;
+}
+
+.roles__estado--exito {
+    color: var(--color-success);
+    font-weight: 600;
+}
+
+.roles__tabla-envoltura {
+    max-height: 60vh;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+}
+
+.roles__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.roles__tabla-caption {
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+    font-size: 0.78rem;
+    color: var(--color-muted);
+    caption-side: top;
+}
+
+.roles__tabla thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: var(--space-2) var(--space-3);
+    background-color: var(--color-surface-alt);
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-muted);
+    text-align: center;
+    white-space: nowrap;
+}
+
+.roles__tabla thead th:first-child {
+    text-align: left;
+}
+
+.roles__fila td,
+.roles__fila th {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+}
+
+.roles__fila:last-child td,
+.roles__fila:last-child th {
+    border-bottom: 0;
+}
+
+.roles__fila:hover td,
+.roles__fila:hover th {
+    background-color: var(--color-surface-alt);
+}
+
+.roles__fila--agrupador td,
+.roles__fila--agrupador th {
+    background-color: var(--color-surface-alt);
+}
+
+.roles__celda-opcion {
+    /* La sangría se calcula con --roles-nivel (lo asigna roles.js según la jerarquía). */
+    padding-left: calc(var(--space-3) + var(--roles-nivel, 0) * var(--space-4)) !important;
+    text-align: left;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.roles__celda-permiso {
+    width: 88px;
+    text-align: center;
+}
+
+.roles__casilla {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+}
+
+.roles__casilla:disabled {
+    cursor: default;
+    opacity: 0.75;
+}
+
+.roles__casilla:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.roles__opcion-nombre {
+    display: inline;
+}
+
+.roles__opcion-tipo,
+.roles__opcion-ruta {
+    margin-left: var(--space-2);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-muted);
+}
+
+.roles__opcion-tipo {
+    padding: 1px 6px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.roles__opcion-ruta {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-weight: 400;
+}
+
+/* --- Pie de la matriz --- */
+.roles__pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.roles__pie-nota {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--color-muted);
+}
+
+.roles__pie-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-left: auto;
+}
+
+/* --- Responsive: en pantallas estrechas los paneles se apilan --- */
+@media (max-width: 980px) {
+    .roles__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .roles__lista {
+        max-height: 40vh;
+    }
+
+    .roles__tabla-envoltura {
+        max-height: none;
+    }
+}
+
+@media (max-width: 520px) {
+    .roles__pie-acciones {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .roles__pie-acciones .btn-primario,
+    .roles__pie-acciones .btn-secundario {
+        flex: 1 1 auto;
+    }
+}

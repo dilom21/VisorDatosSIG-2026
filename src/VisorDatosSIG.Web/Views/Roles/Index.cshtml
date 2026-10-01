@@ -1,0 +1,117 @@
+@*
+    Gestionar Roles y Permisos (CU03 - Gestionar Roles y CU04 - Gestionar Permisos).
+
+    La vista es la maqueta del módulo: listado de roles, detalle del rol seleccionado,
+    matriz de permisos y acciones (nuevo, editar, habilitar/deshabilitar, guardar y
+    descartar). Todo el contenido lo construye js/roles/roles.js por textContent a partir
+    de la API: nada de lo que llega del backend se escribe como HTML.
+
+    Contratos de los elementos (los usa el módulo de la página):
+      #roles-lista / #roles-lista-estado      -> listado de roles administrables
+      #roles-detalle                          -> detalle del rol seleccionado
+      #roles-matriz-cuerpo                    -> filas de la matriz (una por opción de menú)
+      #roles-matriz-badges / #roles-matriz-nota -> estado del rol y avisos de solo lectura
+      #btn-*                                  -> acciones del módulo
+
+    El "Próximamente" anterior se reemplaza por la implementación real; el sidebar sigue
+    siendo el único origen de navegación y la API la única autoridad de autorización.
+*@
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "Gestionar Roles y Permisos";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/roles.css" asp-append-version="true" />
+}
+
+<section class="roles">
+    <header class="roles__head">
+        <p class="roles__modulo">Usuarios y Seguridad</p>
+        <h1>Gestionar Roles y Permisos</h1>
+        <p class="roles__intro">
+            Los roles y su matriz de permisos se consultan y se guardan contra la API con la
+            sesión activa. La jerarquía de opciones se construye desde el catálogo del
+            servidor: una opción nueva de menú aparece aquí automáticamente.
+        </p>
+    </header>
+
+    @* Avisos de la página (éxito, error de validación o falta de permiso). *@
+    <p id="roles-aviso" class="visor-aviso roles__aviso" role="status" hidden></p>
+
+    <div class="roles__grid">
+        <section class="roles__panel roles__panel--roles" aria-labelledby="roles-titulo-lista">
+            <div class="roles__panel-head">
+                <h2 id="roles-titulo-lista">Roles</h2>
+                <button type="button" id="btn-nuevo-rol" class="btn-primario roles__boton">
+                    Nuevo rol
+                </button>
+            </div>
+
+            <p id="roles-lista-estado" class="roles__estado" role="status" aria-live="polite" hidden></p>
+            <ul id="roles-lista" class="roles__lista"></ul>
+
+            <div id="roles-detalle" class="roles__detalle" hidden></div>
+        </section>
+
+        <section class="roles__panel roles__panel--matriz" aria-labelledby="roles-titulo-matriz">
+            <div class="roles__panel-head">
+                <div class="roles__matriz-head">
+                    <h2 id="roles-titulo-matriz">Permisos del rol</h2>
+                    <p id="roles-matriz-rol" class="roles__matriz-rol"></p>
+                    <div id="roles-matriz-badges" class="roles__badges"></div>
+                </div>
+
+                <div class="roles__acciones">
+                    <button type="button" id="btn-editar-rol" class="btn-secundario roles__boton" disabled>
+                        Editar
+                    </button>
+                    <button type="button" id="btn-estado-rol" class="btn-secundario roles__boton" disabled>
+                        Deshabilitar
+                    </button>
+                </div>
+            </div>
+
+            <p id="roles-matriz-nota" class="roles__nota" hidden></p>
+            <p id="roles-matriz-estado" class="roles__estado" role="status" aria-live="polite"></p>
+
+            <div class="roles__tabla-envoltura">
+                <table class="roles__tabla">
+                    <caption class="roles__tabla-caption">
+                        Matriz de permisos por opción de menú
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Opción de menú</th>
+                            <th scope="col">Ver</th>
+                            <th scope="col">Crear</th>
+                            <th scope="col">Editar</th>
+                            <th scope="col">Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roles-matriz-cuerpo"></tbody>
+                </table>
+            </div>
+
+            <div class="roles__pie">
+                <p class="roles__pie-nota">
+                    Los cambios se guardan juntos, en una sola operación sobre la API.
+                </p>
+                <div class="roles__pie-acciones">
+                    <button type="button" id="btn-descartar-permisos" class="btn-secundario" disabled>
+                        Descartar
+                    </button>
+                    <button type="button" id="btn-guardar-permisos" class="btn-primario" disabled>
+                        Guardar
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/roles/roles.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({ returnUrl: '/Roles' });
+    </script>
+}

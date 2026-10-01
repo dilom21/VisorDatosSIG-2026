@@ -1,0 +1,106 @@
+/* =============================================================================
+   VisorDatosSIG 2026 — Tema claro / oscuro del workspace autenticado.
+
+   El tema oscuro se activa con html[data-theme="dark"] (lo fija theme.js y lo
+   anticipa el script en línea de _AppLayout para evitar el destello al cargar).
+   Aquí solo se redefinen los tokens de visor.css, de modo que los componentes
+   existentes cambian de tema sin duplicar reglas.
+
+   Leaflet / OpenStreetMap conserva su cartografía original: no se aplican filtros
+   agresivos al mapa. Solo se ajustan controles y popups para que el contenido
+   propio (leyenda, badges, popups de identificación) siga siendo legible.
+   ============================================================================= */
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    /* Marca (el sidebar tiene sus propios tokens más abajo). */
+    --color-primary: #2f74ad;
+    --color-primary-dark: #265e8c;
+    --color-primary-soft: #16324a;
+    --color-accent: #4fc3b4;
+    --color-accent-dark: #6ed3c5;
+
+    /* Superficies. */
+    --color-background: #0f1720;
+    --color-surface: #17212c;
+    --color-surface-alt: #1d2833;
+
+    /* Texto. */
+    --color-text: #e6ecf2;
+    --color-muted: #a3b3c2;
+    --color-border: #2b3a49;
+    --color-border-strong: #3d4f61;
+
+    /* Estados. */
+    --color-error: #ff9d95;
+    --color-error-bg: #3a1a18;
+    --color-error-border: #6d2b26;
+    --color-warning: #f0cc7a;
+    --color-warning-bg: #3a2f14;
+    --color-warning-border: #6b5620;
+    --color-success: #8fd6a8;
+    --color-success-bg: #16301f;
+    --color-info: #a8cff0;
+    --color-info-bg: #16293a;
+    --color-info-border: #2c4c66;
+
+    /* Estados de Código Fijo: se aclaran para que se lean sobre superficie oscura. */
+    --estado-normal: #6fd39a;
+    --estado-para-corte: #e8bc5a;
+    --estado-cortado: #ff9d95;
+    --estado-baja-parcial: #f0a273;
+    --estado-baja-total: #b6c2ce;
+    --estado-desconocido: #a3b3c2;
+
+    /* Sombras. */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+
+    /* El sidebar queda como la superficie más profunda del workspace. */
+    --sidebar-fondo: #0b1622;
+    --sidebar-borde: rgba(255, 255, 255, 0.10);
+    --sidebar-texto: #cfdce8;
+    --sidebar-texto-suave: #9bb0c3;
+    --sidebar-texto-fuerte: #ffffff;
+    --sidebar-hover: rgba(255, 255, 255, 0.08);
+    --sidebar-activo-fondo: #0d6f68;
+}
+
+/* -----------------------------------------------------------------------------
+   Mapa: fondo neutro mientras cargan los tiles y controles legibles.
+   -------------------------------------------------------------------------- */
+html[data-theme="dark"] .visor-map,
+html[data-theme="dark"] .leaflet-container {
+    background-color: #0b131c;
+}
+
+/* leaflet.css fija fondo blanco en los popups: sin este ajuste el texto del tema
+   oscuro quedaría sobre blanco. */
+html[data-theme="dark"] .leaflet-popup-content-wrapper,
+html[data-theme="dark"] .leaflet-popup-tip {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+}
+
+html[data-theme="dark"] .leaflet-bar a,
+html[data-theme="dark"] .leaflet-bar a:hover {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border-bottom-color: var(--color-border);
+}
+
+html[data-theme="dark"] .leaflet-bar a.leaflet-disabled {
+    background-color: var(--color-surface-alt);
+    color: var(--color-muted);
+}
+
+html[data-theme="dark"] .leaflet-control-attribution {
+    background-color: rgba(11, 19, 28, 0.78);
+    color: var(--color-muted);
+}
+
+html[data-theme="dark"] .leaflet-control-attribution a {
+    color: var(--color-accent);
+}

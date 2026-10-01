@@ -7,8 +7,10 @@ using VisorDatosSIG.Api.Middleware;
 using VisorDatosSIG.Application.Interfaces;
 using VisorDatosSIG.Infrastructure.Authentication;
 using VisorDatosSIG.Infrastructure.Data;
+using VisorDatosSIG.Infrastructure.Navigation;
 using VisorDatosSIG.Infrastructure.Persistence;
 using VisorDatosSIG.Infrastructure.Persistence.Repositories;
+using VisorDatosSIG.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,6 +77,18 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 // Servicios espaciales, catastro y bitácora de migración
 builder.Services.AddScoped<ICadastreRepository, CadastreRepository>();
 builder.Services.AddScoped<IBitacoraService, BitacoraService>();
+
+// Menú lateral dinámico (dbo.MenuOpciones)
+builder.Services.AddScoped<IMenuRepository, MenuRepository>();
+builder.Services.AddScoped<IMenuService, MenuService>();
+
+// Roles, permisos y bitacora web (CU03 - Roles, CU04 - Permisos y CU05 - Bitacora)
+builder.Services.AddScoped<IRolRepository, RolRepository>();
+builder.Services.AddScoped<IRolesService, RolesService>();
+builder.Services.AddScoped<IPermisoRepository, PermisoRepository>();
+builder.Services.AddScoped<IPermisoService, PermisoService>();
+builder.Services.AddScoped<IBitacoraConsultaRepository, BitacoraConsultaRepository>();
+builder.Services.AddScoped<IBitacoraConsultaService, BitacoraConsultaService>();
 
 // Autenticación JWT Bearer.
 builder.Services

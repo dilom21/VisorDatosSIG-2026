@@ -1,0 +1,667 @@
+/* =============================================================================
+   VisorDatosSIG 2026 — Workspace autenticado: sidebar dinámico y páginas
+   "Próximamente".
+
+   Reutiliza los tokens de visor.css (colores, radios, sombras y espaciados) y no
+   duplica valores. Los ajustes del modo oscuro viven en theme.css.
+
+   Regla clave del layout: el sidebar es `position: fixed` y el contenido reserva
+   SIEMPRE el ancho contraído (--sidebar-ancho-contraido). La expansión cambia
+   únicamente el ancho del propio sidebar, que se superpone al contenido con
+   z-index (por encima de la interfaz de Leaflet). Por eso el mapa de Leaflet
+   nunca se redimensiona al pasar el mouse.
+
+   Estado de expansión: hover del mouse, toque explícito (clase sidebar--abierto)
+   o foco de TECLADO (:has(:focus-visible)). Nunca :focus-within a secas: un clic
+   deja el foco en el control pulsado y el sidebar quedaría anclado abierto,
+   ignorando al mouse hasta recargar la página.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. Tokens del sidebar
+   -------------------------------------------------------------------------- */
+:root {
+    --sidebar-ancho-contraido: 72px;
+    --sidebar-ancho-expandido: 264px;
+    --sidebar-transicion: 240ms cubic-bezier(0.4, 0, 0.2, 1);
+    --sidebar-fondo: #0d3b66;
+    --sidebar-borde: rgba(255, 255, 255, 0.10);
+    --sidebar-texto: #d7e3ee;
+    --sidebar-texto-suave: #a9bdd0;
+    --sidebar-texto-fuerte: #ffffff;
+    --sidebar-hover: rgba(255, 255, 255, 0.10);
+    --sidebar-activo-fondo: #0f8f83;
+}
+
+/* -----------------------------------------------------------------------------
+   2. Estructura del workspace
+   -------------------------------------------------------------------------- */
+.app-shell {
+    min-height: 100vh;
+}
+
+/* El contenido nunca se recalcula: el sidebar se superpone al expandirse. */
+.app-shell__contenido {
+    margin-left: var(--sidebar-ancho-contraido);
+}
+
+/* El layout autenticado no usa cabecera ni ancho máximo de contenedor. */
+.app-main--app {
+    max-width: none;
+    margin: 0;
+    padding: var(--space-4);
+}
+
+/* Fail-closed del guard: mientras no se valide la sesión el contenido se atenúa,
+   pero sigue siendo interactivo para que el aviso de reintento funcione. */
+body.sesion-verificando .app-shell__contenido {
+    opacity: 0.55;
+}
+
+/* Alternativa al hover (pantallas táctiles): el botón solo se muestra ahí. */
+.sidebar__btn-alterno {
+    display: none;
+}
+
+/* -----------------------------------------------------------------------------
+   3. Sidebar
+   -------------------------------------------------------------------------- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    /* Por encima de la interfaz de Leaflet (.leaflet-top/.leaflet-bottom usan
+       z-index: 1000 y .leaflet-control 800). Sin esto, el mapa recibía el hover y
+       el clic en la franja donde el sidebar expandido lo tapa, y el sidebar se
+       contraía solo con el cursor dentro. */
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: var(--sidebar-ancho-contraido);
+    height: 100vh;
+    padding: var(--space-3) var(--space-2);
+    background-color: var(--sidebar-fondo);
+    color: var(--sidebar-texto);
+    border-right: 1px solid var(--sidebar-borde);
+    box-shadow: var(--shadow-md);
+    overflow-x: hidden;
+    overflow-y: auto;
+    transition: width var(--sidebar-transicion), box-shadow var(--sidebar-transicion);
+}
+
+/* Expansión por hover del mouse o por toque explícito (clase sidebar--abierto).
+   Deliberadamente NO se usa :focus-within: un clic del mouse deja el foco en el
+   control pulsado (botón de tema, agrupador, cerrar sesión) y el sidebar quedaría
+   expandido de forma permanente, sin volver a responder al mouse hasta recargar.
+   El foco de teclado sí expande, pero solo el visible (:focus-visible), que es el
+   único que se produce con Tab y nunca con un clic. */
+.sidebar:hover,
+.sidebar.sidebar--abierto {
+    width: var(--sidebar-ancho-expandido);
+    box-shadow: var(--shadow-lg);
+}
+
+@supports selector(:has(*)) {
+    .sidebar:has(:focus-visible) {
+        width: var(--sidebar-ancho-expandido);
+        box-shadow: var(--shadow-lg);
+    }
+}
+
+/* Navegadores sin :has(): se conserva la expansión por foco interior. */
+@supports not selector(:has(*)) {
+    .sidebar:focus-within {
+        width: var(--sidebar-ancho-expandido);
+        box-shadow: var(--shadow-lg);
+    }
+}
+
+/* --- Marca --- */
+.sidebar__marca {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: 0 var(--space-2);
+}
+
+.sidebar__logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    color: var(--sidebar-texto-fuerte);
+    text-decoration: none;
+}
+
+.sidebar__logo:hover {
+    color: var(--sidebar-texto-fuerte);
+}
+
+.sidebar__logo-mark {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    background-color: rgba(255, 255, 255, 0.14);
+    color: var(--sidebar-texto-fuerte);
+}
+
+.sidebar__logo-texto {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.15;
+}
+
+.sidebar__logo-titulo {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+}
+
+.sidebar__logo-sub {
+    font-size: 0.7rem;
+    color: var(--sidebar-texto-suave);
+    white-space: nowrap;
+}
+
+/* Texto que solo se lee con el sidebar expandido. Se oculta con opacidad (no con
+   display) para que el nombre siga disponible para los lectores de pantalla. */
+.sidebar__texto {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+.sidebar:hover .sidebar__texto,
+.sidebar.sidebar--abierto .sidebar__texto {
+    opacity: 1;
+    transition-delay: 90ms;
+}
+
+/* El foco de teclado también muestra el texto; el clic del mouse no. */
+@supports selector(:has(*)) {
+    .sidebar:has(:focus-visible) .sidebar__texto {
+        opacity: 1;
+        transition-delay: 90ms;
+    }
+}
+
+@supports not selector(:has(*)) {
+    .sidebar:focus-within .sidebar__texto {
+        opacity: 1;
+        transition-delay: 90ms;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   4. Navegación
+   -------------------------------------------------------------------------- */
+.sidebar__nav {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    gap: var(--space-2);
+}
+
+.sidebar__lista,
+.sidebar__sublista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sidebar__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sidebar__sublista {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Colapsado solo se muestran los iconos de primer nivel. Con foco de teclado el
+   submenú permanece visible; el foco que deja un clic del mouse no cuenta. */
+.sidebar:not(:hover):not(.sidebar--abierto):not(:has(:focus-visible)) .sidebar__sublista {
+    display: none;
+}
+
+@supports not selector(:has(*)) {
+    .sidebar:not(:hover):not(.sidebar--abierto):not(:focus-within) .sidebar__sublista {
+        display: none;
+    }
+}
+
+.sidebar__item {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar__enlace {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 42px;
+    padding: 0 var(--space-2);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    color: var(--sidebar-texto);
+    font: inherit;
+    font-size: 0.93rem;
+    font-weight: 500;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.sidebar__enlace:hover {
+    background-color: var(--sidebar-hover);
+    color: var(--sidebar-texto-fuerte);
+}
+
+.sidebar__enlace:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: -3px;
+}
+
+/* Espacio fijo del icono: mantiene alineadas las filas en ambos estados. */
+.sidebar__icono {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.sidebar__chevron {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    margin-left: auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transition: opacity 120ms ease, transform 200ms ease;
+}
+
+.sidebar:hover .sidebar__chevron,
+.sidebar.sidebar--abierto .sidebar__chevron {
+    opacity: 0.75;
+}
+
+@supports selector(:has(*)) {
+    .sidebar:has(:focus-visible) .sidebar__chevron {
+        opacity: 0.75;
+    }
+}
+
+@supports not selector(:has(*)) {
+    .sidebar:focus-within .sidebar__chevron {
+        opacity: 0.75;
+    }
+}
+
+.sidebar__enlace[aria-expanded="true"] .sidebar__chevron {
+    transform: rotate(90deg);
+}
+
+/* Anidado: los hijos se indentan bajo su agrupador. */
+.sidebar__sublista .sidebar__enlace {
+    padding-left: calc(var(--space-2) + 32px);
+    font-size: 0.89rem;
+}
+
+/* --- Estado activo -------------------------------------------------------
+   No depende solo del color: la opción activa suma una barra lateral y peso
+   tipográfico, de modo que también se distingue en escala de grises. */
+.sidebar__item--activo > .sidebar__enlace {
+    background-color: var(--sidebar-activo-fondo);
+    color: var(--sidebar-texto-fuerte);
+    font-weight: 600;
+}
+
+.sidebar__item--activo > .sidebar__enlace::before {
+    content: "";
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: 0;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background-color: var(--sidebar-texto-fuerte);
+}
+
+/* Rama con un hijo activo: el agrupador queda resaltado y expandido. */
+.sidebar__item--rama-activa > .sidebar__enlace {
+    background-color: var(--sidebar-hover);
+    color: var(--sidebar-texto-fuerte);
+    font-weight: 600;
+}
+
+/* Opción sin ruta ni hijos: no navegable, se señala como inerte. */
+.sidebar__enlace--inerte {
+    cursor: default;
+    color: var(--sidebar-texto-suave);
+}
+
+/* --- Estado de carga (esqueleto) --- */
+.sidebar__esqueleto {
+    height: 42px;
+    border-radius: var(--radius-sm);
+    background-color: rgba(255, 255, 255, 0.07);
+    animation: sidebar-latido 1.4s ease-in-out infinite;
+}
+
+@keyframes sidebar-latido {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 0.9; }
+}
+
+.sidebar__estado {
+    margin: 0;
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    background-color: rgba(255, 255, 255, 0.07);
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--sidebar-texto-suave);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar__esqueleto {
+        animation: none;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   5. Pie del sidebar: usuario, modo oscuro y cerrar sesión
+   -------------------------------------------------------------------------- */
+.sidebar__pie {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--sidebar-borde);
+}
+
+.sidebar__usuario {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 46px;
+    padding: var(--space-1) var(--space-2);
+}
+
+.sidebar__avatar {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.14);
+    color: var(--sidebar-texto-fuerte);
+}
+
+.sidebar__avatar svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Reutiliza .sesion-datos / .sesion-nombre / .sesion-rol de auth.css sobre el
+   fondo oscuro del sidebar (auth.css está pensado para la cabecera clara). */
+.sidebar .sesion-datos {
+    min-width: 0;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+.sidebar:hover .sesion-datos,
+.sidebar.sidebar--abierto .sesion-datos {
+    opacity: 1;
+    transition-delay: 90ms;
+}
+
+@supports selector(:has(*)) {
+    .sidebar:has(:focus-visible) .sesion-datos {
+        opacity: 1;
+        transition-delay: 90ms;
+    }
+}
+
+@supports not selector(:has(*)) {
+    .sidebar:focus-within .sesion-datos {
+        opacity: 1;
+        transition-delay: 90ms;
+    }
+}
+
+.sidebar .sesion-nombre {
+    color: var(--sidebar-texto-fuerte);
+    max-width: 18ch;
+}
+
+.sidebar .sesion-rol {
+    color: var(--sidebar-texto-suave);
+}
+
+.sidebar__accion {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 42px;
+    padding: 0 var(--space-2);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    color: var(--sidebar-texto);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.sidebar__accion:hover {
+    background-color: var(--sidebar-hover);
+    color: var(--sidebar-texto-fuerte);
+}
+
+.sidebar__accion:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: -3px;
+}
+
+.sidebar__accion-icono {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+}
+
+.sidebar__accion-icono svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* El icono del botón de tema se alterna solo con CSS según el tema activo. */
+.icono-modo--sol {
+    display: none;
+}
+
+html[data-theme="dark"] .icono-modo--sol {
+    display: block;
+}
+
+html[data-theme="dark"] .icono-modo--luna {
+    display: none;
+}
+
+/* --- Sprite SVG local: nunca se usa `display: none` (rompe <use>). --- */
+.iconos-svg-sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+/* -----------------------------------------------------------------------------
+   6. Páginas "Próximamente"
+   -------------------------------------------------------------------------- */
+.proximamente {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    max-width: 640px;
+    margin: var(--space-6) auto;
+    padding: var(--space-6);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+
+.proximamente__modulo {
+    margin: 0;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent-dark);
+}
+
+.proximamente__icono {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.proximamente__icono svg {
+    width: 32px;
+    height: 32px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.proximamente h1 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.proximamente__descripcion {
+    margin: 0;
+    color: var(--color-muted);
+}
+
+.proximamente__ruta {
+    margin: 0;
+    padding: var(--space-1) var(--space-3);
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-alt);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.82rem;
+    color: var(--color-muted);
+}
+
+/* -----------------------------------------------------------------------------
+   7. Responsive
+   -------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+    .app-main--app {
+        padding: var(--space-5);
+    }
+
+    /* Sin cabecera en el workspace: el mapa aprovecha el alto disponible. */
+    .app-main--app .visor-map {
+        height: calc(100vh - 4rem);
+        min-height: 480px;
+    }
+}
+
+/* Sin hover (táctil): el sidebar se abre y cierra con el botón de la marca. */
+@media (hover: none) {
+    .sidebar__btn-alterno {
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
+        margin-left: auto;
+        border: 1px solid var(--sidebar-borde);
+        border-radius: var(--radius-sm);
+        background-color: rgba(255, 255, 255, 0.10);
+        color: var(--sidebar-texto-fuerte);
+        cursor: pointer;
+    }
+
+    .sidebar__btn-alterno svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .sidebar__chevron {
+        opacity: 0.75;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-main--app {
+        padding: var(--space-3);
+    }
+
+    .proximamente {
+        margin-top: var(--space-4);
+        padding: var(--space-5) var(--space-4);
+    }
+}
