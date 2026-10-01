@@ -9,8 +9,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - VisorDatosSIG</title>
     @await RenderSectionAsync("Styles", required: false)
-    <link rel="stylesheet" href="~/css/visor.css" />
-    <link rel="stylesheet" href="~/css/auth.css" />
+    <link rel="stylesheet" href="~/css/visor.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    @* usuarios.css no se carga aquí: la vista /Usuarios la declara en su sección Styles y
+       se sirve con el layout del workspace (_AppLayout). *@
 </head>
 <body class="@(ViewData["FullWidth"] is true ? "visor-page" : "") @(ViewData["BodyClass"])">
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -30,30 +32,45 @@
             </a>
 
             <nav class="app-nav" aria-label="Navegación principal">
+                @* Los módulos de administración se alcanzan solo desde el sidebar dinámico
+                   (dbo.MenuOpciones -> GET /api/menu -> sidebar.js): el header público no
+                   fija enlaces a /Usuarios ni a /Roles. *@
                 <a class="app-nav__link" asp-controller="Home" asp-action="Index">Inicio</a>
                 <a class="app-nav__link" asp-controller="Visor" asp-action="Index">Visor cartográfico</a>
             </nav>
 
             @* Bloque de sesión: los identificadores y la estructura los controla
                guard.js (sesion-anonima, sesion-activa, sesion-nombre, sesion-rol,
-               btn-cerrar-sesion). No alterar sin revisar ese módulo. *@
+               btn-cerrar-sesion). El botón de cuenta abre las opciones personales. *@
             <div class="sesion">
                 <div id="sesion-anonima">
                     <a class="btn-sesion" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
                 </div>
-                <div id="sesion-activa" class="sesion-chip" hidden>
-                    <span class="sesion-chip__icono" aria-hidden="true">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
-                            <circle cx="12" cy="8.5" r="3.8" />
-                            <path d="M4.6 20.2a7.7 7.7 0 0 1 14.8 0" />
-                        </svg>
-                    </span>
-                    <span class="sesion-datos">
-                        <span id="sesion-nombre" class="sesion-nombre"></span>
-                        <span id="sesion-rol" class="sesion-rol"></span>
-                    </span>
-                    <button type="button" id="btn-cerrar-sesion" class="btn-sesion btn-sesion--ghost">Cerrar sesión</button>
+                <div id="sesion-activa" class="sesion-usuario" hidden>
+                    <button type="button" id="btn-menu-usuario" class="sesion-chip sesion-chip--boton"
+                            aria-expanded="false" aria-controls="menu-usuario" aria-label="Abrir opciones de cuenta">
+                        <span class="sesion-chip__icono" aria-hidden="true">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                                <circle cx="12" cy="8.5" r="3.8" />
+                                <path d="M4.6 20.2a7.7 7.7 0 0 1 14.8 0" />
+                            </svg>
+                        </span>
+                        <span class="sesion-datos">
+                            <span id="sesion-nombre" class="sesion-nombre"></span>
+                            <span id="sesion-rol" class="sesion-rol"></span>
+                        </span>
+                        <svg class="sesion-chip__flecha" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+                    </button>
+                    <div id="menu-usuario" class="sesion-menu" hidden>
+                        <button type="button" id="btn-cambiar-password" class="sesion-menu__opcion">
+                            Cambiar contraseña
+                        </button>
+                        <button type="button" id="btn-cerrar-sesion" class="sesion-menu__opcion sesion-menu__opcion--salir">
+                            Cerrar sesión
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -64,13 +81,16 @@
         @RenderBody()
     </main>
 
+    <partial name="_PasswordModal" />
+
     <script>
         window.VisorSIG = window.VisorSIG || {};
         window.VisorSIG.config = { apiBaseUrl: @Json.Serialize(apiBaseUrl) };
     </script>
-    <script src="~/js/auth/sesion.js"></script>
-    <script src="~/js/auth/api.js"></script>
-    <script src="~/js/auth/guard.js"></script>
+    <script src="~/js/auth/sesion.js" asp-append-version="true"></script>
+    <script src="~/js/auth/api.js" asp-append-version="true"></script>
+    <script src="~/js/auth/guard.js" asp-append-version="true"></script>
+    <script src="~/js/usuarios/password.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

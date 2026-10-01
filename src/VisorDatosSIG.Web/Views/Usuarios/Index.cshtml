@@ -1,0 +1,88 @@
+@*
+    Gestionar Usuarios (CU03 - Gestionar Usuarios) y cambio de la propia contraseña (CU02).
+
+    La vista es la maqueta del módulo: el listado, las altas, la edición, el cambio de estado y
+    el restablecimiento de contraseña los ejecuta js/usuarios/usuarios.js contra /api/usuarios
+    con el token de la sesión (api.js). Nada de lo que llega del backend se escribe como HTML.
+
+    La autorización real vive en la API: resuelve en cada petición el permiso dinámico sobre la
+    opción de menú /Usuarios de dbo.RolMenu (ver, crear y editar), y el rol Administrador
+    mantiene el acceso total implícito. Esta página solo se alcanza desde el sidebar dinámico
+    (dbo.MenuOpciones -> GET /api/menu -> sidebar.js) y su contenido permanece oculto hasta que
+    guard.js valida la sesión y la API confirma el permiso.
+
+    Contratos de los elementos (los usa el módulo de la página):
+      #gestion-mensaje   -> aviso del módulo (éxito, error o falta de permiso)
+      #usuarios-lista    -> filas del listado de usuarios
+      #usuario-form      -> alta y edición
+      #reset-form        -> restablecimiento de contraseña
+      #usuario-roles     -> casillas de roles (las llena usuarios.js con /api/usuarios/roles)
+*@
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "Gestionar usuarios";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/usuarios.css" asp-append-version="true" />
+}
+
+<section class="gestion">
+    <header class="gestion__cabecera">
+        <p class="gestion__modulo">Usuarios y Seguridad</p>
+        <h1>Gestionar usuarios</h1>
+        <p class="gestion__intro">Cree cuentas, asigne roles y administre su acceso al sistema.</p>
+    </header>
+
+    @* Aviso del módulo: vive fuera del contenido protegido para poder informar la falta de
+       permiso aunque el listado siga oculto. Lo escribe usuarios.js por textContent. *@
+    <p id="gestion-mensaje" class="visor-aviso gestion__mensaje" role="status" aria-live="polite" hidden></p>
+
+    @* El contenido arranca oculto: usuarios.js lo publica cuando la API confirma el permiso. *@
+    <div id="gestion-contenido" class="gestion-contenido" hidden>
+        <div class="gestion__barra">
+            <button id="usuarios-recargar" type="button" class="btn-secundario">Actualizar listado</button>
+            <label class="gestion__buscar" for="usuarios-buscar">Buscar por nombre o usuario
+                <input id="usuarios-buscar" type="search" autocomplete="off" />
+            </label>
+        </div>
+
+        <div class="gestion-tabla"><table>
+            <caption>Usuarios registrados</caption>
+            <thead><tr><th>Usuario</th><th>Nombre</th><th>Roles</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="usuarios-lista"></tbody>
+        </table></div>
+
+        <h2 id="usuario-titulo">Crear usuario</h2>
+        <form id="usuario-form" class="gestion-form">
+            <label for="usuario-login">Usuario</label><input id="usuario-login" maxlength="100" autocomplete="off" required />
+            <label for="usuario-nombre">Nombre</label><input id="usuario-nombre" maxlength="240" required />
+            <div id="password-inicial-grupo">
+                <label for="usuario-password">Contraseña inicial</label><input id="usuario-password" type="password" minlength="8" maxlength="200" autocomplete="new-password" required />
+            </div>
+            <fieldset id="usuario-roles"><legend>Roles</legend></fieldset>
+            <div><button type="submit" class="btn-primario">Guardar usuario</button>
+            <button id="usuario-cancelar" type="button" class="btn-secundario">Cancelar edición</button></div>
+        </form>
+
+        <form id="reset-form" class="gestion-form" hidden>
+            <h2 id="reset-titulo">Restablecer contraseña</h2>
+            <label for="reset-password">Nueva contraseña</label><input id="reset-password" type="password" minlength="8" maxlength="200" autocomplete="new-password" required />
+            <label for="reset-confirmar">Confirmar contraseña</label><input id="reset-confirmar" type="password" minlength="8" maxlength="200" autocomplete="new-password" required />
+            <div><button type="submit" class="btn-primario">Restablecer contraseña</button>
+            <button id="reset-cancelar" type="button" class="btn-secundario">Cancelar</button></div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/usuarios/usuarios.js" asp-append-version="true"></script>
+    <script>
+        @* Misma convención que /Roles y /Bitacora: la página protege la vista y, al validar la
+           sesión, arranca el módulo. La API decide el acceso real con el permiso dinámico. *@
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Usuarios',
+            alValidar: function () { window.VisorSIG.usuarios.iniciar(); }
+        });
+    </script>
+}

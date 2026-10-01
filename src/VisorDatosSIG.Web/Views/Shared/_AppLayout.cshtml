@@ -14,6 +14,8 @@
       - #sesion-anonima y #sesion-activa  -> visibilidad según la sesión
       - #sesion-nombre y #sesion-rol      -> nombre y roles del usuario actual
       - #btn-cerrar-sesion                -> guard.js enlaza el cierre de sesión
+      - #btn-cambiar-password             -> password.js abre el diálogo de CU02
+      - #password-modal                   -> diálogo de cambio de contraseña (_PasswordModal)
     El menú lateral NO está hardcodeado: lo construye sidebar.js con GET /api/menu.
 *@
 <!DOCTYPE html>
@@ -152,6 +154,18 @@
                     <span class="sidebar__texto sidebar__accion-texto">Modo oscuro</span>
                 </button>
 
+                @* CU02 (cambio de la propia contraseña): el diálogo y su lógica son los
+                   compartidos con el layout público. password.js enlaza por id este
+                   disparador, así que no se duplica el módulo ni la sesión. *@
+                <button type="button" id="btn-cambiar-password" class="sidebar__accion">
+                    <span class="sidebar__accion-icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <use href="#icono-password" xlink:href="#icono-password"></use>
+                        </svg>
+                    </span>
+                    <span class="sidebar__texto sidebar__accion-texto">Cambiar contraseña</span>
+                </button>
+
                 @* guard.js enlaza este botón en DOMContentLoaded y usa
                    window.VisorSIG.guard.cerrarSesion(): no hay lógica paralela. *@
                 <button type="button" id="btn-cerrar-sesion" class="sidebar__accion">
@@ -186,6 +200,10 @@
         </div>
     </div>
 
+    @* CU02: el mismo diálogo (_PasswordModal) que usa el layout público; su lógica vive
+       en js/usuarios/password.js y no depende de la página que se esté viendo. *@
+    <partial name="_PasswordModal" />
+
     <script>
         window.VisorSIG = window.VisorSIG || {};
         window.VisorSIG.config = { apiBaseUrl: @Json.Serialize(apiBaseUrl) };
@@ -193,6 +211,8 @@
     <script src="~/js/auth/sesion.js" asp-append-version="true"></script>
     <script src="~/js/auth/api.js" asp-append-version="true"></script>
     <script src="~/js/auth/guard.js" asp-append-version="true"></script>
+    @* CU02: cambio de la propia contraseña (diálogo #password-modal). *@
+    <script src="~/js/usuarios/password.js" asp-append-version="true"></script>
     <script src="~/js/theme/theme.js" asp-append-version="true"></script>
     <script src="~/js/navigation/sidebar.js" asp-append-version="true"></script>
     @* Helpers comunes: diálogo modal y formato de fechas. No dependen de la página

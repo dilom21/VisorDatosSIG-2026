@@ -37,6 +37,9 @@ public sealed class UserSession
     /// <summary>Instante en que vence el token; <c>null</c> si no hay sesión.</summary>
     public DateTimeOffset? ExpiraEn { get; private set; }
 
+    /// <summary>Instante de expiración de la sesión.</summary>
+    public DateTimeOffset? Expiration => ExpiraEn;
+
     /// <summary>Indica si existe una sesión con token de acceso.</summary>
     public bool IsAuthenticated => !string.IsNullOrWhiteSpace(_accessToken);
 

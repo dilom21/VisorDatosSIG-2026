@@ -17,6 +17,8 @@ public class CuentaController : Controller
         return View();
     }
 
+    public IActionResult Password() => RedirectToAction("Index", "Home", new { cambiarPassword = true });
+
     private static string NormalizarReturnUrl(string? valor)
     {
         if (string.IsNullOrWhiteSpace(valor))

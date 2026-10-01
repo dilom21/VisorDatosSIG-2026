@@ -45,13 +45,25 @@ public sealed class AuthenticationApiClient
     };
 
     private readonly HttpClient _cliente;
+    private readonly UserSession? _sesion;
 
     /// <summary>
     /// Inicializa el cliente con el <see cref="HttpClient"/> reutilizable de la aplicación.
     /// </summary>
     /// <param name="cliente">Cliente HTTP con la dirección base de la API ya configurada.</param>
-    public AuthenticationApiClient(HttpClient cliente) =>
+    public AuthenticationApiClient(HttpClient cliente)
+        : this(cliente, null)
+    {
+    }
+
+    /// <summary>
+    /// Inicializa el cliente HTTP reutilizable y la sesión en memoria que aporta el token.
+    /// </summary>
+    public AuthenticationApiClient(HttpClient cliente, UserSession? sesion)
+    {
         _cliente = cliente ?? throw new ArgumentNullException(nameof(cliente));
+        _sesion = sesion;
+    }
 
     /// <summary>Dirección base de la API en uso (solo informativa).</summary>
     public Uri? DireccionBase => _cliente.BaseAddress;
@@ -98,6 +110,10 @@ public sealed class AuthenticationApiClient
             accessToken,
             requiereAutenticacion: true);
 
+    /// <summary>Consulta <c>GET /api/autenticacion/me</c> usando el token de la sesión en memoria.</summary>
+    public Task<ResultadoApi<AuthenticatedUserDto>> ObtenerMeAsync(CancellationToken cancellationToken = default) =>
+        ObtenerUsuarioActualAsync(_sesion?.AccessToken, cancellationToken);
+
     /// <summary>
     /// Registra el cierre de sesión en la API (<c>POST /api/autenticacion/cerrar</c>).
     /// </summary>
@@ -116,6 +132,10 @@ public sealed class AuthenticationApiClient
             accessToken,
             requiereAutenticacion: true,
             avisarSesionExpirada: false);
+
+    /// <summary>Notifica <c>POST /api/autenticacion/cerrar</c> usando el token de la sesión en memoria.</summary>
+    public Task<ResultadoApi<bool>> CerrarSesionAsync(CancellationToken cancellationToken = default) =>
+        CerrarSesionAsync(_sesion?.AccessToken, cancellationToken);
 
     /// <summary>
     /// Construye la cabecera <c>Authorization</c> agregando el prefijo «Bearer » una única vez.

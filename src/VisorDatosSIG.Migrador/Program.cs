@@ -45,12 +45,11 @@ internal static class Program
         // Cliente de autenticación contra la API HTTP (Harold):
         var ajustesApi = ApiSettings.CrearDesdeEntorno();
         using var clienteHttp = ajustesApi.CrearClienteHttp();
-        var clienteAutenticacion = new AuthenticationApiClient(clienteHttp);
 
         // Sesión en memoria:
         var sesion = new UserSession();
+        var clienteAutenticacion = new AuthenticationApiClient(clienteHttp, sesion);
 
-        // Requerir inicio de sesión antes de abrir y utilizar el Migrador:
         using (var loginForm = new LoginForm(clienteAutenticacion, sesion))
         {
             var dialogResult = loginForm.ShowDialog();
