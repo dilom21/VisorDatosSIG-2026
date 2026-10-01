@@ -98,6 +98,10 @@ window.VisorSIG = window.VisorSIG || {};
             bloques[j].hidden = !autenticado;
         }
 
+        var usuario = sesion.obtenerUsuario();
+        var esAdmin = autenticado && usuario && Array.isArray(usuario.roles) && usuario.roles.indexOf('Administrador') !== -1;
+        document.querySelectorAll('[data-sesion-admin]').forEach(function (nodo) { nodo.hidden = !esAdmin; });
+
         var anonimos = document.querySelectorAll('[data-sesion-anonimo]');
         for (var k = 0; k < anonimos.length; k++) {
             anonimos[k].hidden = autenticado;
@@ -181,7 +185,13 @@ window.VisorSIG = window.VisorSIG || {};
                     actualizarHeader();
                     iniciarAutoExpiracion();
                     limpiarAviso();
+                    if (opciones.rol && (!Array.isArray(resultado.datos.roles) || resultado.datos.roles.indexOf(opciones.rol) === -1)) {
+                        var aviso = obtenerAviso();
+                        if (aviso) { aviso.textContent = 'No tiene permisos para administrar usuarios.'; aviso.hidden = false; }
+                        return;
+                    }
                     document.body.classList.remove('sesion-verificando');
+                    if (typeof opciones.alValidar === 'function') { opciones.alValidar(resultado.datos); }
                     return;
                 }
 

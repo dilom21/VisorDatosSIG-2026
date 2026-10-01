@@ -1,0 +1,36 @@
+@{ ViewData["Title"] = "Gestionar usuarios"; }
+<section class="gestion">
+    <h1>Gestionar usuarios</h1>
+    <p>Cree cuentas, asigne roles y administre su acceso al sistema.</p>
+    <p data-visor-aviso role="alert" hidden></p>
+    <div class="gestion-contenido" hidden>
+        <p id="gestion-mensaje" role="status" aria-live="polite"></p>
+        <button id="usuarios-recargar" type="button" class="btn-secundario">Actualizar listado</button>
+        <label for="usuarios-buscar">Buscar por nombre o usuario</label>
+        <input id="usuarios-buscar" type="search" />
+        <div class="gestion-tabla"><table>
+            <caption>Usuarios registrados</caption>
+            <thead><tr><th>Usuario</th><th>Nombre</th><th>Roles</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="usuarios-lista"></tbody>
+        </table></div>
+        <h2 id="usuario-titulo">Crear usuario</h2>
+        <form id="usuario-form" class="gestion-form">
+            <label for="usuario-login">Usuario</label><input id="usuario-login" maxlength="100" autocomplete="off" required />
+            <label for="usuario-nombre">Nombre</label><input id="usuario-nombre" maxlength="240" required />
+            <div id="password-inicial-grupo">
+                <label for="usuario-password">Contraseña inicial</label><input id="usuario-password" type="password" minlength="8" maxlength="200" autocomplete="new-password" required />
+            </div>
+            <fieldset id="usuario-roles"><legend>Roles</legend></fieldset>
+            <div><button type="submit" class="btn-primario">Guardar usuario</button>
+            <button id="usuario-cancelar" type="button" class="btn-secundario">Cancelar edición</button></div>
+        </form>
+        <form id="reset-form" class="gestion-form" hidden>
+            <h2 id="reset-titulo">Restablecer contraseña</h2>
+            <label for="reset-password">Nueva contraseña</label><input id="reset-password" type="password" minlength="8" maxlength="200" autocomplete="new-password" required />
+            <label for="reset-confirmar">Confirmar contraseña</label><input id="reset-confirmar" type="password" minlength="8" maxlength="200" autocomplete="new-password" required />
+            <div><button type="submit" class="btn-primario">Restablecer contraseña</button>
+            <button id="reset-cancelar" type="button" class="btn-secundario">Cancelar</button></div>
+        </form>
+    </div>
+</section>
+@section Scripts { <script src="~/js/usuarios/usuarios.js" asp-append-version="true"></script> }

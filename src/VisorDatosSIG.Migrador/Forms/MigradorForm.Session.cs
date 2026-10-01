@@ -124,10 +124,9 @@ public sealed partial class MigradorForm
 
         _menuUsuario?.Ocultar();
 
-        var token = _sesion.AccessToken;
         EstablecerActividad("Cerrando la sesión...");
 
-        var resultado = await _apiClient.CerrarSesionAsync(token);
+        var resultado = await _apiClient.CerrarSesionAsync();
 
         var mensaje = resultado.EsExitoso || resultado.Estado == EstadoOperacion.SesionExpirada
             ? "Sesión cerrada."

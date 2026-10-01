@@ -41,7 +41,7 @@ public sealed partial class LoginForm
         ShowInTaskbar = false;
         StartPosition = FormStartPosition.CenterParent;
         BackColor = EstiloUI.Fondo;
-        ClientSize = new Size(470, 600);
+        ClientSize = new Size(440, 520);
         KeyPreview = true;
 
         Controls.Add(CrearTarjeta());
@@ -181,7 +181,8 @@ public sealed partial class LoginForm
 
     private void ConfigurarBoton()
     {
-        _btnIngresar.Text = "Iniciar sesión";
+        _btnIngresar.Text = "INICIAR SESIÓN";
+        _btnIngresar.MostrarFlecha = true;
         _btnIngresar.TextoEnProgreso = "Iniciando sesión...";
         _btnIngresar.Height = 48;
         _btnIngresar.Radio = 14;

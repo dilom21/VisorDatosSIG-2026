@@ -83,6 +83,10 @@ builder.Services
     {
         // Se conservan los nombres de claim definidos en el token (sub, login, name, role).
         options.MapInboundClaims = false;
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = VisorDatosSIG.Api.Authentication.SessionTokenValidator.ValidateAsync
+        };
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,

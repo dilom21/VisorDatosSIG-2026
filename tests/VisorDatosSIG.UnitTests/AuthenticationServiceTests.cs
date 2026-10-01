@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using VisorDatosSIG.Application.DTOs.Authentication;
+using VisorDatosSIG.Application.DTOs.Users;
 using VisorDatosSIG.Application.Interfaces;
 using VisorDatosSIG.Infrastructure.Authentication;
 
@@ -28,6 +29,30 @@ public sealed class AuthenticationServiceTests
 
             return Task.FromResult(encontrado);
         }
+
+        public Task<bool> CambiarPasswordAsync(int idUsuario, string actual, string nueva, CancellationToken ct = default) =>
+            Task.FromResult(false);
+
+        public Task<IEnumerable<UserResponseDto>> ObtenerTodosAsync(CancellationToken ct = default) =>
+            Task.FromResult<IEnumerable<UserResponseDto>>([]);
+
+        public Task<UserResponseDto?> ObtenerPorIdAsync(int idUsuario, CancellationToken ct = default) =>
+            Task.FromResult<UserResponseDto?>(null);
+
+        public Task<UserResponseDto?> CrearUsuarioAsync(CreateUserRequestDto dto, CancellationToken ct = default) =>
+            Task.FromResult<UserResponseDto?>(null);
+
+        public Task<bool> CambiarEstadoAsync(int idUsuario, bool activo, CancellationToken ct = default) =>
+            Task.FromResult(false);
+
+        public Task<IReadOnlyList<string>> ObtenerRolesAsync(CancellationToken ct = default) =>
+            Task.FromResult<IReadOnlyList<string>>([]);
+
+        public Task<UserResponseDto?> ActualizarUsuarioAsync(int idUsuario, UpdateUserRequestDto dto, CancellationToken ct = default) =>
+            Task.FromResult<UserResponseDto?>(null);
+
+        public Task<bool> RestablecerPasswordAsync(int idUsuario, string nuevaPassword, CancellationToken ct = default) =>
+            Task.FromResult(false);
     }
 
     private sealed class BitacoraRepositoryFalso : IBitacoraRepository

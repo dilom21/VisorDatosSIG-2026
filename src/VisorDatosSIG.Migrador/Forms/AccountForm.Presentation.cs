@@ -40,7 +40,7 @@ public sealed partial class AccountForm
 
         try
         {
-            var resultado = await _cliente.ObtenerUsuarioActualAsync(_sesion.AccessToken, _cancelacion.Token);
+            var resultado = await _cliente.ObtenerMeAsync(_cancelacion.Token);
             if (IsDisposed)
             {
                 return;

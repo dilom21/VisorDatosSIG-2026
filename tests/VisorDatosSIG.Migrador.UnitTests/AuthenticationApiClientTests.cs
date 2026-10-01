@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text;
+using VisorDatosSIG.Application.DTOs.Authentication;
 using VisorDatosSIG.Migrador.Services;
+using VisorDatosSIG.Migrador.Session;
 
 namespace VisorDatosSIG.Migrador.UnitTests;
 
@@ -41,6 +43,22 @@ public sealed class AuthenticationApiClientTests
 
     private static AuthenticationApiClient CrearCliente(HttpMessageHandler manejador) =>
         new(new HttpClient(manejador) { BaseAddress = new Uri("http://localhost:5080/") });
+
+    private static UserSession CrearSesionAutenticada()
+    {
+        var sesion = new UserSession();
+        sesion.Establecer(
+            Token,
+            new AuthenticatedUserDto
+            {
+                IdUsuario = 1,
+                Login = "admin",
+                Nombre = "Administrador",
+                Roles = ["Administrador"]
+            },
+            1800);
+        return sesion;
+    }
 
     [Fact(DisplayName = "Login 200: procesa el token y los datos del usuario")]
     public async Task Login200ProcesaElTokenYLosDatosDelUsuario()
@@ -190,6 +208,20 @@ public sealed class AuthenticationApiClientTests
         Assert.Equal(new[] { "Consultor" }, resultado.Datos.Roles);
     }
 
+    [Fact(DisplayName = "ObtenerMeAsync toma el token de UserSession")]
+    public async Task ObtenerMeUsaTokenDeSesion()
+    {
+        var manejador = new ManejadorFalso(HttpStatusCode.OK, RespuestaUsuario);
+        using var http = new HttpClient(manejador) { BaseAddress = new Uri("http://localhost:5080/") };
+        var cliente = new AuthenticationApiClient(http, CrearSesionAutenticada());
+
+        var resultado = await cliente.ObtenerMeAsync();
+
+        Assert.True(resultado.EsExitoso);
+        Assert.Equal("/api/autenticacion/me", manejador.Ruta);
+        Assert.Equal($"Bearer {Token}", manejador.Autorizacion);
+    }
+
     [Fact(DisplayName = "GET /me con token vencido invalida la sesión y avisa una vez")]
     public async Task UsuarioActualCon401InvalidaLaSesion()
     {
@@ -227,6 +259,20 @@ public sealed class AuthenticationApiClientTests
         Assert.True(resultado.EsExitoso);
         Assert.True(resultado.Datos);
         Assert.Equal(HttpMethod.Post, manejador.Metodo);
+        Assert.Equal("/api/autenticacion/cerrar", manejador.Ruta);
+        Assert.Equal($"Bearer {Token}", manejador.Autorizacion);
+    }
+
+    [Fact(DisplayName = "CerrarSesionAsync toma el token de UserSession")]
+    public async Task CerrarSesionUsaTokenDeSesion()
+    {
+        var manejador = new ManejadorFalso(HttpStatusCode.NoContent, string.Empty);
+        using var http = new HttpClient(manejador) { BaseAddress = new Uri("http://localhost:5080/") };
+        var cliente = new AuthenticationApiClient(http, CrearSesionAutenticada());
+
+        var resultado = await cliente.CerrarSesionAsync();
+
+        Assert.True(resultado.EsExitoso);
         Assert.Equal("/api/autenticacion/cerrar", manejador.Ruta);
         Assert.Equal($"Bearer {Token}", manejador.Autorizacion);
     }

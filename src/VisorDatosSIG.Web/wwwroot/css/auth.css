@@ -372,3 +372,39 @@
         border-radius: var(--radius-md);
     }
 }
+
+
+/* Menú personal y diálogo de contraseña compartidos por todas las páginas. */
+.sesion-usuario { position: relative; min-width: 0; }
+.sesion-chip--boton { font: inherit; text-align: left; padding: 6px 12px; cursor: pointer; color: var(--color-text); }
+.sesion-chip--boton:hover, .sesion-chip--boton[aria-expanded="true"] { background: var(--color-primary-soft); border-color: var(--color-border-strong); }
+.sesion-chip__flecha { flex-shrink: 0; color: var(--color-muted); }
+.sesion-menu { position: absolute; top: calc(100% + 8px); right: 0; width: 230px; max-width: calc(100vw - 32px); padding: 6px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-md); }
+.sesion-menu__opcion { display: block; width: 100%; padding: 12px; border: 0; border-radius: var(--radius-sm); background: transparent; font: inherit; font-size: .9rem; color: var(--color-text); text-align: left; cursor: pointer; }
+.sesion-menu__opcion:hover { background: var(--color-primary-soft); color: var(--color-primary); }
+.sesion-menu__opcion--salir { margin-top: 4px; border-top: 1px solid var(--color-border); border-radius: 0 0 var(--radius-sm) var(--radius-sm); color: var(--color-error); }
+.sesion-menu__opcion--salir:hover { background: var(--color-error-bg); color: var(--color-error); }
+.password-modal { width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); margin: auto; padding: 28px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-lg); }
+.password-modal::backdrop { background: rgba(9, 27, 46, .55); }
+.password-modal__cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.password-modal__etiqueta { color: var(--color-accent-dark); font-size: .7rem; font-weight: 700; letter-spacing: .1em; }
+.password-modal h2 { font-size: 1.45rem; margin: 6px 0 0; }
+.password-modal > p { color: var(--color-muted); font-size: .9rem; margin: 12px 0 24px; }
+.password-modal__cerrar { border: 0; border-radius: var(--radius-sm); background: var(--color-surface-alt); color: var(--color-muted); font-size: 1.5rem; width: 36px; height: 36px; cursor: pointer; flex-shrink: 0; }
+.password-form fieldset { padding: 0; margin: 0; border: 0; display: grid; gap: 8px; min-width: 0; }
+.password-form label { font-size: .88rem; font-weight: 600; }
+.password-form input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); background: var(--color-surface); font: inherit; color: var(--color-text); margin-bottom: 12px; }
+.password-form input:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.password-form__ayuda { color: var(--color-muted); font-size: .78rem; margin: -10px 0 12px; }
+.password-form__mensaje { margin: 8px 0 0; padding: 12px; border-radius: var(--radius-sm); background: var(--color-info-bg); color: var(--color-info); font-size: .88rem; white-space: pre-line; }
+.password-form__mensaje[data-tipo="error"] { background: var(--color-error-bg); color: var(--color-error); }
+.password-form__mensaje[data-tipo="exito"] { background: var(--color-success-bg); color: var(--color-success); }
+.password-modal__acciones { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; padding-top: 20px; margin-top: 20px; border-top: 1px solid var(--color-border); }
+.password-modal button:disabled { opacity: .55; cursor: wait; }
+body.password-modal-abierto { overflow: hidden; }
+@media (max-width: 520px) {
+    .password-modal { padding: 20px; }
+    .password-modal__acciones > button { flex: 1 1 auto; }
+}
+
+.password-form .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
