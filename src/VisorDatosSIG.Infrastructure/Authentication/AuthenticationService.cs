@@ -61,19 +61,6 @@ public sealed class AuthenticationService : IAuthenticationService
             return LoginResultDto.Fallido(AuthenticationStatus.UserNotFound);
         }
 
-        if (!usuario.Activo)
-        {
-            await RegistrarEnBitacoraAsync(
-                usuario.IdUsuario,
-                BitacoraEventos.AccionInicioSesion,
-                BitacoraEventos.ResultadoFallido,
-                "Usuario inactivo.",
-                ipOrigen,
-                cancellationToken);
-
-            return LoginResultDto.Fallido(AuthenticationStatus.InactiveUser);
-        }
-
         var credencialesValidas = _passwordHasher.Verificar(
             solicitud.Password,
             usuario.PasswordSalt,
@@ -92,6 +79,9 @@ public sealed class AuthenticationService : IAuthenticationService
 
             return LoginResultDto.Fallido(AuthenticationStatus.InvalidCredentials);
         }
+
+        // Al iniciar sesión correctamente, el usuario pasa a estado Conectado (Activo = 1)
+        await _usuarioRepository.CambiarEstadoAsync(usuario.IdUsuario, true, cancellationToken);
 
         var autenticado = new AuthenticatedUserDto
         {
@@ -126,6 +116,12 @@ public sealed class AuthenticationService : IAuthenticationService
         string? ipOrigen = null,
         CancellationToken cancellationToken = default)
     {
+        if (idUsuario > 0)
+        {
+            // Al cerrar sesión, el usuario pasa a estado Desconectado (Activo = 0)
+            await _usuarioRepository.CambiarEstadoAsync(idUsuario, false, cancellationToken);
+        }
+
         await RegistrarEnBitacoraAsync(
             idUsuario > 0 ? idUsuario : null,
             BitacoraEventos.AccionCierreSesion,

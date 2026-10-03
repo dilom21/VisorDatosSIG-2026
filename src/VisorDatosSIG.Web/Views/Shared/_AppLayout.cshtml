@@ -61,8 +61,8 @@
     <div class="app-shell @(ViewData["FullWidth"] as bool? == true ? "app-shell--fullwidth" : "")">
         <aside id="sidebar" class="sidebar" aria-label="Barra de navegación del sistema">
             <div class="sidebar__marca">
-                <a class="sidebar__logo" asp-controller="Visor" asp-action="Index"
-                   aria-label="VisorDatosSIG, ir al visor cartográfico">
+                <a class="sidebar__logo" asp-controller="Dashboard" asp-action="Index"
+                   aria-label="VisorDatosSIG, ir al panel principal">
                     <span class="sidebar__logo-mark" aria-hidden="true">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
@@ -129,6 +129,7 @@
                     <div id="sesion-activa" class="sesion-datos" hidden>
                         <span id="sesion-nombre" class="sesion-nombre"></span>
                         <span id="sesion-rol" class="sesion-rol"></span>
+                        <span class="sesion-estado-tag"><span class="sesion-estado-dot"></span>Conectado</span>
                     </div>
                 </div>
 

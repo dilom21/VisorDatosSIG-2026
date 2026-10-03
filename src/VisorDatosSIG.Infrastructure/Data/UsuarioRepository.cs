@@ -241,7 +241,7 @@ public class UsuarioRepository : IUsuarioRepository
             const string sqlInsert = @"
                 INSERT INTO dbo.Usuarios (Login, Nombre, PasswordHash, PasswordSalt, Iteraciones, Activo, FechaRegistro)
                 OUTPUT INSERTED.IdUsuario, INSERTED.FechaRegistro
-                VALUES (@Login, @Nombre, @PasswordHash, @PasswordSalt, 100000, 1, SYSUTCDATETIME());";
+                VALUES (@Login, @Nombre, @PasswordHash, @PasswordSalt, 100000, 0, SYSUTCDATETIME());";
 
             using var cmdInsert = new SqlCommand(sqlInsert, connection, tx);
             cmdInsert.Parameters.AddWithValue("@Login", dto.Login);

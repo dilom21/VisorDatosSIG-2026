@@ -21,7 +21,7 @@ public sealed class BitacoraRepository : IBitacoraRepository
 
     private const string InsertarEvento = """
         INSERT INTO dbo.Bitacora (IdUsuario, FechaHora, Modulo, Accion, Entidad, IdEntidad, Resultado, Detalle, IP)
-        VALUES (@IdUsuario, SYSDATETIME(), @Modulo, @Accion, @Entidad, @IdEntidad, @Resultado, @Detalle, @IP);
+        VALUES (@IdUsuario, DATEADD(hour, -4, SYSUTCDATETIME()), @Modulo, @Accion, @Entidad, @IdEntidad, @Resultado, @Detalle, @IP);
         """;
 
     private readonly SqlConnectionFactory _connectionFactory;

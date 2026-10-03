@@ -36,9 +36,13 @@ public sealed class BitacoraService : IBitacoraService
                 END
                 """;
 
+            var fechaHoraBolivia = entrada.FechaHora == default
+                ? DateTime.UtcNow.AddHours(-4)
+                : (entrada.FechaHora.Kind == DateTimeKind.Utc ? entrada.FechaHora.AddHours(-4) : entrada.FechaHora);
+
             await using var command = new SqlCommand(sql, connection);
             command.Parameters.Add(new SqlParameter("@IdUsuario", SqlDbType.Int) { Value = (object?)entrada.IdUsuario ?? DBNull.Value });
-            command.Parameters.Add(new SqlParameter("@FechaHora", SqlDbType.DateTime2) { Value = entrada.FechaHora });
+            command.Parameters.Add(new SqlParameter("@FechaHora", SqlDbType.DateTime2) { Value = fechaHoraBolivia });
             command.Parameters.Add(new SqlParameter("@Modulo", SqlDbType.NVarChar, 100) { Value = entrada.Modulo });
             command.Parameters.Add(new SqlParameter("@Accion", SqlDbType.NVarChar, 200) { Value = entrada.Accion });
             command.Parameters.Add(new SqlParameter("@Entidad", SqlDbType.NVarChar, 200) { Value = entrada.Entidad });

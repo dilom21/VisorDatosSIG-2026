@@ -578,6 +578,24 @@ body.sesion-verificando .app-shell__contenido {
     color: var(--sidebar-texto-suave);
 }
 
+.sidebar .sesion-estado-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #34d399;
+    margin-top: 2px;
+}
+
+.sidebar .sesion-estado-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #10b981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+}
+
 .sidebar__accion {
     display: flex;
     align-items: center;

@@ -32,6 +32,7 @@ window.VisorSIG = window.VisorSIG || {};
         'search': 'icono-search',
         'map-pin': 'icono-map-pin',
         'grid': 'icono-grid',
+        'dashboard': 'icono-grid',
         'layers': 'icono-layers',
         'route': 'icono-route',
         'chart': 'icono-chart',

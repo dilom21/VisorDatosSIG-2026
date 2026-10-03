@@ -64,6 +64,7 @@ public sealed class GestionEmpleadosTests
                 Codigo = dto.Codigo,
                 Nombres = dto.Nombres,
                 Apellidos = dto.Apellidos,
+                NombreCompleto = $"{dto.Nombres} {dto.Apellidos}",
                 DocumentoIdentidad = dto.DocumentoIdentidad,
                 Cargo = dto.Cargo,
                 Area = dto.Area,

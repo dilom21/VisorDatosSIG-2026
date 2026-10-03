@@ -62,6 +62,9 @@ public static class PermisoMenu
     /// <summary>Módulo: reportes.</summary>
     public const string Reportes = "/Reportes";
 
+    /// <summary>Módulo: dashboard general del administrador.</summary>
+    public const string Dashboard = "/Dashboard";
+
     /// <summary>Módulo: gestión de empleados (CU04 - Seguimiento de Servicios).</summary>
     public const string Empleados = "/Empleados";
 
@@ -70,6 +73,7 @@ public static class PermisoMenu
     /// </summary>
     public static readonly IReadOnlyList<string> Todas =
     [
+        Dashboard,
         Usuarios,
         Roles,
         Bitacora,

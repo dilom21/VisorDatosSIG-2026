@@ -23,7 +23,7 @@ public class CuentaController : Controller
     {
         if (string.IsNullOrWhiteSpace(valor))
         {
-            return "/Visor";
+            return "/Dashboard";
         }
 
         var recortado = valor.Trim();
@@ -34,7 +34,7 @@ public class CuentaController : Controller
             || recortado.Contains('\\')
             || recortado.Contains("://", StringComparison.Ordinal))
         {
-            return "/Visor";
+            return "/Dashboard";
         }
 
         return recortado;

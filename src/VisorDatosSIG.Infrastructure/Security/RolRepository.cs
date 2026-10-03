@@ -142,7 +142,7 @@ public sealed class RolRepository : IRolRepository
 
     private const string InsertarAuditoria = """
         INSERT INTO dbo.Bitacora (IdUsuario, FechaHora, Modulo, Accion, Entidad, IdEntidad, Resultado, Detalle, IP)
-        VALUES (@IdUsuario, SYSDATETIME(), @Modulo, @Accion, @Entidad, @IdEntidad, @Resultado, @Detalle, @IP);
+        VALUES (@IdUsuario, DATEADD(hour, -4, SYSUTCDATETIME()), @Modulo, @Accion, @Entidad, @IdEntidad, @Resultado, @Detalle, @IP);
         """;
 
     private readonly SqlConnectionFactory _connectionFactory;

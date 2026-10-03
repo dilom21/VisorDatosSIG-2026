@@ -10,23 +10,23 @@ window.VisorSIG = window.VisorSIG || {};
     function normalizarReturnUrl(valor) {
         // Solo se aceptan rutas locales de la aplicación (evita open redirect).
         if (!valor) {
-            return '/Visor';
+            return '/Dashboard';
         }
         var texto = String(valor).trim();
         if (texto.charAt(0) !== '/') {
-            return '/Visor';
+            return '/Dashboard';
         }
         if (texto.indexOf('//') === 0) {
-            return '/Visor';
+            return '/Dashboard';
         }
         if (texto.indexOf('/\\') === 0) {
-            return '/Visor';
+            return '/Dashboard';
         }
         if (texto.indexOf('\\') !== -1) {
-            return '/Visor';
+            return '/Dashboard';
         }
         if (texto.indexOf('://') !== -1) {
-            return '/Visor';
+            return '/Dashboard';
         }
         return texto;
     }

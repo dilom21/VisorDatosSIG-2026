@@ -406,7 +406,7 @@ window.VisorSIG = window.VisorSIG || {};
             meta.appendChild(crearBadge('Rol del sistema', 'sistema'));
         }
         meta.appendChild(crear('span', 'roles__rol-usuarios',
-            rol.usuarios === 1 ? '1 usuario activo' : rol.usuarios + ' usuarios activos'));
+            rol.usuarios === 1 ? '1 usuario conectado' : rol.usuarios + ' usuarios conectados'));
         boton.appendChild(meta);
 
         boton.addEventListener('click', function () {
@@ -448,7 +448,7 @@ window.VisorSIG = window.VisorSIG || {};
         lista.appendChild(estado);
 
         var usuarios = crear('div', 'roles__detalle-fila', null);
-        usuarios.appendChild(crear('dt', 'roles__detalle-clave', 'Usuarios activos'));
+        usuarios.appendChild(crear('dt', 'roles__detalle-clave', 'Usuarios conectados'));
         usuarios.appendChild(crear('dd', 'roles__detalle-valor',
             String(rolSeleccionado.usuarios)));
         lista.appendChild(usuarios);

@@ -1,14 +1,846 @@
-.gestion { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
-.gestion [hidden] { display: none !important; }
-.gestion-form { max-width: 520px; display: grid; gap: .75rem; margin: 1.5rem 0; }
-.gestion input { font: inherit; padding: .7rem; border: 1px solid #a4b5b0; border-radius: .4rem; width: 100%; box-sizing: border-box; }
-.gestion input[type=checkbox] { width: auto; margin-right: .5rem; }
-.gestion fieldset label { display: block; margin: .5rem; }
-.gestion-tabla { overflow-x: auto; margin: 1rem 0; }
-.gestion table { border-collapse: collapse; width: 100%; text-align: left; }
-.gestion th, .gestion td { border-bottom: 1px solid #d4dfda; padding: .8rem; }
-.gestion td button { margin: .2rem; }
-.gestion button:disabled { opacity: .5; cursor: wait; }
-.gestion input:focus-visible { outline: 2px solid #177359; outline-offset: 2px; }
-.gestion [role=alert], .gestion [role=status] { white-space: pre-line; }
-body.sesion-verificando .gestion-contenido { display: none !important; }
+/* =============================================================================
+   VisorDatosSIG 2026 — Módulo de Gestión de Usuarios (CU03)
+   Estilos dedicados para administración de cuentas, roles y seguridad.
+   Compatible con temas claro y oscuro mediante tokens CSS de diseño.
+   ============================================================================= */
+
+.usuarios-seccion {
+    max-width: 1240px;
+    margin: 1.5rem auto 3rem;
+    padding: 0 1.25rem;
+}
+
+/* Encabezado */
+.usuarios-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+.usuarios-cabecera__info {
+    flex: 1;
+    min-width: 280px;
+}
+
+.usuarios-cabecera__modulo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-primary, #00875a);
+    margin-bottom: 0.35rem;
+}
+
+.usuarios-cabecera__modulo::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+.usuarios-cabecera__titulo {
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--color-text, #172b4d);
+    margin: 0 0 0.4rem;
+}
+
+.usuarios-cabecera__intro {
+    font-size: 0.95rem;
+    color: var(--color-muted, #5e6c84);
+    margin: 0;
+    max-width: 650px;
+}
+
+.usuarios-cabecera__acciones {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+/* Botón llamativo principal */
+.btn-nuevo-usuario {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(13, 110, 253, 0.28);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.btn-nuevo-usuario:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(13, 110, 253, 0.38);
+    filter: brightness(1.05);
+}
+
+.btn-nuevo-usuario:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Notificación flotante / aviso accesible */
+.usuarios-notificacion {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    font-weight: 500;
+    animation: notifSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid transparent;
+}
+
+.usuarios-notificacion--exito {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: #065f46;
+    border-color: rgba(16, 185, 129, 0.28);
+}
+
+[data-theme="dark"] .usuarios-notificacion--exito {
+    background-color: rgba(16, 185, 129, 0.20);
+    color: #6ee7b7;
+    border-color: rgba(16, 185, 129, 0.40);
+}
+
+.usuarios-notificacion--error {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #991b1b;
+    border-color: rgba(239, 68, 68, 0.28);
+}
+
+[data-theme="dark"] .usuarios-notificacion--error {
+    background-color: rgba(239, 68, 68, 0.20);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.40);
+}
+
+.usuarios-notificacion__icono {
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.usuarios-notificacion__texto {
+    flex: 1;
+    white-space: pre-line;
+}
+
+.usuarios-notificacion__cerrar {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.7;
+    padding: 0 0.2rem;
+    transition: opacity 0.15s ease;
+}
+
+.usuarios-notificacion__cerrar:hover {
+    opacity: 1;
+}
+
+@keyframes notifSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tarjetas de Métricas (KPIs) */
+.usuarios-metricas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.metrica-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.25rem;
+    background-color: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.metrica-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.08);
+}
+
+.metrica-card__icono {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.metrica-card__icono svg {
+    width: 22px;
+    height: 22px;
+}
+
+.metrica-card__datos {
+    display: flex;
+    flex-direction: column;
+}
+
+.metrica-card__valor {
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--color-text, #172b4d);
+}
+
+.metrica-card__etiqueta {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-muted, #5e6c84);
+    margin-top: 0.2rem;
+}
+
+/* Variaciones cromáticas para KPIs */
+.metrica-card--total .metrica-card__icono {
+    background-color: rgba(13, 110, 253, 0.12);
+    color: #0d6efd;
+}
+
+.metrica-card--activos .metrica-card__icono {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+}
+
+.metrica-card--inactivos .metrica-card__icono {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+}
+
+.metrica-card--admin .metrica-card__icono {
+    background-color: rgba(139, 92, 246, 0.12);
+    color: #8b5cf6;
+}
+
+/* Toolbar de búsqueda y filtros */
+.usuarios-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.9rem 1.1rem;
+    background-color: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    margin-bottom: 1.5rem;
+}
+
+.usuarios-buscar {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+}
+
+.usuarios-buscar__icono {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-muted, #94a3b8);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+}
+
+.usuarios-buscar__input {
+    width: 100%;
+    padding: 0.65rem 0.85rem 0.65rem 2.4rem;
+    font-size: 0.9rem;
+    color: var(--color-text, #1e293b);
+    background-color: var(--color-surface-alt, #f8fafc);
+    border: 1px solid var(--color-border, #cbd5e1);
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.usuarios-buscar__input:focus {
+    background-color: var(--color-surface, #ffffff);
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.18);
+}
+
+.usuarios-filtro-grupo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-muted, #64748b);
+}
+
+.usuarios-select {
+    padding: 0.6rem 2rem 0.6rem 0.8rem;
+    font-size: 0.88rem;
+    color: var(--color-text, #1e293b);
+    background-color: var(--color-surface-alt, #f8fafc);
+    border: 1px solid var(--color-border, #cbd5e1);
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.usuarios-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.18);
+}
+
+.btn-secundario-toolbar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-text, #334155);
+    background-color: var(--color-surface-alt, #f1f5f9);
+    border: 1px solid var(--color-border, #cbd5e1);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-secundario-toolbar:hover:not(:disabled) {
+    background-color: var(--color-border, #e2e8f0);
+    color: var(--color-text, #0f172a);
+}
+
+/* Tarjeta y Tabla de Usuarios */
+.usuarios-tabla-card {
+    background-color: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.usuarios-tabla-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 1.25rem;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+    background-color: var(--color-surface-alt, #f8fafc);
+}
+
+.usuarios-tabla-card__titulo {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text, #1e293b);
+}
+
+.usuarios-tabla-card__conteo {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-muted, #64748b);
+}
+
+.usuarios-tabla-contenedor {
+    overflow-x: auto;
+}
+
+.usuarios-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.usuarios-tabla th {
+    padding: 0.85rem 1.25rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-muted, #64748b);
+    background-color: var(--color-surface-alt, #f8fafc);
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+    white-space: nowrap;
+}
+
+.usuarios-tabla td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-border, #f1f5f9);
+    vertical-align: middle;
+    color: var(--color-text, #334155);
+}
+
+.usuarios-tabla tbody tr {
+    transition: background-color 0.12s ease;
+}
+
+.usuarios-tabla tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.03);
+}
+
+/* Celda de Usuario con Avatar */
+.usuario-celda-perfil {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.usuario-avatar {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(13, 110, 253, 0.25);
+}
+
+.usuario-perfil-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.usuario-login-text {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text, #0f172a);
+}
+
+.usuario-nombre-text {
+    font-size: 0.82rem;
+    color: var(--color-muted, #64748b);
+}
+
+/* Chips de Roles */
+.roles-lista-celda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.rol-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.22rem 0.65rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    border-radius: 20px;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+    border: 1px solid transparent;
+}
+
+.rol-chip--admin {
+    background-color: rgba(99, 102, 241, 0.12);
+    color: #4f46e5;
+    border-color: rgba(99, 102, 241, 0.25);
+}
+
+[data-theme="dark"] .rol-chip--admin {
+    background-color: rgba(99, 102, 241, 0.22);
+    color: #a5b4fc;
+}
+
+.rol-chip--supervisor {
+    background-color: rgba(6, 182, 212, 0.12);
+    color: #0891b2;
+    border-color: rgba(6, 182, 212, 0.25);
+}
+
+[data-theme="dark"] .rol-chip--supervisor {
+    background-color: rgba(6, 182, 212, 0.22);
+    color: #67e8f9;
+}
+
+.rol-chip--empleado {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+[data-theme="dark"] .rol-chip--empleado {
+    background-color: rgba(16, 185, 129, 0.22);
+    color: #6ee7b7;
+}
+
+.rol-chip--consultor {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+[data-theme="dark"] .rol-chip--consultor {
+    background-color: rgba(245, 158, 11, 0.22);
+    color: #fcd34d;
+}
+
+.rol-chip--migrador {
+    background-color: rgba(244, 63, 94, 0.12);
+    color: #e11d48;
+    border-color: rgba(244, 63, 94, 0.25);
+}
+
+[data-theme="dark"] .rol-chip--migrador {
+    background-color: rgba(244, 63, 94, 0.22);
+    color: #fda4af;
+}
+
+.rol-chip--generico {
+    background-color: rgba(148, 163, 184, 0.12);
+    color: #475569;
+    border-color: rgba(148, 163, 184, 0.25);
+}
+
+/* Badges de Estado */
+.estado-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 999px;
+}
+
+.estado-badge__punto {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+.estado-badge--activo {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: #059669;
+}
+
+[data-theme="dark"] .estado-badge--activo {
+    background-color: rgba(16, 185, 129, 0.20);
+    color: #34d399;
+}
+
+.estado-badge--inactivo {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+}
+
+[data-theme="dark"] .estado-badge--inactivo {
+    background-color: rgba(239, 68, 68, 0.20);
+    color: #f87171;
+}
+
+/* Botones de Acción en Tabla */
+.acciones-grupo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.btn-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    background-color: var(--color-surface, #ffffff);
+    color: var(--color-muted, #64748b);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-accion:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.btn-accion--editar:hover:not(:disabled) {
+    background-color: rgba(13, 110, 253, 0.10);
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.btn-accion--estado:hover:not(:disabled) {
+    background-color: rgba(245, 158, 11, 0.10);
+    border-color: #f59e0b;
+    color: #d97706;
+}
+
+.btn-accion--password:hover:not(:disabled) {
+    background-color: rgba(139, 92, 246, 0.10);
+    border-color: #8b5cf6;
+    color: #7c3aed;
+}
+
+/* Estado vacío */
+.tabla-vacia {
+    text-align: center;
+    padding: 3rem 1.5rem !important;
+}
+
+.tabla-vacia__contenido {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--color-muted, #64748b);
+}
+
+.tabla-vacia__icono svg {
+    width: 44px;
+    height: 44px;
+    color: var(--color-border, #cbd5e1);
+}
+
+/* Modales y Formularios */
+.modal-usuario-dialogo,
+.modal-reset-dialogo,
+.modal-estado-dialogo {
+    width: min(540px, 92vw);
+}
+
+.form-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+}
+
+.form-grupo label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-text, #1e293b);
+}
+
+.requerido {
+    color: #ef4444;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.9rem;
+    color: var(--color-text, #1e293b);
+    background-color: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #cbd5e1);
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.18);
+}
+
+.form-control:disabled {
+    background-color: var(--color-surface-alt, #f1f5f9);
+    color: var(--color-muted, #94a3b8);
+    cursor: not-allowed;
+}
+
+.form-ayuda {
+    font-size: 0.78rem;
+    color: var(--color-muted, #64748b);
+}
+
+/* Input con botón toggle contraseña */
+.input-password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-password-wrapper .form-control {
+    padding-right: 2.5rem;
+}
+
+.btn-toggle-pass {
+    position: absolute;
+    right: 0.65rem;
+    background: none;
+    border: none;
+    color: var(--color-muted, #94a3b8);
+    cursor: pointer;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s ease;
+}
+
+.btn-toggle-pass:hover {
+    color: var(--color-text, #1e293b);
+}
+
+/* Grid de Roles interactivo */
+.label-roles {
+    margin-bottom: 0.4rem;
+}
+
+.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.65rem;
+}
+
+.rol-card-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    background-color: var(--color-surface-alt, #f8fafc);
+    border: 1px solid var(--color-border, #cbd5e1);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text, #334155);
+    transition: all 0.15s ease;
+}
+
+.rol-card-label:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+    border-color: #93c5fd;
+}
+
+.rol-card-label input[type="checkbox"] {
+    accent-color: #0d6efd;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.rol-card-label:has(input:checked) {
+    background-color: rgba(13, 110, 253, 0.10);
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+/* Pie de Modal */
+.modal__pie {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background-color: var(--color-surface-alt, #f8fafc);
+    border-top: 1px solid var(--color-border, #e2e8f0);
+}
+
+.btn-cancelar {
+    padding: 0.65rem 1.15rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-text, #475569);
+    background-color: transparent;
+    border: 1px solid var(--color-border, #cbd5e1);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-cancelar:hover {
+    background-color: var(--color-border, #e2e8f0);
+    color: var(--color-text, #1e293b);
+}
+
+.btn-guardar {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
+    transition: all 0.15s ease;
+}
+
+.btn-guardar:hover:not(:disabled) {
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.35);
+    filter: brightness(1.05);
+}
+
+.modal__error {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    background-color: rgba(239, 68, 68, 0.10);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* Modal confirmación estado */
+.estado-mensaje-pregunta {
+    font-size: 0.95rem;
+    color: var(--color-text, #334155);
+    line-height: 1.5;
+    margin: 0.5rem 0;
+}
+
+.estado-mensaje-pregunta strong {
+    color: var(--color-text, #0f172a);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .usuarios-cabecera {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-nuevo-usuario {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .usuarios-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .usuarios-filtro-grupo {
+        justify-content: space-between;
+    }
+
+    .usuarios-select {
+        flex: 1;
+    }
+}

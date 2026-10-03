@@ -162,7 +162,7 @@ public sealed class AuthenticationServiceTests
         Assert.Null(registro.IdUsuario);
     }
 
-    [Fact(DisplayName = "Login: usuario inactivo no puede iniciar sesión")]
+    [Fact(DisplayName = "Login: usuario desconectado (activo: false) puede iniciar sesión y pasa a conectado")]
     public async Task UsuarioInactivoNoPuedeIniciarSesion()
     {
         var usuario = CrearUsuario(PasswordValida, activo: false);
@@ -170,12 +170,12 @@ public sealed class AuthenticationServiceTests
 
         var resultado = await servicio.IniciarSesionAsync(Solicitud());
 
-        Assert.Equal(AuthenticationStatus.InactiveUser, resultado.Status);
-        Assert.Null(resultado.Response);
-        Assert.Equal(0, token.VecesGenerado);
+        Assert.Equal(AuthenticationStatus.Success, resultado.Status);
+        Assert.NotNull(resultado.Response);
+        Assert.Equal(1, token.VecesGenerado);
 
         var registro = Assert.Single(bitacora.Registros);
-        Assert.Equal(BitacoraEventos.ResultadoFallido, registro.Resultado);
+        Assert.Equal(BitacoraEventos.ResultadoExitoso, registro.Resultado);
         Assert.Equal(1, registro.IdUsuario);
     }
 

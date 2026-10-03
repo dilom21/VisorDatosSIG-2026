@@ -1,0 +1,66 @@
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "Dashboard - Panel General";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
+
+<div class="dashboard-seccion">
+    <!-- Encabezado del Dashboard -->
+    <header class="dashboard-cabecera">
+        <div class="dashboard-cabecera__info">
+            <h1 class="dashboard-cabecera__titulo" id="dash-titulo">Dashboard</h1>
+            <p class="dashboard-cabecera__intro" id="dash-subtitulo">Monitoreo general, métricas del territorio y estado operativo en tiempo real.</p>
+            <div class="dashboard-roles-switch" id="dash-roles-switch" hidden>
+                <button type="button" class="btn-rol-chip activo" data-rol="Administrador">Vista Administrador</button>
+                <button type="button" class="btn-rol-chip" data-rol="Empleado">Vista Empleado</button>
+                <button type="button" class="btn-rol-chip" data-rol="Consultor">Vista Consultor</button>
+                <button type="button" class="btn-rol-chip" data-rol="Supervisor">Vista Supervisor</button>
+            </div>
+        </div>
+        <div class="dashboard-cabecera__acciones">
+            <button id="btn-actualizar-dash" type="button" class="btn-dash-secundario" title="Actualizar indicadores">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                <span>Actualizar</span>
+            </button>
+            <a asp-controller="Visor" asp-action="Index" class="btn-dash-primario">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" />
+                    <path d="M9 3v15M15 6v15" />
+                </svg>
+                <span>Abrir Visor</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Estado de carga / aviso -->
+    <p id="dashboard-mensaje" class="dashboard-aviso" role="status" aria-live="polite" hidden></p>
+
+    <!-- Contenedor principal reactivo del Dashboard según el rol -->
+    <div id="dashboard-contenido" class="dashboard-grid-container">
+        <!-- 1. Fila de KPIs Principales -->
+        <div id="dash-kpi-grid" class="kpi-grid"></div>
+
+        <!-- 2. Grid Intermedio: Tareas, Analítica y Accesos -->
+        <div id="dash-medio-grid" class="dashboard-medio-grid"></div>
+
+        <!-- 3. Grid Inferior: Personal, Cuadrillas, Capas y Bitácora -->
+        <div id="dash-inferior-grid" class="dashboard-inferior-grid"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/dashboard/dashboard.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Dashboard',
+            alValidar: function () {
+                window.VisorSIG.dashboard.iniciar();
+            }
+        });
+    </script>
+}
