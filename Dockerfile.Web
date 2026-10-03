@@ -1,0 +1,45 @@
+# ============================================================
+# VisorDatosSIG.Web - Dockerfile
+# .NET 10 / ASP.NET Core MVC
+# ============================================================
+
+# ---------- Etapa de compilación ----------
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
+WORKDIR /src
+
+# TargetFramework net10.0 está definido globalmente aquí.
+COPY ["Directory.Build.props", "./"]
+
+# Copiar proyectos necesarios antes del restore para aprovechar caché.
+COPY ["src/VisorDatosSIG.Web/VisorDatosSIG.Web.csproj", "src/VisorDatosSIG.Web/"]
+COPY ["src/VisorDatosSIG.Application/VisorDatosSIG.Application.csproj", "src/VisorDatosSIG.Application/"]
+COPY ["src/VisorDatosSIG.Domain/VisorDatosSIG.Domain.csproj", "src/VisorDatosSIG.Domain/"]
+
+RUN dotnet restore "src/VisorDatosSIG.Web/VisorDatosSIG.Web.csproj"
+
+# Copiar código fuente.
+COPY src/ ./src/
+
+# Publicar Web en Release.
+RUN dotnet publish "src/VisorDatosSIG.Web/VisorDatosSIG.Web.csproj" \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    /p:UseAppHost=false
+
+# ---------- Etapa final ----------
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+
+WORKDIR /app
+
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+EXPOSE 8080
+
+COPY --from=build /app/publish .
+
+USER $APP_UID
+
+ENTRYPOINT ["dotnet", "VisorDatosSIG.Web.dll"]

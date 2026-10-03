@@ -1,0 +1,43 @@
+# Compilación .NET
+**/bin/
+**/obj/
+artifacts/
+publish/
+TestResults/
+
+# Git / IDE
+.git/
+.github/
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Logs y temporales
+logs/
+*.log
+*.tmp
+*.temp
+*.bak
+Thumbs.db
+.DS_Store
+
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/secrets.json
+
+# SQL local
+*.mdf
+*.ldf
+
+# Material que no se necesita para construir Web/API
+docs/
+data/
+database/
+tests/
+*.pdf

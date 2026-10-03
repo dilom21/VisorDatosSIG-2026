@@ -1,0 +1,47 @@
+# ============================================================
+# VisorDatosSIG.Api - Dockerfile
+# .NET 10 / ASP.NET Core
+# ============================================================
+
+# ---------- Etapa de compilación ----------
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
+WORKDIR /src
+
+# La solución define net10.0 globalmente aquí.
+# Debe existir antes de ejecutar dotnet restore.
+COPY ["Directory.Build.props", "./"]
+
+# Copiar primero los proyectos necesarios para aprovechar caché de restore.
+COPY ["src/VisorDatosSIG.Api/VisorDatosSIG.Api.csproj", "src/VisorDatosSIG.Api/"]
+COPY ["src/VisorDatosSIG.Application/VisorDatosSIG.Application.csproj", "src/VisorDatosSIG.Application/"]
+COPY ["src/VisorDatosSIG.Domain/VisorDatosSIG.Domain.csproj", "src/VisorDatosSIG.Domain/"]
+COPY ["src/VisorDatosSIG.Infrastructure/VisorDatosSIG.Infrastructure.csproj", "src/VisorDatosSIG.Infrastructure/"]
+
+RUN dotnet restore "src/VisorDatosSIG.Api/VisorDatosSIG.Api.csproj"
+
+# Copiar el código fuente.
+COPY src/ ./src/
+
+# Publicar únicamente la API en Release.
+RUN dotnet publish "src/VisorDatosSIG.Api/VisorDatosSIG.Api.csproj" \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    /p:UseAppHost=false
+
+# ---------- Etapa final ----------
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+
+WORKDIR /app
+
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+EXPOSE 8080
+
+COPY --from=build /app/publish .
+
+USER $APP_UID
+
+ENTRYPOINT ["dotnet", "VisorDatosSIG.Api.dll"]

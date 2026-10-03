@@ -1,0 +1,72 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.Api
+    image: visordatos-api:dev
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+
+      ConnectionStrings__VisorDatosSIG: ${ConnectionStrings__VisorDatosSIG:?ConnectionStrings__VisorDatosSIG no configurada}
+
+      Jwt__Issuer: ${JWT_ISSUER:-VisorDatosSIG.Api}
+      Jwt__Audience: ${JWT_AUDIENCE:-VisorDatosSIG.Clientes}
+      Jwt__Key: ${Jwt__Key:?Jwt__Key no configurada}
+      Jwt__ExpirationMinutes: ${JWT_EXPIRATION_MINUTES:-480}
+
+      Cors__AllowedOrigins__0: ${PUBLIC_BASE_URL:-http://localhost}
+
+    expose:
+      - "8080"
+
+    restart: unless-stopped
+
+    networks:
+      - visorsig
+
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.Web
+    image: visordatos-web:dev
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+
+      Api__BaseUrl: ${PUBLIC_BASE_URL:-http://localhost}
+
+    expose:
+      - "8080"
+
+    restart: unless-stopped
+
+    networks:
+      - visorsig
+
+
+  nginx:
+    image: nginx:alpine
+
+    ports:
+      - "${HTTP_PORT:-80}:80"
+
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+    depends_on:
+      - web
+      - api
+
+    restart: unless-stopped
+
+    networks:
+      - visorsig
+
+
+networks:
+  visorsig:
+    driver: bridge
