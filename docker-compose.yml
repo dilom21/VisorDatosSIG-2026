@@ -11,6 +11,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__VisorDatosSIG=Server=tcp:visordatossig.database.windows.net,1433;Initial Catalog=VisorDatosSIG;Persist Security Info=False;User ID=AdminSIG;Password=Admin123!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
+      - Jwt__Key=E6ip+mGK9+OytajSplNpUnYJxGyQ0mGKpSLm2BK5AHk=
+      - Jwt__Issuer=VisorDatosSIG.Api
+      - Jwt__Audience=VisorDatosSIG.Clientes
+      - Jwt__ExpirationMinutes=480
       - Cors__AllowedOrigins__0=http://localhost:5000
       - Cors__AllowedOrigins__1=http://localhost:5080
       - Cors__AllowedOrigins__2=http://localhost:3000
