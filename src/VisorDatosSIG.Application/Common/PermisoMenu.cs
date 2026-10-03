@@ -62,6 +62,9 @@ public static class PermisoMenu
     /// <summary>Módulo: reportes.</summary>
     public const string Reportes = "/Reportes";
 
+    /// <summary>Módulo: gestión de empleados (CU04 - Seguimiento de Servicios).</summary>
+    public const string Empleados = "/Empleados";
+
     /// <summary>
     /// Todas las rutas de menú del sistema web.
     /// </summary>
@@ -75,7 +78,8 @@ public static class PermisoMenu
         ConsultaManzana,
         ConsultaLotes,
         ConsultaVias,
-        Reportes
+        Reportes,
+        Empleados
     ];
 
     /// <summary>

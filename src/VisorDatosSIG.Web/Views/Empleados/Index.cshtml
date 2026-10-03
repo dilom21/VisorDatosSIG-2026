@@ -1,0 +1,304 @@
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "Gestionar Empleados";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/empleados.css" asp-append-version="true" />
+}
+
+<section class="empleados-seccion">
+    <!-- Encabezado de la página -->
+    <header class="empleados-cabecera">
+        <div class="empleados-cabecera__info">
+            <span class="empleados-cabecera__modulo">Seguimiento de Servicios • CU04</span>
+            <h1 class="empleados-cabecera__titulo">Gestión de Empleados</h1>
+            <p class="empleados-cabecera__intro">
+                Administre y mantenga la información del personal operativo para la asignación de cuadrillas,
+                servicios en campo, gestión de rutas y control de bajas parciales.
+            </p>
+        </div>
+        <div class="empleados-cabecera__acciones">
+            <button id="btn-abrir-crear" type="button" class="btn-nuevo-empleado">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Nuevo empleado</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Aviso accesible de estado (éxito / error) -->
+    <p id="gestion-mensaje" class="visor-aviso gestion__mensaje" role="status" aria-live="polite" hidden></p>
+
+    <!-- Contenedor del módulo (protegido por guard.js) -->
+    <div id="empleados-contenido" class="empleados-contenido" hidden>
+        
+        <!-- Tarjetas de Métricas Operativas (KPIs) -->
+        <div class="empleados-metricas">
+            <div class="metrica-card metrica-card--total">
+                <div class="metrica-card__icono" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <div class="metrica-card__datos">
+                    <span id="kpi-total" class="metrica-card__valor">0</span>
+                    <span class="metrica-card__etiqueta">Total Empleados</span>
+                </div>
+            </div>
+
+            <div class="metrica-card metrica-card--disponibles">
+                <div class="metrica-card__icono" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <div class="metrica-card__datos">
+                    <span id="kpi-disponibles" class="metrica-card__valor">0</span>
+                    <span class="metrica-card__etiqueta">Disponibles</span>
+                </div>
+            </div>
+
+            <div class="metrica-card metrica-card--servicio">
+                <div class="metrica-card__icono" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                </div>
+                <div class="metrica-card__datos">
+                    <span id="kpi-servicio" class="metrica-card__valor">0</span>
+                    <span class="metrica-card__etiqueta">En Servicio</span>
+                </div>
+            </div>
+
+            <div class="metrica-card metrica-card--bajas">
+                <div class="metrica-card__icono" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+                <div class="metrica-card__datos">
+                    <span id="kpi-bajas" class="metrica-card__valor">0</span>
+                    <span class="metrica-card__etiqueta">Bajas Parciales</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de herramientas: Búsqueda y Filtros -->
+        <div class="empleados-toolbar">
+            <div class="empleados-buscar">
+                <span class="empleados-buscar__icono" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </span>
+                <input id="empleados-buscar" type="search" placeholder="Buscar por código, nombre o documento..." class="empleados-buscar__input" autocomplete="off" />
+            </div>
+
+            <div class="empleados-filtro-grupo">
+                <label for="filtro-cargo">Cargo:</label>
+                <select id="filtro-cargo" class="empleados-select">
+                    <option value="">Todos los cargos</option>
+                </select>
+            </div>
+
+            <div class="empleados-filtro-grupo">
+                <label for="filtro-disponibilidad">Disponibilidad:</label>
+                <select id="filtro-disponibilidad" class="empleados-select">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+
+            <div class="empleados-filtro-grupo">
+                <label for="filtro-estado">Estado:</label>
+                <select id="filtro-estado" class="empleados-select">
+                    <option value="">Todos</option>
+                    <option value="true" selected>Activos</option>
+                    <option value="false">Inactivos</option>
+                </select>
+            </div>
+
+            <button id="btn-recargar" type="button" class="btn-secundario" title="Recargar lista">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span>Actualizar</span>
+            </button>
+        </div>
+
+        <!-- Tabla de datos -->
+        <div class="empleados-tabla-contenedor">
+            <table class="empleados-tabla">
+                <thead>
+                    <tr>
+                        <th scope="col">Código</th>
+                        <th scope="col">Empleado</th>
+                        <th scope="col">Documento / Contacto</th>
+                        <th scope="col">Cargo y Área</th>
+                        <th scope="col">Disponibilidad</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col" style="text-align: center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="empleados-lista">
+                    <!-- Filas insertadas dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</section>
+
+<!-- Diálogo Modal: Registro / Edición de Empleado -->
+<div id="modal-empleado" class="modal" hidden data-modal>
+    <div class="modal__fondo" id="modal-empleado-fondo"></div>
+    <div class="modal__dialogo modal-empleado-dialogo" role="dialog" aria-modal="true" aria-labelledby="modal-empleado-titulo">
+        <header class="modal__encabezado">
+            <div>
+                <h2 id="modal-empleado-titulo" class="modal__titulo">Registrar Empleado</h2>
+                <p class="modal__subtitulo">Complete los datos requeridos para registrar o actualizar al personal.</p>
+            </div>
+            <button type="button" id="btn-cerrar-modal" class="modal__cerrar" aria-label="Cerrar">×</button>
+        </header>
+
+        <form id="form-empleado" novalidate>
+            <div class="modal__cuerpo">
+                <p id="modal-empleado-error" class="modal__error" role="alert" hidden></p>
+
+                <div class="form-grid">
+                    <div class="form-grupo">
+                        <label for="emp-codigo">Código de empleado <span class="requerido">*</span></label>
+                        <input id="emp-codigo" type="text" maxlength="20" placeholder="Ej. EMP-001" class="form-control" required />
+                        <span class="form-ayuda">Identificador único del personal</span>
+                    </div>
+
+                    <div class="form-grupo">
+                        <label for="emp-ci">Documento de identidad <span class="requerido">*</span></label>
+                        <input id="emp-ci" type="text" maxlength="30" placeholder="Ej. 7845123 SC" class="form-control" required />
+                    </div>
+
+                    <div class="form-grupo">
+                        <label for="emp-nombres">Nombres <span class="requerido">*</span></label>
+                        <input id="emp-nombres" type="text" maxlength="100" placeholder="Ej. Carlos Andrés" class="form-control" required />
+                    </div>
+
+                    <div class="form-grupo">
+                        <label for="emp-apellidos">Apellidos <span class="requerido">*</span></label>
+                        <input id="emp-apellidos" type="text" maxlength="100" placeholder="Ej. Mendoza Flores" class="form-control" required />
+                    </div>
+
+                    <div class="form-grupo">
+                        <label for="emp-telefono">Teléfono / Celular</label>
+                        <input id="emp-telefono" type="tel" maxlength="30" placeholder="Ej. 70012345" class="form-control" />
+                    </div>
+
+                    <div class="form-grupo">
+                        <label for="emp-email">Correo electrónico</label>
+                        <input id="emp-email" type="email" maxlength="150" placeholder="Ej. empleado@visordatos.com" class="form-control" />
+                    </div>
+
+                    <div class="form-grupo">
+                        <label for="emp-cargo">Cargo operativo <span class="requerido">*</span></label>
+                        <input id="emp-cargo" list="dl-cargos" type="text" maxlength="100" placeholder="Seleccione o ingrese cargo" class="form-control" required />
+                        <datalist id="dl-cargos">
+                            <option value="Técnico de Campo" />
+                            <option value="Supervisor de Zona" />
+                            <option value="Conductor de Cuadrilla" />
+                            <option value="Inspectora Catastral" />
+                            <option value="Operador de Redes" />
+                        </datalist>
+                    </div>
+
+                    <div class="form-grupo">
+                        <label for="emp-area">Área / Unidad <span class="requerido">*</span></label>
+                        <input id="emp-area" type="text" maxlength="100" value="Operaciones" class="form-control" required />
+                    </div>
+
+                    <div class="form-grupo form-grid__col-full">
+                        <label for="emp-disponibilidad">Disponibilidad inicial <span class="requerido">*</span></label>
+                        <select id="emp-disponibilidad" class="form-control" required>
+                            <option value="Disponible">Disponible (Listo para asignación)</option>
+                            <option value="En Servicio">En Servicio (Asignado a ruta)</option>
+                            <option value="Baja Parcial">Baja Parcial (Permiso temporal)</option>
+                            <option value="Licencia">Licencia</option>
+                            <option value="Vacaciones">Vacaciones</option>
+                        </select>
+                    </div>
+
+                    <div class="form-grupo form-grid__col-full">
+                        <label for="emp-observaciones">Observaciones adicionales</label>
+                        <textarea id="emp-observaciones" rows="2" maxlength="500" placeholder="Detalles de especialidad, cuadrilla o vehículo asignado..." class="form-control"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="modal__pie">
+                <button type="button" id="btn-cancelar-modal" class="btn-secundario">Cancelar</button>
+                <button type="submit" id="btn-guardar-empleado" class="btn-primario">Guardar empleado</button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+<!-- Diálogo Modal: Cambio de Disponibilidad Operativa -->
+<div id="modal-disponibilidad" class="modal" hidden data-modal>
+    <div class="modal__fondo" id="modal-disp-fondo"></div>
+    <div class="modal__dialogo" role="dialog" aria-modal="true" aria-labelledby="modal-disp-titulo" style="width: min(480px, 95vw);">
+        <header class="modal__encabezado">
+            <div>
+                <h2 id="modal-disp-titulo" class="modal__titulo">Cambiar Disponibilidad</h2>
+                <p id="modal-disp-subtitulo" class="modal__subtitulo">Actualice la situación operativa del empleado.</p>
+            </div>
+            <button type="button" id="btn-cerrar-disp" class="modal__cerrar" aria-label="Cerrar">×</button>
+        </header>
+
+        <form id="form-disponibilidad" novalidate>
+            <div class="modal__cuerpo">
+                <p id="modal-disp-error" class="modal__error" role="alert" hidden></p>
+
+                <div class="form-grupo" style="margin-bottom: 1rem;">
+                    <label for="disp-estado">Nuevo estado de disponibilidad <span class="requerido">*</span></label>
+                    <select id="disp-estado" class="form-control" required>
+                        <option value="Disponible">Disponible (Para nuevas asignaciones)</option>
+                        <option value="En Servicio">En Servicio (Actualmente en ruta)</option>
+                        <option value="Baja Parcial">Baja Parcial (Inhabilitación temporal)</option>
+                        <option value="Licencia">Licencia Médica / Personal</option>
+                        <option value="Vacaciones">Vacaciones</option>
+                    </select>
+                </div>
+
+                <div class="form-grupo">
+                    <label for="disp-motivo">Motivo o justificación operativa</label>
+                    <textarea id="disp-motivo" rows="3" maxlength="500" placeholder="Ej. Bajas parciales por mantenimiento de equipo, cambio de turno, etc." class="form-control"></textarea>
+                    <span class="form-ayuda">Quedará registrado en la bitácora operativa y en las notas del personal.</span>
+                </div>
+            </div>
+
+            <footer class="modal__pie">
+                <button type="button" id="btn-cancelar-disp" class="btn-secundario">Cancelar</button>
+                <button type="submit" id="btn-guardar-disp" class="btn-primario">Actualizar disponibilidad</button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/empleados/empleados.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Empleados',
+            alValidar: function () {
+                window.VisorSIG.empleados.iniciar();
+            }
+        });
+    </script>
+}

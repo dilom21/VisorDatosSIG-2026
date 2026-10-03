@@ -30,6 +30,9 @@ public static class RolesSistema
     /// <summary>Nombre del rol de consulta de la versión web.</summary>
     public const string Consultor = "Consultor";
 
+    /// <summary>Nombre del rol de supervisión operativa y servicios (CU04).</summary>
+    public const string Supervisor = "Supervisor";
+
     /// <summary>Nombre del rol responsable de la migración de datos geográficos.</summary>
     public const string ResponsableMigrador = "RESPONSABLE MIGRADOR";
 
