@@ -1,0 +1,31 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Copiar archivos de solución y configuración de build
+COPY Directory.Build.props Directory.Build.targets ./
+
+# Copiar archivos de proyecto para restaurar dependencias con cache
+COPY src/VisorDatosSIG.Domain/VisorDatosSIG.Domain.csproj src/VisorDatosSIG.Domain/
+COPY src/VisorDatosSIG.Application/VisorDatosSIG.Application.csproj src/VisorDatosSIG.Application/
+COPY src/VisorDatosSIG.Infrastructure/VisorDatosSIG.Infrastructure.csproj src/VisorDatosSIG.Infrastructure/
+COPY src/VisorDatosSIG.Api/VisorDatosSIG.Api.csproj src/VisorDatosSIG.Api/
+
+RUN dotnet restore src/VisorDatosSIG.Api/VisorDatosSIG.Api.csproj
+
+# Copiar el código fuente completo
+COPY src/VisorDatosSIG.Domain/ src/VisorDatosSIG.Domain/
+COPY src/VisorDatosSIG.Application/ src/VisorDatosSIG.Application/
+COPY src/VisorDatosSIG.Infrastructure/ src/VisorDatosSIG.Infrastructure/
+COPY src/VisorDatosSIG.Api/ src/VisorDatosSIG.Api/
+
+WORKDIR /src/src/VisorDatosSIG.Api
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+
+ENV ASPNETCORE_HTTP_PORTS=8080
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "VisorDatosSIG.Api.dll"]
