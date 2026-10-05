@@ -1711,3 +1711,32 @@ body.sesion-verificando .visor-map {
         grid-template-columns: 1fr;
     }
 }
+
+/* CU07 - Selector de mapa base */
+.visor-mapabase {
+    display: grid;
+    gap: 6px;
+    margin-top: 14px;
+}
+
+.visor-mapabase__label {
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.visor-mapabase__select {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid var(--color-border, #cbd5e1);
+    border-radius: 8px;
+    background: var(--color-surface, #ffffff);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.visor-mapabase__select:focus-visible {
+    outline: 2px solid var(--color-primary, #0d3b66);
+    outline-offset: 2px;
+}
