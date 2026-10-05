@@ -13,7 +13,7 @@ namespace VisorDatosSIG.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// Repositorio de consultas espaciales y alfanuméricas sobre SQL Server 2022 (RT-04, RT-07, RT-08).
 /// </summary>
-public sealed class CadastreRepository : ICadastreRepository
+public sealed partial class CadastreRepository : ICadastreRepository
 {
     private readonly SqlServerConnectionFactory _connectionFactory;
     private static readonly WKBReader WkbReader = new();

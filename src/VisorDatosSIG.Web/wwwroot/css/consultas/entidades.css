@@ -1,0 +1,103 @@
+
+.consulta-entidades {
+    padding: clamp(20px, 3vw, 36px);
+    max-width: 1600px;
+    margin: 0 auto;
+    color: var(--color-text, #1d332d);
+}
+.consulta-entidades *, .consulta-entidades *::before, .consulta-entidades *::after { box-sizing: border-box; }
+.consulta-entidades header { margin-bottom: 24px; }
+.consulta-entidades h1 { margin: 0 0 8px; font-size: clamp(26px, 2.5vw, 34px); line-height: 1.2; }
+.consulta-entidades header p { margin: 0; color: var(--color-muted, #5e7069); line-height: 1.6; }
+.consulta-filtros {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr) 160px auto auto;
+    gap: 16px;
+    align-items: end;
+    padding: 22px;
+    border: 1px solid var(--color-border, #dedfd8);
+    border-radius: 14px;
+    background: var(--color-surface, #fff);
+}
+.consulta-entidades[data-capa="vias"] .consulta-filtros {
+    grid-template-columns: minmax(180px, 1.5fr) minmax(120px, 1fr) minmax(120px, 1fr) 160px auto auto;
+}
+.consulta-filtros label { display: grid; gap: 8px; min-width: 0; font-size: 14px; font-weight: 600; }
+.consulta-filtros input, .consulta-filtros select {
+    width: 100%; min-width: 0; height: 44px; padding: 10px 12px;
+    border: 1px solid var(--color-border-strong, #c8cecb); border-radius: 8px;
+    background: var(--color-surface, #fff); color: inherit; font: inherit; font-weight: 400;
+}
+.consulta-entidades button {
+    min-height: 44px; padding: 10px 16px; border: 1px solid transparent; border-radius: 8px;
+    background: var(--color-primary, #183d37); color: #fff; font: inherit;
+    font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer;
+}
+.consulta-entidades button:hover:not(:disabled) { filter: brightness(1.1); }
+.consulta-entidades button:disabled { opacity: .45; cursor: default; }
+.consulta-entidades button:focus-visible, .consulta-filtros input:focus-visible, .consulta-filtros select:focus-visible {
+    outline: 3px solid var(--color-accent, #cf8057); outline-offset: 2px;
+}
+.consulta-entidades .consulta-secundario {
+    background: var(--color-surface-alt, #faf7f2);
+    color: var(--color-text, #1d332d); border-color: var(--color-border-strong, #c8cecb);
+}
+#consulta-estado { margin: 14px 0; line-height: 1.5; }
+#consulta-estado:empty { margin: 0; }
+.consulta-columnas {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(290px, 350px);
+    gap: 22px; align-items: start; margin-top: 24px;
+}
+.consulta-columnas > section {
+    min-width: 0; border: 1px solid var(--color-border, #dedfd8);
+    border-radius: 14px; background: var(--color-surface, #fff); overflow: hidden;
+}
+.consulta-tabla { overflow: auto; max-height: 580px; }
+.consulta-tabla table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.consulta-tabla caption { text-align: left; font-weight: 600; padding: 18px 20px; color: var(--color-text, #1d332d); }
+.consulta-tabla th, .consulta-tabla td {
+    padding: 13px 16px; border-bottom: 1px solid var(--color-border, #dedfd8);
+    text-align: left; vertical-align: middle; line-height: 1.5;
+}
+.consulta-tabla th {
+    background: var(--color-surface-alt, #faf7f2); color: var(--color-muted, #5e7069);
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+    position: sticky; top: 0; z-index: 1;
+}
+.consulta-tabla th:first-child, .consulta-tabla td:first-child { width: 65px; }
+.consulta-tabla th:last-child, .consulta-tabla td:last-child { width: 125px; text-align: right; }
+.consulta-tabla td:nth-child(2) { overflow-wrap: anywhere; }
+.consulta-tabla tbody tr:hover { background: var(--color-surface-alt, #faf7f2); }
+.consulta-tabla tr[aria-selected="true"] { background: var(--color-primary-soft, #e5eeea); }
+.consulta-tabla button { padding: 8px 12px; min-height: 38px; font-size: 13px; }
+.consulta-paginacion {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 16px 20px; border-top: 1px solid var(--color-border, #dedfd8); font-size: 13px;
+}
+.consulta-detalle { padding: 22px; }
+.consulta-detalle h2 { margin: 0 0 14px; font-size: 20px; }
+.consulta-detalle p { color: var(--color-muted, #5e7069); line-height: 1.6; margin: 0; }
+.consulta-detalle dl { display: grid; grid-template-columns: minmax(95px, 1fr) minmax(0, 1.2fr); gap: 12px; margin: 20px 0; font-size: 14px; }
+.consulta-detalle dl:empty { display: none; }
+.consulta-detalle dt { font-weight: 600; }
+.consulta-detalle dd { margin: 0; overflow-wrap: anywhere; }
+#consulta-mapa { height: 300px; border-radius: 8px; margin-top: 20px; }
+#consulta-mapa[hidden] { display: none; }
+#consulta-mapa-aviso:not(:empty) { margin-top: 14px; }
+.consulta-entidades .consulta-error { color: var(--color-error, #a4231c); }
+@media (max-width: 1200px) {
+    .consulta-entidades[data-capa="vias"] .consulta-filtros { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1000px) {
+    .consulta-columnas { grid-template-columns: minmax(0, 1fr); }
+    .consulta-filtros { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+    .consulta-entidades { padding: 18px 14px; }
+    .consulta-filtros, .consulta-entidades[data-capa="vias"] .consulta-filtros { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 16px; gap: 14px; }
+    .consulta-filtros label { grid-column: 1 / -1; }
+    .consulta-tabla table { min-width: 450px; }
+    .consulta-paginacion { padding: 14px 12px; gap: 8px; }
+    .consulta-paginacion button { padding: 9px 12px; }
+    .consulta-detalle { padding: 18px; }
+}

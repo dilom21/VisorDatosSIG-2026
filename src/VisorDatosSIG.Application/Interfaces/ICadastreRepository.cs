@@ -2,6 +2,9 @@ using VisorDatosSIG.Application.Common;
 using VisorDatosSIG.Application.DTOs.CodigosFijos;
 using VisorDatosSIG.Application.DTOs.Manzanas;
 
+using VisorDatosSIG.Application.DTOs.Lotes;
+using VisorDatosSIG.Application.DTOs.Vias;
+
 namespace VisorDatosSIG.Application.Interfaces;
 
 /// <summary>
@@ -9,6 +12,13 @@ namespace VisorDatosSIG.Application.Interfaces;
 /// </summary>
 public interface ICadastreRepository
 {
+    Task<PagedResult<LoteResumenDto>> SearchLotesAsync(LoteConsultaDto consulta, CancellationToken cancellationToken = default);
+    Task<LoteDetalleDto?> GetLoteByIdAsync(int idLote, CancellationToken cancellationToken = default);
+
+    Task<PagedResult<ViaResumenDto>> SearchViasAsync(ViaConsultaDto consulta, CancellationToken cancellationToken = default);
+    Task<ViaDetalleDto?> GetViaByIdAsync(int idVia, CancellationToken cancellationToken = default);
+
+
     /// <summary>
     /// Consulta codigos fijos con filtros combinables y paginacion (CU13).
     /// </summary>
