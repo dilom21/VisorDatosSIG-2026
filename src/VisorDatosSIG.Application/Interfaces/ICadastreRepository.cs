@@ -1,4 +1,6 @@
 using VisorDatosSIG.Application.Common;
+using VisorDatosSIG.Application.DTOs.CodigosFijos;
+using VisorDatosSIG.Application.DTOs.Manzanas;
 
 namespace VisorDatosSIG.Application.Interfaces;
 
@@ -7,6 +9,34 @@ namespace VisorDatosSIG.Application.Interfaces;
 /// </summary>
 public interface ICadastreRepository
 {
+    /// <summary>
+    /// Consulta codigos fijos con filtros combinables y paginacion (CU13).
+    /// </summary>
+    Task<PagedResult<CodigoFijoResumenDto>> SearchCodigosFijosAsync(
+        CodigoFijoConsultaDto consulta,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Obtiene el detalle de un codigo fijo por su identificador unico.
+    /// </summary>
+    Task<CodigoFijoDetalleDto?> GetCodigoFijoByIdAsync(
+        int idCodigo,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Consulta manzanas con filtros alfanumericos combinables y paginacion (CU14).
+    /// </summary>
+    Task<PagedResult<ManzanaResumenDto>> SearchManzanasAsync(
+        ManzanaConsultaDto consulta,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Obtiene una manzana por su identificador y conserva su geometria Polygon/MultiPolygon.
+    /// </summary>
+    Task<ManzanaDetalleDto?> GetManzanaByIdAsync(
+        int idManzana,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Obtiene las entidades de una capa en formato GeoJSON FeatureCollection, opcionalmente filtradas por bounding box.
     /// </summary>
