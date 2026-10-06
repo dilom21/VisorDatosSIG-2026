@@ -71,6 +71,9 @@ public static class PermisoMenu
     /// <summary>Módulo: gestión de bajas parciales (CU18 - Seguimiento de Servicios).</summary>
     public const string BajasParciales = "/Servicios/BajasParciales";
 
+    /// <summary>Módulo: disponibilidad, horarios y asignaciones del personal (CU19).</summary>
+    public const string DisponibilidadPersonal = "/Servicios/Disponibilidad";
+
     /// <summary>Módulo: gestión del estado operativo de los servicios.</summary>
     public const string Servicios = "/Servicios";
 
@@ -91,7 +94,8 @@ public static class PermisoMenu
         Reportes,
         Empleados,
         Servicios,
-        BajasParciales
+        BajasParciales,
+        DisponibilidadPersonal
     ];
 
     /// <summary>

@@ -1,0 +1,662 @@
+@*
+    Disponibilidad de Personal (CU19) — Seguimiento de Servicios.
+
+    La vista es la maqueta del módulo: la disponibilidad, los horarios y las asignaciones los
+    ejecuta el navegador contra la API protegida con el token de la sesión
+    (js/servicios/disponibilidad.js):
+      GET  api/disponibilidad                                   -> disponibilidad efectiva (fecha+hora)
+      GET  api/disponibilidad/empleados/{id}/horarios           -> horarios del empleado
+      POST api/disponibilidad/empleados/{id}/horarios           -> crear franja
+      PUT  api/disponibilidad/horarios/{id}                      -> editar franja
+      PATCH api/disponibilidad/horarios/{id}/estado              -> activar/desactivar franja
+      GET  api/asignaciones-trabajo                              -> asignaciones (paginado servidor)
+      GET  api/asignaciones-trabajo/{id}                         -> detalle de asignación
+      POST api/asignaciones-trabajo                              -> crear asignación
+      PUT  api/asignaciones-trabajo/{id}                         -> editar asignación
+      PATCH api/asignaciones-trabajo/{id}/estado                 -> cambiar estado
+
+    No se usa fetch directo: todas las peticiones pasan por window.VisorSIG.api.peticion.
+    La autorización real vive en la API (permiso dinámico sobre /Servicios/Disponibilidad de
+    dbo.RolMenu); el frontend solo refleja lo que el backend permite y presenta la respuesta.
+
+    La vista NO calcula la disponibilidad: representa el estado que devuelve el backend
+    (Empleado activo + HorariosTrabajo + BajasParciales + AsignacionesTrabajo).
+
+    Contratos de los elementos (los usa js/servicios/disponibilidad.js):
+      #cd-raiz                     -> raíz scoped (data-permisos opcional)
+      #cd-tab-* / #cd-panel-*      -> pestañas superiores Resumen / Horarios / Asignaciones
+      #cd-filtros #cd-busqueda #cd-estado #cd-fecha #cd-hora #cd-buscar #cd-limpiar
+      #cd-kpi-*                    -> KPIs del resumen
+      #cd-titulo #cd-limite #cd-cuerpo #cd-vacio #cd-conteo #cd-paginacion
+      #cd-det-*                    -> panel de detalle del empleado
+      #cd-subtab-* / #cd-sub-*     -> subpanel Horario semanal / Asignaciones
+      #cd-horario-*                -> carrusel semanal (prev / dias / next / puntos)
+      #cd-asig-*                   -> asignaciones del día (empleado + fecha)
+      #cd-hor-* / #cd-asigtab-*    -> pestañas superiores Horarios / Asignaciones
+      #cd-toast #cd-exito          -> avisos (flotante y tarjeta de éxito)
+*@
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "Disponibilidad de Personal";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/servicios/disponibilidad.css" asp-append-version="true" />
+}
+
+<section class="cd" id="cd-raiz">
+    <header class="cd-hero">
+        <div class="cd-hero__marca">
+            <span class="cd-hero__icono" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7.5 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM9 13c-3.9 0-7 2.1-7 4.8V21h14v-3.2C16 15.1 12.9 13 9 13Zm7.5 1c-.5 0-1 .04-1.4.12A6.6 6.6 0 0 1 18 18.8V21h5v-2.7c0-2.5-2.6-4.3-6.5-4.3Z" />
+                </svg>
+            </span>
+            <div class="cd-hero__texto">
+                <h1>Disponibilidad de Personal</h1>
+                <p class="cd-hero__sub">
+                    Consulta, configuración de horarios y gestión de asignaciones del personal operativo.
+                </p>
+            </div>
+        </div>
+
+        <div class="cd-hero__lado">
+            <span id="cd-lectura" class="cd-chip-lectura" hidden>Solo lectura</span>
+            <div id="cd-exito" class="cd-exito" role="status" aria-live="polite" hidden></div>
+        </div>
+    </header>
+
+    @* Navegación principal: tres secciones dentro del mismo módulo (no son páginas). *@
+    <div class="cd-tabs" role="tablist" aria-label="Secciones de disponibilidad de personal">
+        <button type="button" id="cd-tab-resumen" class="cd-tabs__boton" role="tab"
+                aria-selected="true" aria-controls="cd-panel-resumen" tabindex="0">
+            <span class="cd-icono" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M4 20V10h4v10H4Zm6 0V4h4v16h-4Zm6 0v-7h4v7h-4Z" />
+                </svg>
+            </span>
+            Resumen
+        </button>
+        <button type="button" id="cd-tab-horarios" class="cd-tabs__boton" role="tab"
+                aria-selected="false" aria-controls="cd-panel-horarios" tabindex="-1">
+            <span class="cd-icono" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M7 2v2h10V2h2v2h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V2h2Zm13 8H4v9h16v-9ZM8 12v2H6v-2h2Zm5 0v2h-2v-2h2Zm5 0v2h-2v-2h2Z" />
+                </svg>
+            </span>
+            Horarios
+        </button>
+        <button type="button" id="cd-tab-asignaciones" class="cd-tabs__boton" role="tab"
+                aria-selected="false" aria-controls="cd-panel-asignaciones" tabindex="-1">
+            <span class="cd-icono" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M9 2h6a2 2 0 0 1 2 2v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2Zm6 3V4H9v1h6Zm-7 5v2H6v-2h2Zm11 0v2h-8v-2h8ZM8 15v2H6v-2h2Zm11 0v2h-8v-2h8Z" />
+                </svg>
+            </span>
+            Asignaciones
+        </button>
+    </div>
+
+    @* ---------------------------- RESUMEN ---------------------------- *@
+    <div id="cd-panel-resumen" class="cd-panel-vista" role="tabpanel" aria-labelledby="cd-tab-resumen">
+        <form id="cd-filtros" class="cd-card cd-filtros" role="search" novalidate>
+            <div class="cd-filtros__cabecera">
+                <span class="cd-icono-caja" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M3 5h18l-7 8v6l-4 2v-8L3 5Z" />
+                    </svg>
+                </span>
+                <div>
+                    <h2 class="cd-card__titulo">Filtros de consulta</h2>
+                    <p class="cd-filtros__ayuda">Consulte la disponibilidad efectiva del personal para una fecha y hora.</p>
+                </div>
+            </div>
+
+            <div class="cd-filtros__fila">
+                <label class="cd-campo" for="cd-busqueda">
+                    <span class="cd-campo__etiqueta">Empleado</span>
+                    <span class="cd-campo__control">
+                        <span class="cd-campo__icono" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false"><path d="M11 3a8 8 0 1 0 4.9 14.32l4.4 4.4 1.4-1.42-4.4-4.4A8 8 0 0 0 11 3Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" /></svg>
+                        </span>
+                        <input id="cd-busqueda" name="busqueda" type="search" class="cd-input"
+                               autocomplete="off" maxlength="200" placeholder="Ingrese nombre o código…" />
+                    </span>
+                </label>
+
+                <label class="cd-campo" for="cd-estado">
+                    <span class="cd-campo__etiqueta">Estado</span>
+                    <select id="cd-estado" name="estado" class="cd-select">
+                        <option value="">Todos</option>
+                        <option value="Disponible">Disponible</option>
+                        <option value="En Servicio">En Servicio</option>
+                        <option value="Fuera de horario">Fuera de horario</option>
+                        <option value="Baja Parcial">Baja Parcial</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                </label>
+
+                <label class="cd-campo" for="cd-fecha">
+                    <span class="cd-campo__etiqueta">Día</span>
+                    <input id="cd-fecha" name="fecha" type="date" class="cd-input cd-input--date" />
+                </label>
+
+                <label class="cd-campo" for="cd-hora">
+                    <span class="cd-campo__etiqueta">Hora</span>
+                    <input id="cd-hora" name="hora" type="time" class="cd-input cd-input--time" />
+                </label>
+
+                <div class="cd-filtros__acciones">
+                    <button type="submit" id="cd-buscar" class="cd-btn cd-btn--primario">
+                        <span class="cd-icono" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false"><path d="M11 3a8 8 0 1 0 4.9 14.32l4.4 4.4 1.4-1.42-4.4-4.4A8 8 0 0 0 11 3Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" /></svg>
+                        </span>
+                        Buscar
+                    </button>
+                    <button type="button" id="cd-limpiar" class="cd-btn cd-btn--secundario">
+                        <span class="cd-icono" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false"><path d="M6 7h12l-1 13a2 2 0 0 1-2 1.8H9A2 2 0 0 1 7 20L6 7Zm3-3h6l1 2H8l1-2Z" /></svg>
+                        </span>
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <p id="cd-aviso" class="cd-alerta" role="status" hidden></p>
+
+        <div class="cd-kpis" aria-label="Indicadores de disponibilidad">
+            <article class="cd-kpi cd-kpi--disponible">
+                <span class="cd-kpi__icono" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7.5 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM9 13c-3.9 0-7 2.1-7 4.8V21h14v-3.2C16 15.1 12.9 13 9 13Zm7.5 1c-.5 0-1 .04-1.4.12A6.6 6.6 0 0 1 18 18.8V21h5v-2.7c0-2.5-2.6-4.3-6.5-4.3Z" /></svg>
+                </span>
+                <div class="cd-kpi__texto">
+                    <p class="cd-kpi__etiqueta">Disponibles</p>
+                    <p class="cd-kpi__num" id="cd-kpi-disponible-valor">0</p>
+                    <p class="cd-kpi__meta" id="cd-kpi-disponible-meta">de 0 empleados</p>
+                </div>
+                <div class="cd-kpi__anillo" id="cd-kpi-disponible-anillo" role="img" aria-label="0%">
+                    <svg viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+                        <circle class="cd-kpi__anillo-fondo" cx="18" cy="18" r="15.5" />
+                        <circle class="cd-kpi__anillo-valor" id="cd-kpi-disponible-circulo" cx="18" cy="18" r="15.5" stroke-dasharray="97.4" stroke-dashoffset="97.4" />
+                    </svg>
+                    <span class="cd-kpi__pct" id="cd-kpi-disponible-pct">0%</span>
+                </div>
+            </article>
+
+            <article class="cd-kpi cd-kpi--servicio">
+                <span class="cd-kpi__icono" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M10 2h4v3h-4V2Zm-3.5 6h11l-1.2 5H7.7L6.5 8ZM5 15h14v2H5v-2Zm2 4h10v2H7v-2Z" /></svg>
+                </span>
+                <div class="cd-kpi__texto">
+                    <p class="cd-kpi__etiqueta">En Servicio</p>
+                    <p class="cd-kpi__num" id="cd-kpi-servicio-valor">0</p>
+                    <p class="cd-kpi__meta" id="cd-kpi-servicio-meta">de 0 empleados</p>
+                </div>
+                <div class="cd-kpi__anillo" id="cd-kpi-servicio-anillo" role="img" aria-label="0%">
+                    <svg viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+                        <circle class="cd-kpi__anillo-fondo" cx="18" cy="18" r="15.5" />
+                        <circle class="cd-kpi__anillo-valor" id="cd-kpi-servicio-circulo" cx="18" cy="18" r="15.5" stroke-dasharray="97.4" stroke-dashoffset="97.4" />
+                    </svg>
+                    <span class="cd-kpi__pct" id="cd-kpi-servicio-pct">0%</span>
+                </div>
+            </article>
+
+            <article class="cd-kpi cd-kpi--fuera">
+                <span class="cd-kpi__icono" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M12 8v5l4 2-.8 1.7L10 14V8h2Zm0-6a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z" /></svg>
+                </span>
+                <div class="cd-kpi__texto">
+                    <p class="cd-kpi__etiqueta">Fuera de horario</p>
+                    <p class="cd-kpi__num" id="cd-kpi-fuera-valor">0</p>
+                    <p class="cd-kpi__meta" id="cd-kpi-fuera-meta">de 0 empleados</p>
+                </div>
+                <div class="cd-kpi__anillo" id="cd-kpi-fuera-anillo" role="img" aria-label="0%">
+                    <svg viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+                        <circle class="cd-kpi__anillo-fondo" cx="18" cy="18" r="15.5" />
+                        <circle class="cd-kpi__anillo-valor" id="cd-kpi-fuera-circulo" cx="18" cy="18" r="15.5" stroke-dasharray="97.4" stroke-dashoffset="97.4" />
+                    </svg>
+                    <span class="cd-kpi__pct" id="cd-kpi-fuera-pct">0%</span>
+                </div>
+            </article>
+
+            <article class="cd-kpi cd-kpi--baja">
+                <span class="cd-kpi__icono" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 5v6h-2V7h2Zm0 8v2h-2v-2h2Z" /></svg>
+                </span>
+                <div class="cd-kpi__texto">
+                    <p class="cd-kpi__etiqueta">Baja parcial</p>
+                    <p class="cd-kpi__num" id="cd-kpi-baja-valor">0</p>
+                    <p class="cd-kpi__meta" id="cd-kpi-baja-meta">de 0 empleados</p>
+                </div>
+                <div class="cd-kpi__anillo" id="cd-kpi-baja-anillo" role="img" aria-label="0%">
+                    <svg viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+                        <circle class="cd-kpi__anillo-fondo" cx="18" cy="18" r="15.5" />
+                        <circle class="cd-kpi__anillo-valor" id="cd-kpi-baja-circulo" cx="18" cy="18" r="15.5" stroke-dasharray="97.4" stroke-dashoffset="97.4" />
+                    </svg>
+                    <span class="cd-kpi__pct" id="cd-kpi-baja-pct">0%</span>
+                </div>
+            </article>
+        </div>
+
+        <div class="cd-grid">
+            <section class="cd-card cd-lista" aria-label="Listado de personal">
+                <header class="cd-lista__cabecera">
+                    <div class="cd-titulo-grupo">
+                        <span class="cd-icono-caja" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false"><path d="M4 5h16v3H4V5Zm0 6h16v3H4v-3Zm0 6h16v3H4v-3Z" /></svg>
+                        </span>
+                        <h2 id="cd-titulo" class="cd-card__titulo">Listado de Personal (0 registros)</h2>
+                    </div>
+                    <div class="cd-lista__controles">
+                        <span id="cd-cargando" class="cd-cargando" hidden>
+                            <span class="cd-spinner" aria-hidden="true"></span>Consultando…
+                        </span>
+                        <label class="cd-limite" for="cd-limite">Registros por página
+                            <select id="cd-limite" class="cd-select cd-select--corto">
+                                <option value="8" selected>8</option>
+                                <option value="16">16</option>
+                                <option value="24">24</option>
+                            </select>
+                        </label>
+                    </div>
+                </header>
+
+                <div id="cd-tabla-envoltura" class="cd-tabla-envoltura">
+                    <table class="cd-tabla">
+                        <caption class="cd-visually-hidden">Disponibilidad del personal de la página consultada</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Empleado</th>
+                                <th scope="col">Cargo</th>
+                                <th scope="col">Estado actual</th>
+                                <th scope="col">Horario activo</th>
+                                <th scope="col">Asignación</th>
+                                <th scope="col" class="cd-col-accion"><span class="cd-visually-hidden">Acciones</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cd-cuerpo"></tbody>
+                    </table>
+                </div>
+
+                <p id="cd-vacio" class="cd-vacio" hidden>
+                    No se encontraron empleados para los filtros seleccionados.
+                </p>
+
+                <footer class="cd-lista__pie">
+                    <p id="cd-conteo" class="cd-conteo"></p>
+                    <div id="cd-paginacion" class="cd-paginacion" hidden></div>
+                </footer>
+            </section>
+
+            <section class="cd-card cd-detalle" aria-label="Detalle del personal">
+                <header class="cd-detalle__cabecera">
+                    <div class="cd-titulo-grupo">
+                        <span class="cd-icono-caja" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.4-8 5.3V21h16v-1.7c0-2.9-3.6-5.3-8-5.3Z" /></svg>
+                        </span>
+                        <h2 class="cd-card__titulo">Detalle del Personal</h2>
+                    </div>
+                    <span id="cd-det-badge" class="cd-badge" hidden></span>
+                </header>
+
+                <p id="cd-det-vacio" class="cd-detalle__vacio">Seleccione un empleado para visualizar su detalle.</p>
+
+                <p id="cd-det-cargando" class="cd-detalle__cargando" role="status" hidden>
+                    <span class="cd-spinner" aria-hidden="true"></span>Cargando detalle…
+                </p>
+
+                <div id="cd-det-contenido" class="cd-detalle__contenido" hidden>
+                    <div class="cd-detalle__persona">
+                        <span id="cd-det-avatar" class="cd-avatar cd-avatar--grande" aria-hidden="true">--</span>
+                        <dl class="cd-detalle__datos">
+                            <div class="cd-detalle__fila"><dt>IdEmpleado</dt><dd id="cd-det-id"></dd></div>
+                            <div class="cd-detalle__fila"><dt>Nombre</dt><dd id="cd-det-nombre"></dd></div>
+                            <div class="cd-detalle__fila"><dt>Cargo</dt><dd id="cd-det-cargo"></dd></div>
+                            <div class="cd-detalle__fila"><dt>Área</dt><dd id="cd-det-area"></dd></div>
+                            <div class="cd-detalle__fila"><dt>Estado efectivo</dt><dd id="cd-det-estado"></dd></div>
+                            <div class="cd-detalle__fila"><dt>Fecha de consulta</dt><dd id="cd-det-fecha"></dd></div>
+                            <div class="cd-detalle__fila"><dt>Horario vigente</dt><dd id="cd-det-horario"></dd></div>
+                            <div class="cd-detalle__fila"><dt>Observación</dt><dd id="cd-det-motivo"></dd></div>
+                        </dl>
+                    </div>
+
+                    @* Subpanel interno obligatorio: Horario semanal | Asignaciones (nunca ambos). *@
+                    <div class="cd-subtabs" role="tablist" aria-label="Detalle del empleado">
+                        <button type="button" id="cd-subtab-horario" class="cd-subtabs__boton" role="tab"
+                                aria-selected="true" aria-controls="cd-sub-horario" tabindex="0">
+                            <span class="cd-icono" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false"><path d="M7 2v2h10V2h2v2h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V2h2Zm13 8H4v9h16v-9Z" /></svg>
+                            </span>
+                            Horario semanal
+                        </button>
+                        <button type="button" id="cd-subtab-asignaciones" class="cd-subtabs__boton" role="tab"
+                                aria-selected="false" aria-controls="cd-sub-asignaciones" tabindex="-1">
+                            <span class="cd-icono" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false"><path d="M9 2h6a2 2 0 0 1 2 2v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2Zm6 3V4H9v1h6ZM8 10v2H6v-2h2Zm11 0v2h-8v-2h8ZM8 15v2H6v-2h2Zm11 0v2h-8v-2h8Z" /></svg>
+                            </span>
+                            Asignaciones
+                        </button>
+                    </div>
+
+                    <div id="cd-sub-horario" class="cd-subpanel" role="tabpanel" aria-labelledby="cd-subtab-horario">
+                        <p id="cd-horario-vacio" class="cd-detalle__nota-vacia" hidden>
+                            El empleado no tiene horarios configurados.
+                        </p>
+                        <div id="cd-horario-carrusel" class="cd-carrusel">
+                            <button type="button" id="cd-horario-prev" class="cd-carrusel__flecha" aria-label="Ver días anteriores" disabled>
+                                <span aria-hidden="true">&#8249;</span>
+                            </button>
+                            <div id="cd-horario-dias" class="cd-carrusel__dias"></div>
+                            <button type="button" id="cd-horario-next" class="cd-carrusel__flecha" aria-label="Ver fin de semana" disabled>
+                                <span aria-hidden="true">&#8250;</span>
+                            </button>
+                        </div>
+                        <div id="cd-horario-puntos" class="cd-carrusel__puntos" aria-hidden="true" hidden></div>
+                    </div>
+
+                    <div id="cd-sub-asignaciones" class="cd-subpanel" role="tabpanel" aria-labelledby="cd-subtab-asignaciones" hidden>
+                        <div class="cd-subseccion__cabecera">
+                            <h3 class="cd-subseccion__titulo">
+                                <span class="cd-icono-caja cd-icono-caja--mini" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" focusable="false"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z" /></svg>
+                                </span>
+                                <span id="cd-asig-titulo">Asignaciones del día</span>
+                            </h3>
+                            <button type="button" id="cd-nueva-asignacion" class="cd-btn cd-btn--mini cd-btn--primario" hidden>
+                                <span class="cd-icono" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" focusable="false"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z" /></svg>
+                                </span>
+                                Nueva asignación
+                            </button>
+                        </div>
+
+                        <div class="cd-tabla-envoltura cd-tabla-envoltura--mini">
+                            <table class="cd-tabla cd-tabla--mini">
+                                <caption class="cd-visually-hidden">Asignaciones del empleado en la fecha consultada</caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Hora</th>
+                                        <th scope="col">Actividad</th>
+                                        <th scope="col">Ubicación</th>
+                                        <th scope="col">Estado</th>
+                                        <th scope="col" class="cd-col-accion"><span class="cd-visually-hidden">Acciones</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cd-asig-cuerpo"></tbody>
+                            </table>
+                        </div>
+
+                        <p id="cd-asig-vacio" class="cd-detalle__nota-vacia" hidden>
+                            No existen asignaciones para este empleado en la fecha seleccionada.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    @* ---------------------------- HORARIOS (configuración) ---------------------------- *@
+    <div id="cd-panel-horarios" class="cd-panel-vista" role="tabpanel" aria-labelledby="cd-tab-horarios" hidden>
+        <div class="cd-card cd-hor-toolbar">
+            <div class="cd-filtros__cabecera">
+                <span class="cd-icono-caja" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M7 2v2h10V2h2v2h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V2h2Zm13 8H4v9h16v-9Z" /></svg>
+                </span>
+                <div>
+                    <h2 class="cd-card__titulo">Configuración de horarios</h2>
+                    <p class="cd-filtros__ayuda">Seleccione un empleado y administre sus franjas semanales (no se eliminan: solo se activan o desactivan).</p>
+                </div>
+            </div>
+            <div class="cd-hor-toolbar__fila">
+                <label class="cd-campo" for="cd-hor-select">
+                    <span class="cd-campo__etiqueta">Empleado</span>
+                    <select id="cd-hor-select" class="cd-select"></select>
+                </label>
+                <button type="button" id="cd-hor-recargar" class="cd-btn cd-btn--secundario">
+                    <span class="cd-icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z" /></svg>
+                    </span>
+                    Actualizar
+                </button>
+            </div>
+        </div>
+
+        <p id="cd-hor-aviso" class="cd-alerta" role="status" hidden></p>
+
+        <div id="cd-hor-semana" class="cd-semana" aria-label="Horarios semanales del empleado"></div>
+
+        <p id="cd-hor-vacio" class="cd-vacio" hidden>El empleado no tiene horarios configurados.</p>
+    </div>
+
+    @* ---------------------------- ASIGNACIONES (gestión general) ---------------------------- *@
+    <div id="cd-panel-asignaciones" class="cd-panel-vista" role="tabpanel" aria-labelledby="cd-tab-asignaciones" hidden>
+        <form id="cd-asigtab-filtros" class="cd-card cd-filtros" role="search" novalidate>
+            <div class="cd-filtros__cabecera">
+                <span class="cd-icono-caja" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M9 2h6a2 2 0 0 1 2 2v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2Zm6 3V4H9v1h6ZM8 10v2H6v-2h2Zm11 0v2h-8v-2h8ZM8 15v2H6v-2h2Zm11 0v2h-8v-2h8Z" /></svg>
+                </span>
+                <div>
+                    <h2 class="cd-card__titulo">Gestión de asignaciones</h2>
+                    <p class="cd-filtros__ayuda">Consulte y administre las asignaciones de trabajo del personal.</p>
+                </div>
+            </div>
+
+            <div class="cd-filtros__fila cd-filtros__fila--asig">
+                <label class="cd-campo" for="cd-asigtab-empleado">
+                    <span class="cd-campo__etiqueta">Empleado</span>
+                    <select id="cd-asigtab-empleado" class="cd-select"></select>
+                </label>
+                <label class="cd-campo" for="cd-asigtab-estado">
+                    <span class="cd-campo__etiqueta">Estado</span>
+                    <select id="cd-asigtab-estado" class="cd-select">
+                        <option value="">Todos</option>
+                        <option value="Asignada">Asignada</option>
+                        <option value="En Proceso">En Proceso</option>
+                        <option value="Finalizada">Finalizada</option>
+                        <option value="Cancelada">Cancelada</option>
+                    </select>
+                </label>
+                <label class="cd-campo" for="cd-asigtab-tipo">
+                    <span class="cd-campo__etiqueta">Tipo de tarea</span>
+                    <select id="cd-asigtab-tipo" class="cd-select">
+                        <option value="">Todos</option>
+                        <option value="Corte">Corte</option>
+                        <option value="Reconexión">Reconexión</option>
+                        <option value="Cobro">Cobro</option>
+                        <option value="Inspección">Inspección</option>
+                        <option value="Lectura">Lectura</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </label>
+                <label class="cd-campo" for="cd-asigtab-fecha">
+                    <span class="cd-campo__etiqueta">Día</span>
+                    <input id="cd-asigtab-fecha" type="date" class="cd-input cd-input--date" />
+                </label>
+                <div class="cd-filtros__acciones">
+                    <button type="submit" id="cd-asigtab-buscar" class="cd-btn cd-btn--primario">Buscar</button>
+                    <button type="button" id="cd-asigtab-limpiar" class="cd-btn cd-btn--secundario">Limpiar</button>
+                </div>
+            </div>
+        </form>
+
+        <p id="cd-asigtab-aviso" class="cd-alerta" role="status" hidden></p>
+
+        <section class="cd-card cd-lista" aria-label="Listado de asignaciones">
+            <header class="cd-lista__cabecera">
+                <div class="cd-titulo-grupo">
+                    <span class="cd-icono-caja" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><path d="M4 5h16v3H4V5Zm0 6h16v3H4v-3Zm0 6h16v3H4v-3Z" /></svg>
+                    </span>
+                    <h2 id="cd-asigtab-titulo" class="cd-card__titulo">Asignaciones (0 registros)</h2>
+                </div>
+                <div class="cd-lista__controles">
+                    <span id="cd-asigtab-cargando" class="cd-cargando" hidden>
+                        <span class="cd-spinner" aria-hidden="true"></span>Consultando…
+                    </span>
+                    <button type="button" id="cd-asigtab-nueva" class="cd-btn cd-btn--mini cd-btn--primario" hidden>
+                        <span class="cd-icono" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z" /></svg>
+                        </span>
+                        Nueva asignación
+                    </button>
+                </div>
+            </header>
+
+            <div class="cd-tabla-envoltura">
+                <table class="cd-tabla">
+                    <caption class="cd-visually-hidden">Asignaciones de trabajo registradas</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Empleado</th>
+                            <th scope="col">Tipo de tarea</th>
+                            <th scope="col">Código fijo</th>
+                            <th scope="col">Inicio</th>
+                            <th scope="col">Fin</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Prioridad</th>
+                            <th scope="col" class="cd-col-accion"><span class="cd-visually-hidden">Acciones</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cd-asigtab-cuerpo"></tbody>
+                </table>
+            </div>
+
+            <p id="cd-asigtab-vacio" class="cd-vacio" hidden>No se encontraron asignaciones para los filtros seleccionados.</p>
+
+            <footer class="cd-lista__pie">
+                <p id="cd-asigtab-conteo" class="cd-conteo"></p>
+                <div id="cd-asigtab-paginacion" class="cd-paginacion" hidden></div>
+            </footer>
+        </section>
+    </div>
+</section>
+
+@* Aviso flotante (éxito / error / advertencia) y modal de franja horaria. *@
+<div id="cd-toast" class="cd-toast" role="status" aria-live="polite" hidden></div>
+
+<div id="cd-modal-horario" class="cd-modal" hidden>
+    <div class="cd-modal__fondo" data-cerrar-horario></div>
+    <div class="cd-modal__dialogo" role="dialog" aria-modal="true" aria-labelledby="cd-horario-titulo">
+        <header class="cd-modal__cabecera">
+            <div>
+                <h2 id="cd-horario-titulo">Nueva franja horaria</h2>
+                <p id="cd-horario-sub">Configure una franja del horario semanal.</p>
+            </div>
+            <button type="button" id="cd-horario-cerrar" class="cd-modal__cerrar" aria-label="Cerrar">&#215;</button>
+        </header>
+        <form id="cd-horario-form" novalidate>
+            <div class="cd-modal__cuerpo">
+                <p id="cd-horario-error" class="cd-alerta cd-alerta--error" role="alert" hidden></p>
+                <label class="cd-campo" for="cd-horario-dia">
+                    <span class="cd-campo__etiqueta">Día</span>
+                    <select id="cd-horario-dia" class="cd-select">
+                        <option value="1">Lunes</option>
+                        <option value="2">Martes</option>
+                        <option value="3">Miércoles</option>
+                        <option value="4">Jueves</option>
+                        <option value="5">Viernes</option>
+                        <option value="6">Sábado</option>
+                        <option value="7">Domingo</option>
+                    </select>
+                </label>
+                <div class="cd-modal__dos">
+                    <label class="cd-campo" for="cd-horario-inicio">
+                        <span class="cd-campo__etiqueta">Hora inicio</span>
+                        <input id="cd-horario-inicio" type="time" class="cd-input" required />
+                    </label>
+                    <label class="cd-campo" for="cd-horario-fin">
+                        <span class="cd-campo__etiqueta">Hora fin</span>
+                        <input id="cd-horario-fin" type="time" class="cd-input" required />
+                    </label>
+                </div>
+            </div>
+            <footer class="cd-modal__pie">
+                <button type="button" id="cd-horario-cancelar" class="cd-btn cd-btn--secundario">Cancelar</button>
+                <button type="submit" id="cd-horario-guardar" class="cd-btn cd-btn--primario">Guardar franja</button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+<div id="cd-modal-asignacion" class="cd-modal" hidden>
+    <div class="cd-modal__fondo" data-cerrar-asignacion></div>
+    <div class="cd-modal__dialogo cd-modal__dialogo--ancho" role="dialog" aria-modal="true" aria-labelledby="cd-asignacion-titulo">
+        <header class="cd-modal__cabecera">
+            <div>
+                <h2 id="cd-asignacion-titulo">Nueva asignación</h2>
+                <p id="cd-asignacion-sub">Registre una asignación de trabajo para el personal operativo.</p>
+            </div>
+            <button type="button" id="cd-asignacion-cerrar" class="cd-modal__cerrar" aria-label="Cerrar">&#215;</button>
+        </header>
+        <form id="cd-asignacion-form" novalidate>
+            <div class="cd-modal__cuerpo">
+                <p id="cd-asignacion-error" class="cd-alerta cd-alerta--error" role="alert" hidden></p>
+                <div class="cd-modal__dos">
+                    <label class="cd-campo" for="cd-asignacion-empleado">
+                        <span class="cd-campo__etiqueta">Empleado</span>
+                        <select id="cd-asignacion-empleado" class="cd-select" required></select>
+                    </label>
+                    <label class="cd-campo" for="cd-asignacion-codigo">
+                        <span class="cd-campo__etiqueta">Código fijo (opcional)</span>
+                        <input id="cd-asignacion-codigo" type="number" min="1" class="cd-input" placeholder="IdCodigo" />
+                    </label>
+                </div>
+                <div class="cd-modal__dos">
+                    <label class="cd-campo" for="cd-asignacion-tipo">
+                        <span class="cd-campo__etiqueta">Tipo de tarea</span>
+                        <select id="cd-asignacion-tipo" class="cd-select" required>
+                            <option value="Corte">Corte</option>
+                            <option value="Reconexión">Reconexión</option>
+                            <option value="Cobro">Cobro</option>
+                            <option value="Inspección">Inspección</option>
+                            <option value="Lectura">Lectura</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </label>
+                    <label class="cd-campo" for="cd-asignacion-prioridad">
+                        <span class="cd-campo__etiqueta">Prioridad</span>
+                        <select id="cd-asignacion-prioridad" class="cd-select" required>
+                            <option value="Baja">Baja</option>
+                            <option value="Normal" selected>Normal</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Urgente">Urgente</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="cd-modal__dos">
+                    <label class="cd-campo" for="cd-asignacion-inicio">
+                        <span class="cd-campo__etiqueta">Fecha inicio</span>
+                        <input id="cd-asignacion-inicio" type="datetime-local" class="cd-input" required />
+                    </label>
+                    <label class="cd-campo" for="cd-asignacion-fin">
+                        <span class="cd-campo__etiqueta">Fecha fin</span>
+                        <input id="cd-asignacion-fin" type="datetime-local" class="cd-input" required />
+                    </label>
+                </div>
+                <label class="cd-campo" for="cd-asignacion-observaciones">
+                    <span class="cd-campo__etiqueta">Observaciones</span>
+                    <textarea id="cd-asignacion-observaciones" class="cd-input cd-textarea" rows="3" maxlength="500"></textarea>
+                </label>
+            </div>
+            <footer class="cd-modal__pie">
+                <span class="cd-modal__nota">Estado inicial: <strong>Asignada</strong></span>
+                <button type="button" id="cd-asignacion-cancelar" class="cd-btn cd-btn--secundario">Cancelar</button>
+                <button type="submit" id="cd-asignacion-guardar" class="cd-btn cd-btn--primario">Guardar asignación</button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/servicios/disponibilidad.js" asp-append-version="true"></script>
+    <script>
+        @* Misma convención que el resto del workspace: la página protege la vista y, al validar la
+           sesión, arranca el módulo. La API decide el acceso real con el permiso dinámico sobre la
+           opción de menú /Servicios/Disponibilidad de dbo.RolMenu. *@
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Servicios/Disponibilidad',
+            alValidar: function () { window.VisorSIG.disponibilidadPersonal.iniciar(); }
+        });
+    </script>
+}
