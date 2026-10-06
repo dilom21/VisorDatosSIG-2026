@@ -27,6 +27,13 @@ public sealed class CodigosFijosControllerTests
 {
     private sealed class CadastreRepositoryFalso : ICadastreRepository
     {
+    public Task<PagedResult<VisorDatosSIG.Application.DTOs.Lotes.LoteResumenDto>> SearchLotesAsync(VisorDatosSIG.Application.DTOs.Lotes.LoteConsultaDto consulta, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task<VisorDatosSIG.Application.DTOs.Lotes.LoteDetalleDto?> GetLoteByIdAsync(int idLote, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+    public Task<PagedResult<VisorDatosSIG.Application.DTOs.Vias.ViaResumenDto>> SearchViasAsync(VisorDatosSIG.Application.DTOs.Vias.ViaConsultaDto consulta, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task<VisorDatosSIG.Application.DTOs.Vias.ViaDetalleDto?> GetViaByIdAsync(int idVia, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+
         public CodigoFijoConsultaDto? ConsultaRecibida { get; private set; }
         public int? IdRecibido { get; private set; }
         public int ConsultasRealizadas { get; private set; }

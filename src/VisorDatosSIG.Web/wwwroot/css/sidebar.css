@@ -157,13 +157,15 @@ body.sesion-verificando .app-shell__contenido {
     gap: var(--space-3);
     width: var(--sidebar-ancho-contraido);
     height: 100vh;
+    height: 100dvh;
+    box-sizing: border-box;
     padding: var(--space-3) var(--space-2);
     background-color: var(--sidebar-fondo);
     color: var(--sidebar-texto);
     border-right: 1px solid var(--sidebar-borde);
     box-shadow: var(--shadow-md);
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: hidden;
     transition: width var(--sidebar-transicion), box-shadow var(--sidebar-transicion), transform var(--sidebar-transicion);
 }
 
@@ -218,6 +220,7 @@ body.sesion-verificando .app-shell__contenido {
 
 /* --- Marca --- */
 .sidebar__marca {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: var(--space-2);
@@ -309,8 +312,14 @@ body.sesion-verificando .app-shell__contenido {
 .sidebar__nav {
     display: flex;
     flex-direction: column;
-    flex: 1 1 auto;
+    /* Solo los modulos se desplazan: no pueden invadir el pie. */
+    flex: 1 1 0;
     min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sidebar-texto-suave) transparent;
     gap: var(--space-2);
 }
 
@@ -322,6 +331,7 @@ body.sesion-verificando .app-shell__contenido {
 }
 
 .sidebar__lista {
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -504,6 +514,15 @@ body.sesion-verificando .app-shell__contenido {
    5. Pie del sidebar: usuario, modo oscuro y cerrar sesión
    -------------------------------------------------------------------------- */
 .sidebar__pie {
+    /* Reserva su espacio; en pantallas bajas conserva accesibles todas las acciones. */
+    flex: 0 0 auto;
+    max-height: 50%;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sidebar-texto-suave) transparent;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -512,6 +531,7 @@ body.sesion-verificando .app-shell__contenido {
 }
 
 .sidebar__usuario {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: var(--space-3);
@@ -597,6 +617,7 @@ body.sesion-verificando .app-shell__contenido {
 }
 
 .sidebar__accion {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: var(--space-3);
