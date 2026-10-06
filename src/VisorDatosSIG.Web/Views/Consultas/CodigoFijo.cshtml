@@ -12,8 +12,8 @@
     el rol Administrador mantiene el acceso total implícito. La página solo se alcanza desde el
     sidebar dinámico (dbo.MenuOpciones -> GET /api/menu -> sidebar.js).
 
-    La integración real con el visor cartográfico NO se implementa aquí: el botón "Ver en el
-    mapa" solo informa que estará disponible próximamente.
+    El detalle representa la geometría Point en un mini mapa Leaflet sin alterar las
+    coordenadas GeoJSON entregadas por la API.
 
     Contratos de los elementos (los usa js/consultas/codigo-fijo.js):
       #cf-filtros      -> formulario de filtros (codFijo, nombre, codFSig, estado)
@@ -24,7 +24,7 @@
       #cf-paginacion   -> paginación del servidor
       #cf-aviso        -> aviso de validación, error o falta de permiso
       #cf-vacio        -> tarjeta de "sin resultados"
-      #cf-det-*        -> panel de detalle (vacío, cargando, contenido, coordenadas, geojson)
+      #cf-det-*        -> panel de detalle (vacío, cargando, contenido, coordenadas, mapa)
       #cf-toast        -> aviso de éxito de la consulta
 *@
 @{
@@ -33,6 +33,7 @@
 }
 
 @section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
     <link rel="stylesheet" href="~/css/consultas/codigo-fijo.css" asp-append-version="true" />
 }
 
@@ -215,53 +216,19 @@
                         Este registro no dispone de coordenadas espaciales.
                     </p>
 
-                    <button type="button" id="cf-ver-mapa" class="btn-secundario cf-btn cf-btn--mapa"
-                            title="Ver la ubicación en el visor cartográfico (disponible próximamente)">
-                        <span class="cf-icono" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" focusable="false">
-                                <path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Zm0 2.2 6 2v11.6l-6-2V5.2Z" />
-                            </svg>
-                        </span>
-                        Ver en el mapa
-                    </button>
-                    <p class="cf-detalle__futuro">Disponible próximamente</p>
-                </section>
-
-                <section class="cf-subseccion">
-                    <div class="cf-subseccion__cabecera">
-                        <h3 class="cf-subseccion__titulo">
-                            <span class="cf-icono" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" focusable="false">
-                                    <path d="M8 4h8a2 2 0 0 1 2 2v14l-6-3-6 3V6a2 2 0 0 1 2-2Z" />
-                                </svg>
-                            </span>
-                            Dato espacial utilizable
-                        </h3>
-                        <button type="button" id="cf-copiar" class="btn-secundario cf-btn cf-btn--mini"
-                                title="Copiar GeoJSON" aria-label="Copiar GeoJSON">
-                            <span class="cf-icono" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" focusable="false">
-                                    <path d="M9 2h9a2 2 0 0 1 2 2v12h-2V4H9V2ZM6 6h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2v12h9V8H6Z" />
-                                </svg>
-                            </span>
-                            Copiar
-                        </button>
+                    <div class="cf-mapa-envoltura">
+                        <div id="cf-mapa" class="cf-mapa" hidden
+                             aria-label="Ubicación del código fijo seleccionado"></div>
+                        <p id="cf-mapa-aviso" class="cf-mapa__aviso" role="status"></p>
                     </div>
-
-                    <pre id="cf-geojson" class="cf-geojson"></pre>
-                    <p id="cf-copiar-feedback" class="cf-copiar-feedback" role="status" aria-live="polite"></p>
                 </section>
-
-                <p class="cf-nota">
-                    <span class="cf-nota__icono" aria-hidden="true">ℹ</span>
-                    GeoJSON usa [longitud, latitud]. Leaflet directo usa [latitud, longitud].
-                </p>
             </div>
         </section>
     </div>
 </section>
 
 @section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
     <script src="~/js/consultas/codigo-fijo.js" asp-append-version="true"></script>
     <script>
         @* Misma convención que /Usuarios, /Roles y /Bitacora: la página protege la vista y, al

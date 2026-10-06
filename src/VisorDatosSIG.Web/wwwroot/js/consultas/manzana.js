@@ -16,8 +16,8 @@
 // sesión y `protegida: true`. Un 401 se deja al flujo existente (api.js limpia la sesión y
 // guard.js redirige); un 403 se informa sin mostrar datos.
 //
-// Integración con el visor: NO implementada todavía. "Ver en el mapa" solo muestra un aviso de
-// "Disponible próximamente"; no se carga Leaflet ni se modifica layers.js.
+// El detalle representa Polygon/MultiPolygon en un mini mapa Leaflet. El objeto GeoJSON se
+// entrega directamente a Leaflet sin calcular centroides ni invertir coordenadas.
 //
 // Seguridad del DOM: createElement + textContent; nada que llegue del backend se interpreta
 // como HTML.
@@ -34,7 +34,6 @@ window.VisorSIG = window.VisorSIG || {};
     var LIMITE_INICIAL = 8;
     var SIN_DATO = '—';
     var MS_TOAST = 4000;
-    var MS_COPIA = 2500;
 
     var ID_FORM = 'mz-filtros';
     var ID_UVMZA = 'mz-uvmza';
@@ -63,20 +62,15 @@ window.VisorSIG = window.VisorSIG || {};
     var ID_DET_UVMZA = 'mz-det-uvmza';
     var ID_DET_UV = 'mz-det-uv';
     var ID_DET_MZA = 'mz-det-mza';
-    var ID_GEOJSON = 'mz-geojson';
-    var ID_GEOJSON_NUMS = 'mz-geojson-nums';
-    var ID_COPIAR = 'mz-copiar';
-    var ID_COPIA_FEEDBACK = 'mz-copiar-feedback';
-    var ID_VER_MAPA = 'mz-ver-mapa';
+    var ID_MAPA = 'mz-mapa';
+    var ID_MAPA_AVISO = 'mz-mapa-aviso';
 
     var TEXTO_VACIO_DETALLE = 'Seleccione un registro para visualizar su detalle.';
     var TEXTO_ERROR_LISTA = 'No fue posible realizar la consulta.';
     var TEXTO_ERROR_DETALLE = 'No fue posible cargar el detalle de la Manzana.';
     var TEXTO_SIN_PERMISO = 'No tiene permisos para consultar manzanas.';
     var TEXTO_SIN_GEOMETRIA = 'Sin geometría disponible';
-    var TEXTO_COPIADO = 'GeoJSON copiado';
-    var TEXTO_COPIA_ERROR = 'No se pudo copiar el GeoJSON';
-    var TEXTO_MAPA = 'Disponible próximamente';
+    var TEXTO_ERROR_MAPA = 'No se pudo representar la geometría de esta manzana.';
 
     // Estado del módulo.
     var paginaActual = PAGINA_INICIAL;
@@ -84,13 +78,13 @@ window.VisorSIG = window.VisorSIG || {};
     var totalRegistros = 0;
     var totalPaginas = 0;
     var seleccionActual = null;
-    var geojsonActual = '';
+    var mapa = null;
+    var capaGeometria = null;
     var idsPagina = [];
     // Protege contra respuestas obsoletas cuando se encadenan consultas.
     var secuencia = 0;
     var secuenciaDetalle = 0;
     var temporizadorToast = null;
-    var temporizadorCopia = null;
 
     // --- Utilidades ---------------------------------------------------------
 
@@ -401,6 +395,7 @@ window.VisorSIG = window.VisorSIG || {};
     }
 
     function detalleCargando() {
+        limpiarMapa();
         var cargando = nodo(ID_DET_CARGANDO);
         var vacio = nodo(ID_DET_VACIO);
         var contenido = nodo(ID_DET_CONTENIDO);
@@ -416,6 +411,7 @@ window.VisorSIG = window.VisorSIG || {};
     }
 
     function detalleVacio(mensaje) {
+        limpiarMapa();
         var cargando = nodo(ID_DET_CARGANDO);
         var vacio = nodo(ID_DET_VACIO);
         var contenido = nodo(ID_DET_CONTENIDO);
@@ -482,6 +478,10 @@ window.VisorSIG = window.VisorSIG || {};
 
         var pedida = aEntero(pagina, PAGINA_INICIAL);
         paginaActual = pedida >= 1 ? pedida : PAGINA_INICIAL;
+
+        seleccionActual = null;
+        secuenciaDetalle += 1;
+        detalleVacio(null);
 
         secuencia += 1;
         var actual = secuencia;
@@ -758,7 +758,7 @@ window.VisorSIG = window.VisorSIG || {};
             }
         }
 
-        pintarGeojson(geometria);
+        dibujarMapa(geometria);
     }
 
     // Tipo geométrico real devuelto por el backend (Polygon / MultiPolygon). Nunca se
@@ -771,136 +771,76 @@ window.VisorSIG = window.VisorSIG || {};
         return tipo !== '' ? tipo : null;
     }
 
-    // --- GeoJSON ------------------------------------------------------------
-
-    // Se conserva el orden [longitud, latitud] y la estructura Polygon/MultiPolygon tal
-    // como llega del backend. Si es null se informa que no hay geometría.
-    function formatearGeojson(geometria) {
-        if (geometria === null || geometria === undefined) {
-            return null;
-        }
-
-        if (typeof geometria === 'object') {
-            try {
-                return JSON.stringify(geometria, null, 2);
-            } catch (e) {
-                return null;
-            }
-        }
-
-        if (typeof geometria === 'string') {
-            var limpio = geometria.trim();
-            if (limpio === '') {
-                return null;
-            }
-            try {
-                return JSON.stringify(JSON.parse(limpio), null, 2);
-            } catch (e) {
-                // No se muestra ningún hexadecimal de SQL Server: si no es JSON válido,
-                // se muestra el texto tal cual llegó.
-                return limpio;
-            }
-        }
-
-        return null;
-    }
-
-    // Numeración de líneas del bloque de código (solo presentación).
-    function pintarNumerosLineas(texto) {
-        var gutter = nodo(ID_GEOJSON_NUMS);
-        if (!gutter) {
+    function mensajeMapa(texto, esError) {
+        var avisoMapa = nodo(ID_MAPA_AVISO);
+        if (!avisoMapa) {
             return;
         }
-        vaciar(gutter);
-        if (!texto) {
-            return;
-        }
-        var lineas = texto.split('\n');
-        for (var i = 0; i < lineas.length; i++) {
-            gutter.appendChild(crear('div', null, String(i + 1)));
-        }
+        avisoMapa.textContent = texto || '';
+        avisoMapa.classList.toggle('mz-mapa__aviso--error', !!esError);
     }
 
-    function pintarGeojson(geometria) {
-        var bloque = nodo(ID_GEOJSON);
-        var boton = nodo(ID_COPIAR);
-        var formateado = formatearGeojson(geometria);
+    function limpiarMapa() {
+        if (capaGeometria && mapa) {
+            mapa.removeLayer(capaGeometria);
+        }
+        capaGeometria = null;
+        var contenedor = nodo(ID_MAPA);
+        if (contenedor) {
+            contenedor.hidden = true;
+        }
+        mensajeMapa('', false);
+    }
 
-        if (formateado === null) {
-            geojsonActual = '';
-            if (bloque) {
-                bloque.textContent = TEXTO_SIN_GEOMETRIA;
-            }
-            pintarNumerosLineas('');
-            if (boton) {
-                boton.disabled = true;
-            }
+    function asegurarMapa(contenedor) {
+        if (mapa) {
+            return mapa;
+        }
+        if (!window.L) {
+            throw new Error('Leaflet no disponible');
+        }
+        mapa = L.map(contenedor, { zoomControl: true });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }).on('tileerror', function () {
+            mensajeMapa('El mapa base no está disponible. La manzana seleccionada sigue visible.', true);
+        }).addTo(mapa);
+        return mapa;
+    }
+
+    // Polygon/MultiPolygon se entrega intacto a Leaflet. No se calcula centroide ni se
+    // transforma la geometría; Leaflet interpreta directamente el orden GeoJSON.
+    function dibujarMapa(geometria) {
+        limpiarMapa();
+        var contenedor = nodo(ID_MAPA);
+        if (!contenedor || !geometria) {
+            mensajeMapa(TEXTO_SIN_GEOMETRIA, false);
             return;
         }
 
-        geojsonActual = formateado;
-        if (bloque) {
-            bloque.textContent = formateado;
-        }
-        pintarNumerosLineas(formateado);
-        if (boton) {
-            boton.disabled = false;
-        }
-    }
-
-    function feedbackCopia(mensaje) {
-        var zona = nodo(ID_COPIA_FEEDBACK);
-        if (!zona) {
-            return;
-        }
-        zona.textContent = mensaje;
-        if (temporizadorCopia) {
-            clearTimeout(temporizadorCopia);
-        }
-        temporizadorCopia = setTimeout(function () {
-            zona.textContent = '';
-            temporizadorCopia = null;
-        }, MS_COPIA);
-    }
-
-    function copiarConFallback() {
-        var area = document.createElement('textarea');
-        area.value = geojsonActual;
-        area.setAttribute('readonly', '');
-        area.style.position = 'fixed';
-        area.style.top = '-1000px';
-        document.body.appendChild(area);
-
-        var copiado = false;
         try {
-            area.select();
-            copiado = document.execCommand('copy');
-        } catch (e) {
-            copiado = false;
+            contenedor.hidden = false;
+            var mapaActual = asegurarMapa(contenedor);
+            capaGeometria = L.geoJSON(geometria, {
+                style: {
+                    color: '#67e8f9',
+                    weight: 3,
+                    opacity: 1,
+                    fillColor: '#14b8a6',
+                    fillOpacity: 0.28
+                }
+            }).addTo(mapaActual);
+            mapaActual.invalidateSize();
+            var bounds = capaGeometria.getBounds();
+            if (!bounds.isValid()) {
+                throw new Error('Geometría vacía');
+            }
+            mapaActual.fitBounds(bounds.pad(0.15), { maxZoom: 18, padding: [16, 16] });
+        } catch (error) {
+            limpiarMapa();
+            mensajeMapa(TEXTO_ERROR_MAPA, true);
         }
-        if (area.parentNode) {
-            area.parentNode.removeChild(area);
-        }
-
-        feedbackCopia(copiado ? TEXTO_COPIADO : TEXTO_COPIA_ERROR);
-    }
-
-    function copiarGeojson() {
-        if (!geojsonActual) {
-            return;
-        }
-
-        if (window.navigator && navigator.clipboard
-            && typeof navigator.clipboard.writeText === 'function') {
-            navigator.clipboard.writeText(geojsonActual).then(function () {
-                feedbackCopia(TEXTO_COPIADO);
-            }).catch(function () {
-                copiarConFallback();
-            });
-            return;
-        }
-
-        copiarConFallback();
     }
 
     // --- Acciones del formulario --------------------------------------------
@@ -921,7 +861,6 @@ window.VisorSIG = window.VisorSIG || {};
         }
 
         seleccionActual = null;
-        geojsonActual = '';
         detalleVacio(null);
         aviso('', null);
         consultar(PAGINA_INICIAL);
@@ -963,10 +902,6 @@ window.VisorSIG = window.VisorSIG || {};
 
         enlazar(ID_LIMPIAR, 'click', limpiarFiltros);
         enlazar(ID_LIMITE, 'change', manejarCambioLimite);
-        enlazar(ID_COPIAR, 'click', copiarGeojson);
-        enlazar(ID_VER_MAPA, 'click', function () {
-            mostrarToast(TEXTO_MAPA);
-        });
     }
 
     // Arranque del módulo: lo invoca Views/Consultas/Manzana.cshtml desde guard.protegerPagina,

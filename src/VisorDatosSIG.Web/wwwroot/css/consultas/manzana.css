@@ -517,7 +517,6 @@
 .mz-btn:focus-visible,
 .mz-paginacion__boton:focus-visible,
 .mz-tabla button:focus-visible,
-.mz-mapa:focus-visible,
 .mz-select:focus-visible {
     outline: 2px solid var(--mz-celeste);
     outline-offset: 2px;
@@ -962,130 +961,45 @@
     color: #eaf4ff;
 }
 
-/* --- Bloque GeoJSON tipo editor de código -------------------------------- */
-.mz-code {
-    display: flex;
-    overflow: auto;
-    max-height: 240px;
+/* --- Mini mapa Leaflet --------------------------------------------------- */
+.mz-mapa-envoltura {
+    position: relative;
+    min-height: 46px;
+    overflow: hidden;
     border: 1px solid var(--mz-borde-fuerte);
     border-radius: 12px;
     background: linear-gradient(180deg, rgba(3, 12, 24, 0.97), rgba(4, 16, 30, 0.97));
-    box-shadow: inset 0 0 24px rgba(34, 211, 238, 0.07);
+    box-shadow: inset 0 0 24px rgba(34, 211, 238, 0.07), 0 0 18px rgba(34, 211, 238, 0.1);
 }
 
-/* La numeración viaja con el bloque: al desplazar, los números siguen alineados. */
-.mz-code__nums {
-    position: sticky;
-    left: 0;
-    flex: 0 0 auto;
-    padding: 0.7rem 0.55rem;
-    text-align: right;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    font-size: 0.76rem;
-    line-height: 1.55;
-    color: #3f6c94;
-    background: rgba(3, 10, 20, 0.96);
-    border-right: 1px solid rgba(56, 150, 214, 0.18);
-    user-select: none;
-}
-
-.mz-code__pre {
-    flex: 1 1 auto;
-    margin: 0;
-    padding: 0.7rem 0.8rem;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    font-size: 0.76rem;
-    line-height: 1.55;
-    color: #bfe9ff;
-    white-space: pre;
-}
-
-.mz-copia-feedback {
-    margin: 0;
-    min-height: 1em;
-    font-size: 0.76rem;
-    font-weight: 700;
-    color: var(--mz-verde);
-}
-
-/* --- Nota GeoJSON / Leaflet --------------------------------------------- */
-.mz-nota {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    margin: 0;
-    padding: 0.6rem 0.7rem;
-    font-size: 0.78rem;
-    line-height: 1.45;
-    color: #a9e6fb;
-    background: rgba(34, 211, 238, 0.1);
-    border: 1px solid rgba(34, 211, 238, 0.4);
-    border-left: 4px solid var(--mz-celeste);
-    border-radius: 10px;
-}
-
-.mz-nota__icono {
-    flex: 0 0 auto;
-    font-size: 0.92rem;
-    line-height: 1.35;
-}
-
-/* --- "Ver en el mapa" (mock: sin integración real) ----------------------- */
 .mz-mapa {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.7rem;
     width: 100%;
-    padding: 0.75rem 1rem;
-    border-radius: 12px;
-    background: rgba(4, 16, 30, 0.5);
-    border: 1px dashed rgba(103, 232, 249, 0.5);
-    color: #cfe9ff;
-    font: inherit;
-    cursor: pointer;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    height: 300px;
+    background: #061321;
 }
 
-.mz-mapa:hover {
-    border-color: var(--mz-celeste);
-    background: rgba(34, 211, 238, 0.08);
-    box-shadow: 0 0 18px rgba(34, 211, 238, 0.25);
+.mz-mapa[hidden] {
+    display: none;
 }
 
-.mz-mapa__icono {
-    display: grid;
-    place-items: center;
-    flex: 0 0 auto;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    color: var(--mz-celeste-claro);
-    background: rgba(34, 211, 238, 0.12);
-    border: 1px solid rgba(34, 211, 238, 0.4);
-}
-
-.mz-mapa__icono svg {
-    width: 18px;
-    height: 18px;
-    fill: currentColor;
-}
-
-.mz-mapa__texto {
-    display: flex;
-    flex-direction: column;
-    text-align: left;
-}
-
-.mz-mapa__titulo {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #eaf6ff;
-}
-
-.mz-mapa__sub {
-    font-size: 0.72rem;
+.mz-mapa__aviso {
+    margin: 0;
+    padding: 0.85rem;
+    text-align: center;
+    font-size: 0.8rem;
     color: var(--mz-suave);
+}
+
+.mz-mapa__aviso:empty {
+    display: none;
+}
+
+.mz-mapa__aviso--error {
+    color: #fda4af;
+}
+
+.mz-mapa .leaflet-control-zoom a {
+    color: #0e7490;
 }
 
 /* --- Aviso flotante ------------------------------------------------------ */
@@ -1184,6 +1098,10 @@
 
     .mz-tabla {
         min-width: 520px;
+    }
+
+    .mz-mapa {
+        height: 260px;
     }
 
     .mz-toast {
