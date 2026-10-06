@@ -3,6 +3,8 @@ using NetTopologySuite.IO;
 using System.Data;
 using System.Globalization;
 using VisorDatosSIG.Application.Common;
+using VisorDatosSIG.Application.DTOs.CodigosFijos;
+using VisorDatosSIG.Application.DTOs.Manzanas;
 using VisorDatosSIG.Application.Interfaces;
 using VisorDatosSIG.Infrastructure.Spatial;
 
@@ -20,6 +22,265 @@ public sealed class CadastreRepository : ICadastreRepository
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
     }
+
+    public async Task<PagedResult<CodigoFijoResumenDto>> SearchCodigosFijosAsync(
+        CodigoFijoConsultaDto consulta,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(consulta);
+
+        var pagina = Math.Max(1, consulta.Pagina);
+        var limite = Math.Clamp(consulta.Limite, 1, 100);
+        var offset = ((long)pagina - 1) * limite;
+
+        const string where = """
+            WHERE (@CodFSig IS NULL OR CodF_SIG LIKE @CodFSig)
+              AND (@CodFijo IS NULL OR CodFijo = @CodFijo)
+              AND (@Nombre IS NULL OR Nombre LIKE @Nombre)
+              AND (@Estado IS NULL OR Estado = @Estado)
+            """;
+
+        var sqlConteo = $"SELECT COUNT(*) FROM dbo.CodigosFijos {where};";
+        var sqlDatos = $"""
+            SELECT IdCodigo, CodF_SIG, CodFijo, Nombre, Estado
+            FROM dbo.CodigosFijos
+            {where}
+            ORDER BY IdCodigo
+            OFFSET @Offset ROWS FETCH NEXT @Limite ROWS ONLY;
+            """;
+
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        int total;
+        await using (var command = new SqlCommand(sqlConteo, connection))
+        {
+            AddCodigoFijoFilterParameters(command, consulta);
+            total = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture);
+        }
+
+        var datos = new List<CodigoFijoResumenDto>();
+        await using (var command = new SqlCommand(sqlDatos, connection))
+        {
+            AddCodigoFijoFilterParameters(command, consulta);
+            command.Parameters.Add(new SqlParameter("@Offset", SqlDbType.BigInt) { Value = offset });
+            command.Parameters.Add(new SqlParameter("@Limite", SqlDbType.Int) { Value = limite });
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                datos.Add(new CodigoFijoResumenDto
+                {
+                    IdCodigo = reader.GetInt32(0),
+                    CodFSig = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    CodFijo = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                    Nombre = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    Estado = reader.GetByte(4)
+                });
+            }
+        }
+
+        return new PagedResult<CodigoFijoResumenDto>
+        {
+            Pagina = pagina,
+            Limite = limite,
+            TotalRegistros = total,
+            Datos = datos
+        };
+    }
+
+    public async Task<CodigoFijoDetalleDto?> GetCodigoFijoByIdAsync(
+        int idCodigo,
+        CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+            SELECT IdCodigo, CodF_SQL, CodF_SIG, CodFijo, Nombre, Estado,
+                   FechaCambioEstado, IdLote, Longitud, Latitud,
+                   Geom.STAsBinary() AS GeomWkb
+            FROM dbo.CodigosFijos
+            WHERE IdCodigo = @IdCodigo;
+            """;
+
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.Add(new SqlParameter("@IdCodigo", SqlDbType.Int) { Value = idCodigo });
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        object? geometria = null;
+        if (!reader.IsDBNull(10))
+        {
+            var wkb = (byte[])reader.GetValue(10);
+            geometria = SpatialGeoJsonHelper.ToGeoJsonObject(WkbReader.Read(wkb));
+        }
+
+        return new CodigoFijoDetalleDto
+        {
+            IdCodigo = reader.GetInt32(0),
+            CodFSql = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+            CodFSig = reader.IsDBNull(2) ? null : reader.GetString(2),
+            CodFijo = reader.IsDBNull(3) ? null : reader.GetInt32(3),
+            Nombre = reader.IsDBNull(4) ? null : reader.GetString(4),
+            Estado = reader.GetByte(5),
+            FechaCambioEstado = reader.GetDateTime(6),
+            IdLote = reader.IsDBNull(7) ? null : reader.GetInt32(7),
+            Longitud = reader.IsDBNull(8) ? null : reader.GetDouble(8),
+            Latitud = reader.IsDBNull(9) ? null : reader.GetDouble(9),
+            Geometria = geometria
+        };
+    }
+
+    private static void AddCodigoFijoFilterParameters(SqlCommand command, CodigoFijoConsultaDto consulta)
+    {
+        command.Parameters.Add(new SqlParameter("@CodFSig", SqlDbType.NVarChar, 4000)
+        {
+            Value = string.IsNullOrWhiteSpace(consulta.CodFSig)
+                ? DBNull.Value
+                : $"%{consulta.CodFSig.Trim()}%"
+        });
+        command.Parameters.Add(new SqlParameter("@CodFijo", SqlDbType.Int)
+        {
+            Value = (object?)consulta.CodFijo ?? DBNull.Value
+        });
+        command.Parameters.Add(new SqlParameter("@Nombre", SqlDbType.NVarChar, 4000)
+        {
+            Value = string.IsNullOrWhiteSpace(consulta.Nombre)
+                ? DBNull.Value
+                : $"%{consulta.Nombre.Trim()}%"
+        });
+        command.Parameters.Add(new SqlParameter("@Estado", SqlDbType.TinyInt)
+        {
+            Value = (object?)consulta.Estado ?? DBNull.Value
+        });
+    }
+
+    public async Task<PagedResult<ManzanaResumenDto>> SearchManzanasAsync(
+        ManzanaConsultaDto consulta,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(consulta);
+
+        var pagina = Math.Max(1, consulta.Pagina);
+        var limite = Math.Clamp(consulta.Limite, 1, 100);
+        var offset = ((long)pagina - 1) * limite;
+
+        const string where = """
+            WHERE (@UvMza IS NULL OR UV_MZA LIKE @UvMza)
+              AND (@Uv IS NULL OR UV LIKE @Uv)
+              AND (@Mza IS NULL OR MZA LIKE @Mza)
+            """;
+
+        var sqlConteo = $"SELECT COUNT(*) FROM dbo.Manzanas {where};";
+        var sqlDatos = $"""
+            SELECT IdManzana, UV_MZA, UV, MZA
+            FROM dbo.Manzanas
+            {where}
+            ORDER BY UV, MZA, IdManzana
+            OFFSET @Offset ROWS FETCH NEXT @Limite ROWS ONLY;
+            """;
+
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        int total;
+        await using (var command = new SqlCommand(sqlConteo, connection))
+        {
+            AddManzanaFilterParameters(command, consulta);
+            total = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture);
+        }
+
+        var datos = new List<ManzanaResumenDto>();
+        await using (var command = new SqlCommand(sqlDatos, connection))
+        {
+            AddManzanaFilterParameters(command, consulta);
+            command.Parameters.Add(new SqlParameter("@Offset", SqlDbType.BigInt) { Value = offset });
+            command.Parameters.Add(new SqlParameter("@Limite", SqlDbType.Int) { Value = limite });
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                datos.Add(new ManzanaResumenDto
+                {
+                    IdManzana = reader.GetInt32(0),
+                    UvMza = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    Uv = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    Mza = reader.IsDBNull(3) ? null : reader.GetString(3)
+                });
+            }
+        }
+
+        return new PagedResult<ManzanaResumenDto>
+        {
+            Pagina = pagina,
+            Limite = limite,
+            TotalRegistros = total,
+            Datos = datos
+        };
+    }
+
+    public async Task<ManzanaDetalleDto?> GetManzanaByIdAsync(
+        int idManzana,
+        CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+            SELECT IdManzana, IdOrigen, UV_MZA, UV, MZA,
+                   Geom.STAsBinary() AS GeomWkb
+            FROM dbo.Manzanas
+            WHERE IdManzana = @IdManzana;
+            """;
+
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.Add(new SqlParameter("@IdManzana", SqlDbType.Int) { Value = idManzana });
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        object? geometria = null;
+        if (!reader.IsDBNull(5))
+        {
+            var wkb = (byte[])reader.GetValue(5);
+            geometria = SpatialGeoJsonHelper.ToGeoJsonObject(WkbReader.Read(wkb));
+        }
+
+        return new ManzanaDetalleDto
+        {
+            IdManzana = reader.GetInt32(0),
+            IdOrigen = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+            UvMza = reader.IsDBNull(2) ? null : reader.GetString(2),
+            Uv = reader.IsDBNull(3) ? null : reader.GetString(3),
+            Mza = reader.IsDBNull(4) ? null : reader.GetString(4),
+            Geometria = geometria
+        };
+    }
+
+    private static void AddManzanaFilterParameters(SqlCommand command, ManzanaConsultaDto consulta)
+    {
+        command.Parameters.Add(new SqlParameter("@UvMza", SqlDbType.NVarChar, 4000)
+        {
+            Value = LikeOrDbNull(consulta.UvMza)
+        });
+        command.Parameters.Add(new SqlParameter("@Uv", SqlDbType.NVarChar, 4000)
+        {
+            Value = LikeOrDbNull(consulta.Uv)
+        });
+        command.Parameters.Add(new SqlParameter("@Mza", SqlDbType.NVarChar, 4000)
+        {
+            Value = LikeOrDbNull(consulta.Mza)
+        });
+    }
+
+    private static object LikeOrDbNull(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? DBNull.Value : $"%{value.Trim()}%";
 
     public async Task<GeoJsonFeatureCollectionDto> GetLayerGeoJsonAsync(
         string layerName,
