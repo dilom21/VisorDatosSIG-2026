@@ -1,0 +1,104 @@
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "Gestionar Bajas Parciales";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/bajas-parciales.css" asp-append-version="true" />
+}
+
+<section class="bajas-seccion" aria-labelledby="bajas-titulo">
+    <header class="bajas-cabecera">
+        <div>
+            <span class="bajas-cabecera__modulo">Seguimiento de Servicios</span>
+            <h1 id="bajas-titulo" class="bajas-cabecera__titulo">Gestionar bajas parciales</h1>
+            <p class="bajas-cabecera__intro">Administre periodos temporales de indisponibilidad sin perder la trazabilidad del empleado.</p>
+        </div>
+        <button id="btn-nueva-baja" type="button" class="bajas-btn bajas-btn--primario">Registrar baja parcial</button>
+    </header>
+
+    <p id="bajas-mensaje" class="bajas-mensaje" role="status" aria-live="polite" hidden></p>
+
+    <div id="bajas-contenido" hidden>
+        <div class="bajas-metricas" aria-label="Métricas de bajas parciales">
+            <article class="bajas-metrica"><strong id="metrica-total">0</strong><span>Total</span></article>
+            <article class="bajas-metrica bajas-metrica--vigente"><strong id="metrica-vigentes">0</strong><span>Vigentes</span></article>
+            <article class="bajas-metrica bajas-metrica--programada"><strong id="metrica-programadas">0</strong><span>Programadas</span></article>
+            <article class="bajas-metrica bajas-metrica--finalizada"><strong id="metrica-finalizadas">0</strong><span>Finalizadas</span></article>
+            <article class="bajas-metrica bajas-metrica--cancelada"><strong id="metrica-canceladas">0</strong><span>Canceladas</span></article>
+        </div>
+
+        <div class="bajas-toolbar" aria-label="Búsqueda y filtros">
+            <div class="bajas-campo bajas-campo--busqueda">
+                <label for="bajas-busqueda">Buscar por código o nombre</label>
+                <input id="bajas-busqueda" type="search" autocomplete="off" placeholder="Ej. EMP-001 o Ana Prueba" />
+            </div>
+            <div class="bajas-campo">
+                <label for="bajas-estado">Estado</label>
+                <select id="bajas-estado">
+                    <option value="">Todos los estados</option>
+                    <option value="vigente">Vigentes</option>
+                    <option value="programada">Programadas</option>
+                    <option value="finalizada">Finalizadas</option>
+                    <option value="cancelada">Canceladas</option>
+                </select>
+            </div>
+            <div class="bajas-campo">
+                 <label for="bajas-filtro-empleado">Empleado</label>
+                 <select id="bajas-filtro-empleado"><option value="">Todos los empleados</option></select>
+            </div>
+            <button id="btn-actualizar-bajas" type="button" class="bajas-btn bajas-btn--secundario">Actualizar</button>
+        </div>
+
+        <div class="bajas-tabla-wrap">
+            <table class="bajas-tabla">
+                <caption class="visually-hidden">Listado de bajas parciales</caption>
+                <thead>
+                    <tr><th scope="col">Empleado</th><th scope="col">Periodo</th><th scope="col">Motivo</th><th scope="col">Estado</th><th scope="col">Fecha de registro</th><th scope="col">Acciones</th></tr>
+                </thead>
+                <tbody id="bajas-lista"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<div id="modal-baja" class="bajas-modal" hidden>
+    <div class="bajas-modal__fondo" data-cerrar-modal></div>
+    <div class="bajas-modal__dialogo" role="dialog" aria-modal="true" aria-labelledby="modal-baja-titulo">
+        <header class="bajas-modal__cabecera">
+            <div><h2 id="modal-baja-titulo">Registrar baja parcial</h2><p id="modal-baja-subtitulo">Complete el periodo y el motivo.</p></div>
+            <button id="btn-cerrar-baja" type="button" class="bajas-modal__cerrar" aria-label="Cerrar formulario">×</button>
+        </header>
+        <form id="form-baja" novalidate>
+            <div class="bajas-modal__cuerpo">
+                <p id="modal-baja-error" class="bajas-error" role="alert" hidden></p>
+                <div class="bajas-form-grid">
+                    <div class="bajas-campo bajas-form-grid__full"><label for="baja-empleado">Empleado <span aria-hidden="true">*</span></label><select id="baja-empleado" required></select></div>
+                    <div class="bajas-campo"><label for="baja-inicio">Fecha de inicio <span aria-hidden="true">*</span></label><input id="baja-inicio" type="date" required /></div>
+                    <div class="bajas-campo"><label for="baja-fin">Fecha de fin <span aria-hidden="true">*</span></label><input id="baja-fin" type="date" required /></div>
+                    <div class="bajas-campo bajas-form-grid__full"><label for="baja-motivo">Motivo <span aria-hidden="true">*</span></label><input id="baja-motivo" type="text" maxlength="300" required /></div>
+                    <div class="bajas-campo bajas-form-grid__full"><label for="baja-observaciones">Observaciones</label><textarea id="baja-observaciones" rows="3" maxlength="500"></textarea></div>
+                </div>
+            </div>
+            <footer class="bajas-modal__pie"><button id="btn-cancelar-baja" type="button" class="bajas-btn bajas-btn--secundario">Cancelar</button><button id="btn-guardar-baja" type="submit" class="bajas-btn bajas-btn--primario">Guardar</button></footer>
+        </form>
+    </div>
+</div>
+
+<div id="modal-detalle-baja" class="bajas-modal" hidden>
+    <div class="bajas-modal__fondo" data-cerrar-detalle></div>
+    <div class="bajas-modal__dialogo" role="dialog" aria-modal="true" aria-labelledby="detalle-baja-titulo">
+        <header class="bajas-modal__cabecera"><div><h2 id="detalle-baja-titulo">Detalle de baja parcial</h2><p>Información devuelta por la API.</p></div><button id="btn-cerrar-detalle" type="button" class="bajas-modal__cerrar" aria-label="Cerrar detalle">×</button></header>
+        <div id="detalle-baja-contenido" class="bajas-modal__cuerpo"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/bajas-parciales/bajas-parciales.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Servicios/BajasParciales',
+            alValidar: function () { window.VisorSIG.bajasParciales.iniciar(); }
+        });
+    </script>
+}

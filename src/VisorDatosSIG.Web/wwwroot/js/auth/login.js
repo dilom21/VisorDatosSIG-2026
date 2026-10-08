@@ -112,9 +112,26 @@ window.VisorSIG = window.VisorSIG || {};
         var mensaje = document.getElementById('login-mensaje');
         var info = document.getElementById('login-info');
 
-        if (campoUsuario) {
-            campoUsuario.focus();
+        function activarManejoTeclado(campo) {
+            if (!campo) { return; }
+            campo.addEventListener('focus', function () {
+                document.body.classList.add('login-teclado-activo');
+                setTimeout(function () {
+                    campo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 220);
+            });
+            campo.addEventListener('blur', function () {
+                setTimeout(function () {
+                    var activo = document.activeElement;
+                    if (!activo || (activo !== campoUsuario && activo !== campoPassword)) {
+                        document.body.classList.remove('login-teclado-activo');
+                    }
+                }, 120);
+            });
         }
+
+        activarManejoTeclado(campoUsuario);
+        activarManejoTeclado(campoPassword);
 
         mostrarMotivo(formulario, info);
 

@@ -174,3 +174,24 @@ public sealed class ArchivoExportadoDto
     public string ContentType { get; set; } = string.Empty;
     public byte[] Contenido { get; set; } = [];
 }
+
+/// <summary>
+/// Vista previa estructurada con metadatos y filas tabulares antes de exportar (CU32).
+/// </summary>
+public sealed class ReporteVistaPreviaDto
+{
+    public string TipoReporte { get; set; } = string.Empty;
+    public string CodigoReporte { get; set; } = string.Empty;
+    public string Codigo { get => CodigoReporte; set => CodigoReporte = value; }
+    public string Titulo { get; set; } = string.Empty;
+    public string Subtitulo { get; set; } = string.Empty;
+    public string Modulo { get; set; } = string.Empty;
+    public int TotalRegistros { get; set; }
+    public List<string> Columnas { get; set; } = [];
+    public List<List<string>> Filas { get; set; } = [];
+    public DateTime FechaGeneracionBolivia { get; set; }
+    public DateTime FechaHoraBolivia { get => FechaGeneracionBolivia; set => FechaGeneracionBolivia = value; }
+    public string Operador { get; set; } = string.Empty;
+    public Dictionary<string, string> Metadatos { get; set; } = [];
+}
+

@@ -1,0 +1,494 @@
+@*
+    Módulo 6: Reportes y Analítica Territorial
+    CU32 – Gestionar Reportes
+    Generación de consultas multi-módulo, vista previa interactiva y exportación en 4 formatos (PDF, Excel, CSV, TXT)
+*@
+@{
+    ViewData["Title"] = "Gestionar Reportes - Centro de Reportes y Auditoría SIG";
+    Layout = "_AppLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/reportes.css" asp-append-version="true" />
+}
+
+<div class="reportes-seccion reportes-gestionar">
+    <!-- Encabezado Ejecutivo Institucional -->
+    <header class="gestionar-header">
+        <div class="gestionar-header__info">
+            <h1 class="gestionar-header__titulo">Reportes y Consultas SIG</h1>
+            <p class="gestionar-header__subtitulo">
+                Panel ejecutivo con visibilidad global consolidada y consultas parametrizadas de todas las capas y módulos territoriales.
+            </p>
+            <div class="reportes-cabecera__meta">
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Hora Oficial (Bolivia UTC-4): <strong id="hora-auditoria">Cargando...</strong>
+                </span>
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    Acceso Autorizado: <strong id="perfil-usuario">Administrador / Supervisor</strong>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notificación / Mensaje de Estado / Alerta de Validación (RN-REP-05) -->
+    <div id="gestionar-aviso" class="dashboard-aviso" hidden></div>
+
+    <!-- Pestañas de Categoría (Pill Navigation) -->
+    <nav class="gestionar-categorias" aria-label="Categorías de Reportes">
+        <button type="button" class="btn-cat-pill btn-cat-pill--activo" data-categoria="catastro">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <span>Catastro y Territorial</span>
+        </button>
+        <button type="button" class="btn-cat-pill" data-categoria="servicios">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            <span>Servicios y Clientes</span>
+        </button>
+        <button type="button" class="btn-cat-pill" data-categoria="operaciones">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            <span>Operaciones e Indicadores</span>
+        </button>
+        <button type="button" class="btn-cat-pill" data-categoria="seguridad">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span>Seguridad y Auditoría</span>
+        </button>
+    </nav>
+
+    <!-- Grid de Tarjetas de Reporte Seleccionables -->
+    <div class="gestionar-cards-grid" id="contenedor-reportes-cards">
+        <!-- 1. Catastro: REP-CAT-01 Manzanas -->
+        <article class="reporte-card reporte-card--activo" data-categoria="catastro" data-codigo="REP-CAT-01">
+            <div class="reporte-card__header">
+                <div class="reporte-card__icono">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                </div>
+                <span class="reporte-card__codigo">REP-CAT-01</span>
+            </div>
+            <h3 class="reporte-card__titulo">Consolidado Territorial por UV</h3>
+            <p class="reporte-card__desc">
+                Distribución territorial de manzanas, parcelas prediales y acometidas de servicio agrupadas por Unidad Vecinal (UV).
+            </p>
+            <div class="reporte-card__footer">
+                <span class="reporte-card__status">● Reporte Seleccionado</span>
+                <span class="reporte-card__accion">Configurar →</span>
+            </div>
+        </article>
+
+        <!-- 2. Catastro: REP-CAT-02 Lotes -->
+        <article class="reporte-card" data-categoria="catastro" data-codigo="REP-CAT-02">
+            <div class="reporte-card__header">
+                <div class="reporte-card__icono">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <span class="reporte-card__codigo">REP-CAT-02</span>
+            </div>
+            <h3 class="reporte-card__titulo">Padrón Predial y Catastro Integrado</h3>
+            <p class="reporte-card__desc">
+                Padrón predial detallado con clave catastral UV-MZA-Lote, vinculación de suministros y estado operativo.
+            </p>
+            <div class="reporte-card__footer">
+                <span class="reporte-card__status">Haga clic para seleccionar</span>
+                <span class="reporte-card__accion">Configurar →</span>
+            </div>
+        </article>
+
+        <!-- 3. Catastro: REP-CAT-03 Vías -->
+        <article class="reporte-card" data-categoria="catastro" data-codigo="REP-CAT-03">
+            <div class="reporte-card__header">
+                <div class="reporte-card__icono">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                        <line x1="8" y1="2" x2="8" y2="18"></line>
+                        <line x1="16" y1="6" x2="16" y2="22"></line>
+                    </svg>
+                </div>
+                <span class="reporte-card__codigo">REP-CAT-03</span>
+            </div>
+            <h3 class="reporte-card__titulo">Red Vial y Movilidad Urbana</h3>
+            <p class="reporte-card__desc">
+                Estructura de avenidas, calles, anillos concéntricos y radiales con jerarquía de red y georreferenciación.
+            </p>
+            <div class="reporte-card__footer">
+                <span class="reporte-card__status">Haga clic para seleccionar</span>
+                <span class="reporte-card__accion">Configurar →</span>
+            </div>
+        </article>
+
+        <!-- 4. Servicios: REP-SRV-01 Estados de Servicios -->
+        <article class="reporte-card" data-categoria="servicios" data-codigo="REP-SRV-01">
+            <div class="reporte-card__header">
+                <div class="reporte-card__icono">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                    </svg>
+                </div>
+                <span class="reporte-card__codigo">REP-SRV-01</span>
+            </div>
+            <h3 class="reporte-card__titulo">Estados de Servicios y Códigos Fijos</h3>
+            <p class="reporte-card__desc">
+                Auditoría detallada de abonados, códigos SIG, estado operativo (Normal, Corte, Inspección) y ubicación.
+            </p>
+            <div class="reporte-card__footer">
+                <span class="reporte-card__status">Haga clic para seleccionar</span>
+                <span class="reporte-card__accion">Configurar →</span>
+            </div>
+        </article>
+
+        <!-- 5. Servicios: REP-SRV-02 Personal y Cuadrillas -->
+        <article class="reporte-card" data-categoria="servicios" data-codigo="REP-SRV-02">
+            <div class="reporte-card__header">
+                <div class="reporte-card__icono">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <span class="reporte-card__codigo">REP-SRV-02</span>
+            </div>
+            <h3 class="reporte-card__titulo">Disponibilidad de Personal</h3>
+            <p class="reporte-card__desc">
+                Seguimiento de personal operativo en campo, cuadrillas técnicas activas, cargos y disponibilidad.
+            </p>
+            <div class="reporte-card__footer">
+                <span class="reporte-card__status">Haga clic para seleccionar</span>
+                <span class="reporte-card__accion">Configurar →</span>
+            </div>
+        </article>
+
+        <!-- 6. Servicios: REP-SRV-03 Bajas Parciales y Cortes -->
+        <article class="reporte-card" data-categoria="servicios" data-codigo="REP-SRV-03">
+            <div class="reporte-card__header">
+                <div class="reporte-card__icono">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                    </svg>
+                </div>
+                <span class="reporte-card__codigo">REP-SRV-03</span>
+            </div>
+            <h3 class="reporte-card__titulo">Bajas Parciales y Cortes</h3>
+            <p class="reporte-card__desc">
+                Extracto de conexiones para brigadas: puntos cortados, en programación de corte o bajo inspección técnica.
+            </p>
+            <div class="reporte-card__footer">
+                <span class="reporte-card__status">Haga clic para seleccionar</span>
+                <span class="reporte-card__accion">Configurar →</span>
+            </div>
+        </article>
+
+        <!-- 7. Operaciones: REP-OPR-01 Indicadores Cartográficos -->
+        <article class="reporte-card" data-categoria="operaciones" data-codigo="REP-OPR-01">
+            <div class="reporte-card__header">
+                <div class="reporte-card__icono">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                </div>
+                <span class="reporte-card__codigo">REP-OPR-01</span>
+            </div>
+            <h3 class="reporte-card__titulo">Indicadores de Cobertura SIG</h3>
+            <p class="reporte-card__desc">
+                Métricas consolidadas de entidades espaciales por capa, porcentaje de cobertura y validación topológica.
+            </p>
+            <div class="reporte-card__footer">
+                <span class="reporte-card__status">Haga clic para seleccionar</span>
+                <span class="reporte-card__accion">Configurar →</span>
+            </div>
+        </article>
+
+        <!-- 8. Operaciones: REP-OPR-02 Historial de Migraciones -->
+        <article class="reporte-card" data-categoria="operaciones" data-codigo="REP-OPR-02">
+            <div class="reporte-card__header">
+                <div class="reporte-card__icono">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <polyline points="1 20 1 14 7 14"></polyline>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                </div>
+                <span class="reporte-card__codigo">REP-OPR-02</span>
+            </div>
+            <h3 class="reporte-card__titulo">Historial de Migraciones Shapefile</h3>
+            <p class="reporte-card__desc">
+                Auditoría cronológica de cargas masivas SHP/DBF, volúmenes de registros insertados y tiempos de proceso.
+            </p>
+            <div class="reporte-card__footer">
+                <span class="reporte-card__status">Haga clic para seleccionar</span>
+                <span class="reporte-card__accion">Configurar →</span>
+            </div>
+        </article>
+
+        <!-- 9. Seguridad: REP-AUD-01 Bitácora de Auditoría -->
+        <article class="reporte-card" data-categoria="seguridad" data-codigo="REP-AUD-01">
+            <div class="reporte-card__header">
+                <div class="reporte-card__icono">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
+                <span class="reporte-card__codigo">REP-AUD-01</span>
+            </div>
+            <h3 class="reporte-card__titulo">Bitácora de Seguridad y Accesos</h3>
+            <p class="reporte-card__desc">
+                Trazabilidad de operaciones críticas, accesos, módulos auditados, IPs de origen y resultados transaccionales.
+            </p>
+            <div class="reporte-card__footer">
+                <span class="reporte-card__status">Haga clic para seleccionar</span>
+                <span class="reporte-card__accion">Configurar →</span>
+            </div>
+        </article>
+
+        <!-- 10. Seguridad: REP-AUD-02 Padrón de Usuarios -->
+        <article class="reporte-card" data-categoria="seguridad" data-codigo="REP-AUD-02">
+            <div class="reporte-card__header">
+                <div class="reporte-card__icono">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <span class="reporte-card__codigo">REP-AUD-02</span>
+            </div>
+            <h3 class="reporte-card__titulo">Padrón de Usuarios y Roles</h3>
+            <p class="reporte-card__desc">
+                Inventario de cuentas de usuario del sistema, asignación de perfiles, permisos y estado de actividad.
+            </p>
+            <div class="reporte-card__footer">
+                <span class="reporte-card__status">Haga clic para seleccionar</span>
+                <span class="reporte-card__accion">Configurar →</span>
+            </div>
+        </article>
+    </div>
+
+    <!-- Panel de Parámetros y Filtros del Reporte -->
+    <div class="gestionar-filtros-card">
+        <div class="gestionar-filtros-card__header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            <h2 class="gestionar-filtros-card__titulo">Parámetros y Filtros del Reporte</h2>
+            <span class="badge-reporte-actual" id="badge-codigo-actual">REP-CAT-01</span>
+        </div>
+
+        <div class="gestionar-filtros-grid">
+            <div class="filtro-campo">
+                <label for="filtro-rango-fechas" class="filtro-campo__label">Rango de Fechas / Período</label>
+                <div class="filtro-campo__input-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="filtro-icono">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <select id="filtro-rango-fechas" class="rep-select">
+                        <option value="30d">Últimos 30 días</option>
+                        <option value="hoy">Hoy (Día en curso)</option>
+                        <option value="mes">Mes actual</option>
+                        <option value="historico" selected>Todo el histórico (Consolidado)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filtro-campo">
+                <label for="filtro-criterio-especifico" class="filtro-campo__label" id="lbl-criterio-especifico">Criterio Específico / Estado</label>
+                <div class="filtro-campo__input-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="filtro-icono">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                    <select id="filtro-criterio-especifico" class="rep-select">
+                        <option value="">Todos los registros</option>
+                        <option value="1">Normal (Operativo)</option>
+                        <option value="2">Pendiente</option>
+                        <option value="3">Para Corte</option>
+                        <option value="4">Cortado</option>
+                        <option value="5">En Inspección</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filtro-campo">
+                <label for="filtro-busqueda-texto" class="filtro-campo__label">Búsqueda / Criterio Clave</label>
+                <div class="filtro-campo__input-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="filtro-icono">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="filtro-busqueda-texto" class="rep-input" placeholder="Filtrar por código, titular, UV..." />
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de Acción y Descarga -->
+        <div class="gestionar-acciones-barra">
+            <button type="button" class="btn-generar-preview" id="btn-generar-preview">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span>Generar Vista Previa</span>
+            </button>
+
+            <div class="exportar-grupo">
+                <span class="exportar-grupo__label">Descargar archivo:</span>
+                <div class="exportar-botones">
+                    <button type="button" class="btn-exp btn-exp--csv" data-exportar="csv" title="Exportar en formato CSV delimitado">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>CSV</span>
+                    </button>
+                    <button type="button" class="btn-exp btn-exp--excel" data-exportar="xlsx" title="Exportar en Microsoft Excel .xlsx">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        <span>Excel (.xlsx)</span>
+                    </button>
+                    <button type="button" class="btn-exp btn-exp--pdf" data-exportar="pdf" title="Exportar documento en PDF institucional">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        <span>PDF</span>
+                    </button>
+                    <button type="button" class="btn-exp btn-exp--txt" data-exportar="txt" title="Exportar reporte en archivo de texto plano TXT">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="17" y1="10" x2="3" y2="10"></line>
+                            <line x1="21" y1="6" x2="3" y2="6"></line>
+                            <line x1="21" y1="14" x2="3" y2="14"></line>
+                            <line x1="17" y1="18" x2="3" y2="18"></line>
+                        </svg>
+                        <span>TXT</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor de la Vista Previa de Verificación -->
+    <section class="gestionar-preview-card" id="seccion-preview" aria-live="polite">
+        <div class="gestionar-preview-card__header">
+            <div class="gestionar-preview-card__intro">
+                <div class="gestionar-preview-card__icono">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <path d="m9 15 2 2 4-4"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="gestionar-preview-card__titulo" id="preview-titulo">Vista Previa de Verificación</h3>
+                    <p class="gestionar-preview-card__subtitulo" id="preview-subtitulo">
+                        Verifique y audite los registros antes de proceder con la descarga en los formatos disponibles.
+                    </p>
+                </div>
+            </div>
+            <div class="preview-meta-badges">
+                <span class="badge-meta-preview badge-meta-preview--codigo" id="preview-badge-codigo">REP-CAT-01</span>
+                <span class="badge-meta-preview badge-meta-preview--registros" id="preview-badge-registros">0 registros</span>
+                <span class="badge-meta-preview" id="preview-badge-fecha">Sin generar</span>
+                <span class="badge-meta-preview badge-meta-preview--modo">Modo Auditoría</span>
+            </div>
+        </div>
+
+        <!-- Barra de Herramientas de Verificación -->
+        <div class="gestionar-preview-toolbar" id="preview-toolbar" hidden>
+            <div class="preview-toolbar__info">
+                <span class="preview-toolbar__punto"></span>
+                <span>Registros en memoria validados contra base de datos oficial</span>
+            </div>
+            <div class="preview-toolbar__filtro">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="filtro-rapido-preview" class="rep-input rep-input--sm" placeholder="Filtrar en vista previa..." />
+            </div>
+        </div>
+
+        <!-- Estado Inicial / Vacío -->
+        <div class="preview-estado-vacio" id="preview-estado-vacio">
+            <div class="preview-estado-vacio__circulo">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+            </div>
+            <p class="preview-estado-vacio__texto">
+                Haga clic en <strong>"Generar Vista Previa"</strong> para consultar la información en tiempo real desde la base de datos oficial.
+            </p>
+            <small class="preview-estado-vacio__nota">Los datos son extraídos en modo de solo lectura (RN-REP-01: no se alteran registros fuente).</small>
+        </div>
+
+        <!-- Tabla con Resultados -->
+        <div class="gestionar-tabla-wrapper" id="preview-tabla-wrapper" hidden>
+            <table class="rep-tabla-datos rep-tabla-datos--preview" id="tabla-preview">
+                <thead id="tabla-preview-head">
+                    <!-- Columnas dinámicas -->
+                </thead>
+                <tbody id="tabla-preview-body">
+                    <!-- Filas dinámicas -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pie de Información de Auditoría -->
+        <div class="gestionar-preview-footer" id="preview-footer" hidden>
+            <span class="preview-footer__nota">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Vista previa generada para verificación. Puede descargar la totalidad de los datos en cualquier formato.
+            </span>
+            <span class="preview-footer__formatos">Exportación disponible: CSV · Excel (.xlsx) · PDF · TXT</span>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/reportes/gestionar.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Reportes/Gestionar',
+            alValidar: function () {
+                if (window.VisorSIG && window.VisorSIG.gestionarReportes) {
+                    window.VisorSIG.gestionarReportes.iniciar();
+                }
+            }
+        });
+    </script>
+}

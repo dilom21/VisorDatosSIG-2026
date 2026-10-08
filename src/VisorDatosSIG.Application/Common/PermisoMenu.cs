@@ -68,6 +68,15 @@ public static class PermisoMenu
     /// <summary>Módulo: gestión de empleados (CU04 - Seguimiento de Servicios).</summary>
     public const string Empleados = "/Empleados";
 
+    /// <summary>Módulo: gestión de bajas parciales (CU18 - Seguimiento de Servicios).</summary>
+    public const string BajasParciales = "/Servicios/BajasParciales";
+
+    /// <summary>Módulo: disponibilidad, horarios y asignaciones del personal (CU19).</summary>
+    public const string DisponibilidadPersonal = "/Servicios/Disponibilidad";
+
+    /// <summary>Módulo: gestión del estado operativo de los servicios.</summary>
+    public const string Servicios = "/Servicios";
+
     /// <summary>
     /// Todas las rutas de menú del sistema web.
     /// </summary>
@@ -83,7 +92,10 @@ public static class PermisoMenu
         ConsultaLotes,
         ConsultaVias,
         Reportes,
-        Empleados
+        Empleados,
+        Servicios,
+        BajasParciales,
+        DisponibilidadPersonal
     ];
 
     /// <summary>

@@ -1,0 +1,242 @@
+@*
+    Consultar Código Fijo (CU13) — búsqueda paginada y detalle espacial.
+
+    La vista es la maqueta del módulo: la búsqueda paginada y el detalle los ejecuta el
+    navegador contra la API protegida con el token de la sesión:
+      GET api/codigos-fijos              -> página de resultados (filtros y paginación en SQL)
+      GET api/codigos-fijos/{idCodigo}   -> detalle completo, incluida la geometría GeoJSON
+
+    No se usa fetch directo: todas las peticiones pasan por window.VisorSIG.api.peticion
+    (js/consultas/codigo-fijo.js). La autorización real vive en la API, que resuelve en cada
+    petición el permiso dinámico sobre la opción de menú /Consultas/CodigoFijo de dbo.RolMenu;
+    el rol Administrador mantiene el acceso total implícito. La página solo se alcanza desde el
+    sidebar dinámico (dbo.MenuOpciones -> GET /api/menu -> sidebar.js).
+
+    El detalle representa la geometría Point en un mini mapa Leaflet sin alterar las
+    coordenadas GeoJSON entregadas por la API.
+
+    Contratos de los elementos (los usa js/consultas/codigo-fijo.js):
+      #cf-filtros      -> formulario de filtros (codFijo, nombre, codFSig, estado)
+      #cf-codfijo #cf-nombre #cf-codfsig #cf-estado -> filtros
+      #cf-cuerpo       -> filas de la página actual
+      #cf-titulo       -> "Resultados (N registros)"
+      #cf-conteo       -> "Mostrando X a Y de TOTAL registros"
+      #cf-paginacion   -> paginación del servidor
+      #cf-aviso        -> aviso de validación, error o falta de permiso
+      #cf-vacio        -> tarjeta de "sin resultados"
+      #cf-det-*        -> panel de detalle (vacío, cargando, contenido, coordenadas, mapa)
+      #cf-toast        -> aviso de éxito de la consulta
+*@
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "Consultar Código Fijo";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="~/css/consultas/codigo-fijo.css" asp-append-version="true" />
+}
+
+<section class="cf">
+    <header class="cf__cabecera">
+        <span class="cf__icono" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z" />
+            </svg>
+        </span>
+        <div class="cf__titulos">
+            <h1>Consultar Código Fijo</h1>
+            <p class="cf__subtitulo">
+                Búsqueda y visualización de registros de código fijo con detalle espacial.
+            </p>
+        </div>
+    </header>
+
+    @* Toast de éxito de la consulta: lo rellena el módulo con createElement + textContent. *@
+    <div id="cf-toast" class="cf-toast" role="status" aria-live="polite" hidden></div>
+
+    <form id="cf-filtros" class="cf-card cf__filtros" role="search" novalidate>
+        <h2 class="cf-card__titulo cf__filtros-titulo">
+            <span class="cf-icono" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M11 3a8 8 0 1 0 4.9 14.32l4.4 4.4 1.4-1.42-4.4-4.4A8 8 0 0 0 11 3Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+                </svg>
+            </span>
+            Filtros de búsqueda
+        </h2>
+
+        <div class="cf-campo">
+            <label class="cf-campo__etiqueta" for="cf-codfijo">Código fijo</label>
+            <input id="cf-codfijo" name="codFijo" class="cf-control" type="text"
+                   inputmode="numeric" autocomplete="off" placeholder="Ingrese código fijo" />
+        </div>
+
+        <div class="cf-campo">
+            <label class="cf-campo__etiqueta" for="cf-nombre">Nombre</label>
+            <input id="cf-nombre" name="nombre" class="cf-control" type="search"
+                   autocomplete="off" maxlength="240" placeholder="Ingrese nombre" />
+        </div>
+
+        <div class="cf-campo">
+            <label class="cf-campo__etiqueta" for="cf-codfsig">CodF_SIG</label>
+            <input id="cf-codfsig" name="codFSig" class="cf-control" type="search"
+                   autocomplete="off" maxlength="120" placeholder="Ingrese CodF_SIG" />
+        </div>
+
+        <div class="cf-campo">
+            <label class="cf-campo__etiqueta" for="cf-estado">Estado</label>
+            <select id="cf-estado" name="estado" class="cf-control">
+                <option value="">Todos</option>
+                <option value="1">Normal</option>
+                <option value="2">Para Corte</option>
+                <option value="3">Cortado</option>
+                <option value="4">Baja Parcial</option>
+                <option value="5">Baja Total</option>
+            </select>
+        </div>
+
+        <div class="cf__filtros-acciones">
+            <button type="submit" id="cf-buscar" class="btn-primario cf-btn">
+                <span class="cf-icono" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M11 3a8 8 0 1 0 4.9 14.32l4.4 4.4 1.4-1.42-4.4-4.4A8 8 0 0 0 11 3Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+                    </svg>
+                </span>
+                Buscar
+            </button>
+            <button type="button" id="cf-limpiar" class="btn-secundario cf-btn">
+                <span class="cf-icono" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M6 7h12l-1 13a2 2 0 0 1-2 1.8H9A2 2 0 0 1 7 20L6 7Zm3-3h6l1 2H8l1-2Z" />
+                    </svg>
+                </span>
+                Limpiar
+            </button>
+        </div>
+    </form>
+
+    <p id="cf-aviso" class="visor-aviso cf-aviso" role="status" hidden></p>
+
+    <div class="cf-grid">
+        <section class="cf-card cf-resultados" aria-label="Resultados de la consulta">
+            <header class="cf-resultados__cabecera">
+                <h2 id="cf-titulo" class="cf-card__titulo">
+                    <span class="cf-icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M4 5h3v3H4V5Zm5 0h11v3H9V5ZM4 10.5h3v3H4v-3Zm5 0h11v3H9v-3ZM4 16h3v3H4v-3Zm5 0h11v3H9v-3Z" />
+                        </svg>
+                    </span>
+                    <span>Resultados (0 registros)</span>
+                </h2>
+                <span id="cf-cargando" class="cf-cargando" hidden>
+                    <span class="cf-spinner" aria-hidden="true"></span>Consultando…
+                </span>
+            </header>
+
+            <div id="cf-tabla-envoltura" class="cf-tabla-envoltura">
+                <table class="cf-tabla">
+                    <caption class="cf-visually-hidden">
+                        Registros de código fijo de la página consultada
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">IdCódigo</th>
+                            <th scope="col">CodF_SIG</th>
+                            <th scope="col">CodFijo</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col" class="cf-col-accion">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cf-cuerpo"></tbody>
+                </table>
+            </div>
+
+            <p id="cf-vacio" class="cf-vacio" hidden>
+                No se encontraron códigos fijos que coincidan con los filtros.
+            </p>
+
+            <footer class="cf-resultados__pie">
+                <p id="cf-conteo" class="cf-conteo"></p>
+                <div id="cf-paginacion" class="cf-paginacion" hidden></div>
+            </footer>
+        </section>
+
+        <section class="cf-card cf-detalle" aria-label="Detalle del código fijo">
+            <header class="cf-detalle__cabecera">
+                <h2 class="cf-card__titulo">Detalle del Código Fijo</h2>
+                <span id="cf-det-badge" class="cf-badge" hidden></span>
+            </header>
+
+            <p id="cf-det-vacio" class="cf-detalle__vacio">
+                Seleccione un registro para visualizar su detalle.
+            </p>
+
+            <p id="cf-det-cargando" class="cf-detalle__cargando" role="status" hidden>
+                <span class="cf-spinner" aria-hidden="true"></span>Cargando detalle…
+            </p>
+
+            <div id="cf-det-contenido" class="cf-detalle__contenido" hidden>
+                <dl class="cf-detalle__lista">
+                    <div class="cf-detalle__fila"><dt>IdCódigo</dt><dd id="cf-det-id"></dd></div>
+                    <div class="cf-detalle__fila"><dt>CodF_SQL</dt><dd id="cf-det-codfsql"></dd></div>
+                    <div class="cf-detalle__fila"><dt>CodF_SIG</dt><dd id="cf-det-codfsig"></dd></div>
+                    <div class="cf-detalle__fila"><dt>CodFijo</dt><dd id="cf-det-codfijo"></dd></div>
+                    <div class="cf-detalle__fila"><dt>Nombre</dt><dd id="cf-det-nombre"></dd></div>
+                    <div class="cf-detalle__fila">
+                        <dt>Estado</dt>
+                        <dd><span id="cf-det-estado" class="cf-badge"></span></dd>
+                    </div>
+                    <div class="cf-detalle__fila"><dt>FechaCambioEstado</dt><dd id="cf-det-fecha"></dd></div>
+                    <div class="cf-detalle__fila"><dt>IdLote</dt><dd id="cf-det-lote"></dd></div>
+                </dl>
+
+                <section class="cf-subseccion">
+                    <h3 class="cf-subseccion__titulo">
+                        <span class="cf-icono" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false">
+                                <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z" />
+                            </svg>
+                        </span>
+                        Ubicación espacial
+                    </h3>
+
+                    <div id="cf-det-coords" class="cf-coords">
+                        <div class="cf-coord">
+                            <span class="cf-coord__etiqueta">Longitud (X)</span>
+                            <span id="cf-det-longitud" class="cf-coord__valor"></span>
+                        </div>
+                        <div class="cf-coord">
+                            <span class="cf-coord__etiqueta">Latitud (Y)</span>
+                            <span id="cf-det-latitud" class="cf-coord__valor"></span>
+                        </div>
+                    </div>
+
+                    <p id="cf-det-sin-coords" class="cf-detalle__nota-vacia" hidden>
+                        Este registro no dispone de coordenadas espaciales.
+                    </p>
+
+                    <div class="cf-mapa-envoltura">
+                        <div id="cf-mapa" class="cf-mapa" hidden
+                             aria-label="Ubicación del código fijo seleccionado"></div>
+                        <p id="cf-mapa-aviso" class="cf-mapa__aviso" role="status"></p>
+                    </div>
+                </section>
+            </div>
+        </section>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/consultas/codigo-fijo.js" asp-append-version="true"></script>
+    <script>
+        @* Misma convención que /Usuarios, /Roles y /Bitacora: la página protege la vista y, al
+           validar la sesión, arranca el módulo. La API decide el acceso real con el permiso
+           dinámico sobre la opción de menú /Consultas/CodigoFijo de dbo.RolMenu. *@
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Consultas/CodigoFijo',
+            alValidar: function () { window.VisorSIG.consultaCodigoFijo.iniciar(); }
+        });
+    </script>
+}

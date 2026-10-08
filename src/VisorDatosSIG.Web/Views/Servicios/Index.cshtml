@@ -1,0 +1,104 @@
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "Gestionar Servicios";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/servicios.css" asp-append-version="true" />
+}
+
+<section class="servicios-seccion" aria-labelledby="servicios-titulo">
+    <header class="servicios-cabecera">
+        <div>
+            <span class="servicios-cabecera__modulo">Seguimiento de Servicios</span>
+            <h1 id="servicios-titulo">Gestionar Servicios</h1>
+            <p>Consulte y actualice el estado operativo de los servicios registrados en los códigos fijos.</p>
+        </div>
+    </header>
+
+    <p id="servicios-mensaje" class="servicios-mensaje" role="status" aria-live="polite" hidden></p>
+    <div id="servicios-contenido" hidden>
+        <div class="servicios-metricas" aria-label="Resumen global de servicios">
+            <article class="servicios-metrica servicios-metrica--total"><strong id="metrica-total">0</strong><span>Total</span></article>
+            <article class="servicios-metrica servicios-metrica--normal"><strong id="metrica-normal">0</strong><span>Normal</span></article>
+            <article class="servicios-metrica servicios-metrica--corte"><strong id="metrica-para-corte">0</strong><span>Para Corte</span></article>
+            <article class="servicios-metrica servicios-metrica--cortado"><strong id="metrica-cortado">0</strong><span>Cortados</span></article>
+            <article class="servicios-metrica servicios-metrica--parcial"><strong id="metrica-baja-parcial">0</strong><span>Baja Parcial</span></article>
+            <article class="servicios-metrica servicios-metrica--total-baja"><strong id="metrica-baja-total">0</strong><span>Baja Total</span></article>
+        </div>
+
+        <div class="servicios-toolbar" aria-label="Búsqueda y filtros">
+            <div class="servicios-campo servicios-campo--busqueda">
+                <label for="servicios-busqueda">Buscar por código o titular</label>
+                <input id="servicios-busqueda" type="search" autocomplete="off" placeholder="Buscar por código SIG, código fijo o titular..." />
+            </div>
+            <div class="servicios-campo">
+                <label for="servicios-estado">Estado</label>
+                <select id="servicios-estado">
+                    <option value="">Todos los estados</option>
+                    <option value="1">Normal</option>
+                    <option value="2">Para Corte</option>
+                    <option value="3">Cortado</option>
+                    <option value="4">Baja Parcial</option>
+                    <option value="5">Baja Total</option>
+                </select>
+            </div>
+            <div class="servicios-campo servicios-campo--limite">
+                <label for="servicios-limite">Por página</label>
+                <select id="servicios-limite">
+                    <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option><option value="100">100</option>
+                </select>
+            </div>
+            <button id="btn-actualizar-servicios" type="button" class="servicios-btn servicios-btn--secundario">Actualizar</button>
+        </div>
+
+        <div class="servicios-tabla-wrap">
+            <table class="servicios-tabla">
+                <caption class="visually-hidden">Listado paginado de servicios</caption>
+                <thead><tr><th scope="col">Código</th><th scope="col">Titular</th><th scope="col">Referencia</th><th scope="col">Estado</th><th scope="col">Último cambio</th><th scope="col">Acciones</th></tr></thead>
+                <tbody id="servicios-lista"></tbody>
+            </table>
+        </div>
+        <div class="servicios-paginacion" aria-label="Paginación de servicios">
+            <span id="servicios-rango" aria-live="polite">Mostrando 0-0 de 0 servicios</span>
+            <div class="servicios-paginacion__controles">
+                <button id="btn-pagina-anterior" type="button" class="servicios-btn servicios-btn--secundario">Anterior</button>
+                <span id="servicios-pagina-actual" aria-current="page">Página 1 de 1</span>
+                <button id="btn-pagina-siguiente" type="button" class="servicios-btn servicios-btn--secundario">Siguiente</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="modal-detalle-servicio" class="servicios-modal" hidden>
+    <div class="servicios-modal__fondo" data-cerrar-detalle></div>
+    <div class="servicios-modal__dialogo" role="dialog" aria-modal="true" aria-labelledby="detalle-servicio-titulo">
+        <header class="servicios-modal__cabecera"><div><h2 id="detalle-servicio-titulo">Detalle del servicio</h2><p>Información operativa de solo lectura.</p></div><button id="btn-cerrar-detalle" type="button" class="servicios-modal__cerrar" aria-label="Cerrar detalle">×</button></header>
+        <div id="detalle-servicio-contenido" class="servicios-modal__cuerpo"></div>
+    </div>
+</div>
+
+<div id="modal-estado-servicio" class="servicios-modal" hidden>
+    <div class="servicios-modal__fondo" data-cerrar-estado></div>
+    <div class="servicios-modal__dialogo servicios-modal__dialogo--estrecho" role="dialog" aria-modal="true" aria-labelledby="estado-servicio-titulo">
+        <header class="servicios-modal__cabecera"><div><h2 id="estado-servicio-titulo">Cambiar estado</h2><p>Actualice únicamente la situación operativa.</p></div><button id="btn-cerrar-estado" type="button" class="servicios-modal__cerrar" aria-label="Cerrar cambio de estado">×</button></header>
+        <form id="form-estado-servicio" novalidate>
+            <div class="servicios-modal__cuerpo">
+                <p id="estado-servicio-error" class="servicios-error" role="alert" hidden></p>
+                <dl class="servicios-resumen-cambio"><dt>Servicio</dt><dd id="cambio-servicio"></dd><dt>Titular</dt><dd id="cambio-titular"></dd><dt>Estado actual</dt><dd id="cambio-actual"></dd></dl>
+                <div class="servicios-campo"><label for="cambio-nuevo">Nuevo estado <span aria-hidden="true">*</span></label><select id="cambio-nuevo" required><option value="">Seleccione un estado</option><option value="1">Normal</option><option value="2">Para Corte</option><option value="3">Cortado</option><option value="4">Baja Parcial</option><option value="5">Baja Total</option></select></div>
+            </div>
+            <footer class="servicios-modal__pie"><button id="btn-cancelar-estado" type="button" class="servicios-btn servicios-btn--secundario">Cancelar</button><button id="btn-confirmar-estado" type="submit" class="servicios-btn servicios-btn--primario">Confirmar cambio</button></footer>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/servicios/servicios.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Servicios',
+            alValidar: function () { window.VisorSIG.servicios.iniciar(); }
+        });
+    </script>
+}

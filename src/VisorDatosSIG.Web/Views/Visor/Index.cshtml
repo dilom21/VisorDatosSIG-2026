@@ -30,14 +30,22 @@
                 </button>
             </div>
             <p>Cuatro capas disponibles con datos reales desde la base de datos.</p>
-        </div>
 
-        @* Aviso heredado del visor. El guard de sesión escribe ahora en el aviso del
-           layout (#app-aviso, marcado con data-visor-aviso) porque es único para todas
-           las páginas del workspace; este elemento se conserva por compatibilidad con
-           el contrato documentado del visor y permanece oculto. *@
-        <p id="visor-aviso" class="visor-aviso" role="status" hidden></p>
+<div class="visor-mapabase">
+    <label for="selector-mapa-base" class="visor-mapabase__label">
+        Mapa base
+    </label>
 
+    <select id="selector-mapa-base"
+            class="visor-mapabase__select"
+            aria-label="Seleccionar mapa base">
+        <option value="osm" selected>OpenStreetMap</option>
+        <option value="topografico">OpenTopoMap</option>
+    </select>
+</div>
+</div>
+
+<p id="visor-aviso"
         <ul class="visor-panel__lista">
             <li class="visor-panel__item">
                 <label class="visor-capa" for="capa-manzanas">
@@ -171,6 +179,7 @@
 @section Scripts {
     <script src="~/lib/leaflet/leaflet.js"></script>
     <script src="~/js/visor/map.js"></script>
+    <script src="~/js/visor/basemaps.js"></script>
     <script src="~/js/visor/panel.js"></script>
     <script src="~/js/visor/geojson.js"></script>
     <script src="~/js/visor/features.js"></script>

@@ -9,6 +9,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using VisorDatosSIG.Api.Controllers;
 using VisorDatosSIG.Application.Common;
 using VisorDatosSIG.Application.DTOs;
+using VisorDatosSIG.Application.DTOs.CodigosFijos;
+using VisorDatosSIG.Application.DTOs.Manzanas;
 using VisorDatosSIG.Application.DTOs.Security;
 using VisorDatosSIG.Application.Interfaces;
 
@@ -23,6 +25,41 @@ public sealed class CapasControllerTests
 {
     private sealed class CadastreRepositoryFalso : ICadastreRepository
     {
+    public Task<PagedResult<VisorDatosSIG.Application.DTOs.Lotes.LoteResumenDto>> SearchLotesAsync(VisorDatosSIG.Application.DTOs.Lotes.LoteConsultaDto consulta, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task<VisorDatosSIG.Application.DTOs.Lotes.LoteDetalleDto?> GetLoteByIdAsync(int idLote, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+    public Task<PagedResult<VisorDatosSIG.Application.DTOs.Vias.ViaResumenDto>> SearchViasAsync(VisorDatosSIG.Application.DTOs.Vias.ViaConsultaDto consulta, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task<VisorDatosSIG.Application.DTOs.Vias.ViaDetalleDto?> GetViaByIdAsync(int idVia, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+
+        public Task<PagedResult<CodigoFijoResumenDto>> SearchCodigosFijosAsync(
+            CodigoFijoConsultaDto consulta,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new PagedResult<CodigoFijoResumenDto>
+            {
+                Pagina = consulta.Pagina,
+                Limite = consulta.Limite
+            });
+
+        public Task<CodigoFijoDetalleDto?> GetCodigoFijoByIdAsync(
+            int idCodigo,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<CodigoFijoDetalleDto?>(null);
+
+        public Task<PagedResult<ManzanaResumenDto>> SearchManzanasAsync(
+            ManzanaConsultaDto consulta,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new PagedResult<ManzanaResumenDto>
+            {
+                Pagina = consulta.Pagina,
+                Limite = consulta.Limite
+            });
+
+        public Task<ManzanaDetalleDto?> GetManzanaByIdAsync(
+            int idManzana,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<ManzanaDetalleDto?>(null);
+
         public string? UltimaCapaConsultada { get; private set; }
         public int UltimoLimit { get; private set; }
         public double? UltimoMinX { get; private set; }

@@ -1,0 +1,303 @@
+@*
+    Consultar Manzana (CU14) — búsqueda paginada y detalle espacial premium.
+
+    La vista es la maqueta del módulo: la búsqueda paginada y el detalle los ejecuta el
+    navegador contra la API protegida con el token de la sesión:
+      GET api/manzanas              -> página de resultados (filtros y paginación en SQL)
+      GET api/manzanas/{idManzana}  -> detalle completo, incluida la geometría GeoJSON
+
+    No se usa fetch directo: todas las peticiones pasan por window.VisorSIG.api.peticion
+    (js/consultas/manzana.js). La autorización real vive en la API, que resuelve en cada
+    petición el permiso dinámico sobre la opción de menú /Consultas/Manzana de dbo.RolMenu;
+    el rol Administrador mantiene el acceso total implícito. La página solo se alcanza desde el
+    sidebar dinámico (dbo.MenuOpciones -> GET /api/menu -> sidebar.js).
+
+    El detalle representa la geometría Polygon/MultiPolygon en un mini mapa Leaflet sin
+    alterar las coordenadas GeoJSON entregadas por la API.
+
+    Contratos de los elementos (los usa js/consultas/manzana.js):
+      #mz-filtros      -> formulario de filtros (uvMza, uv, mza)
+      #mz-uvmza #mz-uv #mz-mza -> filtros
+      #mz-limite       -> registros por página
+      #mz-cuerpo       -> filas de la página actual
+      #mz-titulo       -> "Resultados (N registros)"
+      #mz-conteo       -> "Mostrando X a Y de TOTAL registros"
+      #mz-paginacion   -> paginación del servidor
+      #mz-aviso        -> aviso de error o falta de permiso
+      #mz-vacio        -> tarjeta de "sin resultados"
+      #mz-det-*        -> panel de detalle (vacío, cargando, contenido, badge, mapa)
+      #mz-exito        -> tarjeta de éxito de la consulta (en el header)
+      #mz-toast        -> aviso flotante de la consulta
+*@
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "Consultar Manzana";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="~/css/consultas/manzana.css" asp-append-version="true" />
+}
+
+<section class="mz">
+    <header class="mz-hero">
+        <div class="mz-hero__marca">
+            <span class="mz-hero__icono" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z" />
+                </svg>
+            </span>
+            <div class="mz-hero__texto">
+                <h1>Consultar Manzana</h1>
+                <p class="mz-hero__sub">
+                    Búsqueda y visualización de información asociada a una manzana con detalle espacial.
+                </p>
+            </div>
+        </div>
+
+        @* Tarjeta de éxito: la rellena el módulo con createElement + textContent. *@
+        <div id="mz-exito" class="mz-exito" role="status" aria-live="polite" hidden></div>
+    </header>
+
+    <form id="mz-filtros" class="mz-panel mz-filtros" role="search" novalidate>
+        <div class="mz-filtros__cabecera">
+            <span class="mz-filtros__icono" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M11 3a8 8 0 1 0 4.9 14.32l4.4 4.4 1.4-1.42-4.4-4.4A8 8 0 0 0 11 3Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+                </svg>
+            </span>
+            <div>
+                <h2 class="mz-filtros__titulo">Filtros de búsqueda</h2>
+                <p class="mz-filtros__ayuda">
+                    Ingrese uno o más criterios para consultar la información de manzana.
+                </p>
+            </div>
+        </div>
+
+        <div class="mz-filtros__fila">
+            <label class="mz-campo" for="mz-uvmza">
+                <span class="mz-campo__etiqueta">UV_MZA</span>
+                <span class="mz-campo__control">
+                    <span class="mz-campo__icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z" />
+                        </svg>
+                    </span>
+                    <input id="mz-uvmza" name="uvMza" type="search" class="mz-input"
+                           autocomplete="off" maxlength="60" placeholder="Ingrese UV_MZA" />
+                </span>
+            </label>
+
+            <label class="mz-campo" for="mz-uv">
+                <span class="mz-campo__etiqueta">UV</span>
+                <span class="mz-campo__control">
+                    <span class="mz-campo__icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M12 3 2 8l10 5 10-5-10-5Zm0 7.9L5.6 7.7 12 4.5l6.4 3.2L12 10.9ZM2 16l10 5 10-5-1.6-.8L12 19.1 3.6 15.2 2 16Zm0-4 10 5 10-5-1.6-.8L12 15.1 3.6 11.2 2 12Z" />
+                        </svg>
+                    </span>
+                    <input id="mz-uv" name="uv" type="search" class="mz-input"
+                           autocomplete="off" maxlength="60" placeholder="Ingrese UV" />
+                </span>
+            </label>
+
+            <label class="mz-campo" for="mz-mza">
+                <span class="mz-campo__etiqueta">MZA</span>
+                <span class="mz-campo__control">
+                    <span class="mz-campo__icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M9 3 3 5.4v15.2L9 18l6 3 6-2.4V3.4L15 6 9 3Zm0 2.2 6 3v10.6l-6-3V5.2Z" />
+                        </svg>
+                    </span>
+                    <input id="mz-mza" name="mza" type="search" class="mz-input"
+                           autocomplete="off" maxlength="60" placeholder="Ingrese MZA" />
+                </span>
+            </label>
+
+            <div class="mz-filtros__acciones">
+                <button type="submit" id="mz-buscar" class="mz-btn mz-btn--primario">
+                    <span class="mz-icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M11 3a8 8 0 1 0 4.9 14.32l4.4 4.4 1.4-1.42-4.4-4.4A8 8 0 0 0 11 3Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+                        </svg>
+                    </span>
+                    Buscar
+                </button>
+                <button type="button" id="mz-limpiar" class="mz-btn mz-btn--secundario">
+                    <span class="mz-icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M6 7h12l-1 13a2 2 0 0 1-2 1.8H9A2 2 0 0 1 7 20L6 7Zm3-3h6l1 2H8l1-2Z" />
+                        </svg>
+                    </span>
+                    Limpiar
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <p id="mz-aviso" class="mz-alerta" role="status" hidden></p>
+
+    <div class="mz-grid">
+        <section class="mz-panel mz-resultados" aria-label="Resultados de la consulta">
+            <header class="mz-resultados__cabecera">
+                <div class="mz-titulo-grupo">
+                    <span class="mz-icono-caja" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M4 5h16v3H4V5Zm0 6h16v3H4v-3Zm0 6h16v3H4v-3Z" />
+                        </svg>
+                    </span>
+                    <h2 id="mz-titulo" class="mz-panel__titulo">Resultados (0 registros)</h2>
+                </div>
+                <div class="mz-resultados__controles">
+                    <span id="mz-cargando" class="mz-cargando" hidden>
+                        <span class="mz-spinner" aria-hidden="true"></span>Consultando…
+                    </span>
+                    <label class="mz-limite" for="mz-limite">Registros por página
+                        <select id="mz-limite" class="mz-select">
+                            <option value="8" selected>8</option>
+                            <option value="16">16</option>
+                            <option value="24">24</option>
+                        </select>
+                    </label>
+                </div>
+            </header>
+
+            <div id="mz-tabla-envoltura" class="mz-tabla-envoltura">
+                <table class="mz-tabla">
+                    <caption class="mz-visually-hidden">
+                        Manzanas de la página consultada
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col" class="mz-col-num">#</th>
+                            <th scope="col">IdManzana</th>
+                            <th scope="col">UV_MZA</th>
+                            <th scope="col">UV</th>
+                            <th scope="col">MZA</th>
+                            <th scope="col" class="mz-col-accion">
+                                <span class="mz-visually-hidden">Acción</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="mz-cuerpo"></tbody>
+                </table>
+            </div>
+
+            <p id="mz-vacio" class="mz-vacio" hidden>
+                No se encontraron manzanas que coincidan con los filtros.
+            </p>
+
+            <footer class="mz-resultados__pie">
+                <p id="mz-conteo" class="mz-conteo"></p>
+                <div id="mz-paginacion" class="mz-paginacion" hidden></div>
+            </footer>
+        </section>
+
+        <section class="mz-panel mz-detalle" aria-label="Detalle de la manzana">
+            <header class="mz-detalle__cabecera">
+                <div class="mz-titulo-grupo">
+                    <span class="mz-icono-caja" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z" />
+                        </svg>
+                    </span>
+                    <h2 class="mz-panel__titulo">Detalle de la Manzana</h2>
+                </div>
+                <span id="mz-det-badge" class="mz-badge" hidden></span>
+            </header>
+
+            <p id="mz-det-vacio" class="mz-detalle__vacio">
+                Seleccione un registro para visualizar su detalle.
+            </p>
+
+            <p id="mz-det-cargando" class="mz-detalle__cargando" role="status" hidden>
+                <span class="mz-spinner" aria-hidden="true"></span>Cargando detalle…
+            </p>
+
+            <div id="mz-det-contenido" class="mz-detalle__contenido" hidden>
+                <dl class="mz-detalle__lista">
+                    <div class="mz-detalle__fila">
+                        <dt>
+                            <span class="mz-detalle__icono" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z" /></svg>
+                            </span>
+                            IdManzana
+                        </dt>
+                        <dd id="mz-det-id"></dd>
+                    </div>
+                    <div class="mz-detalle__fila">
+                        <dt>
+                            <span class="mz-detalle__icono" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z" /></svg>
+                            </span>
+                            IdOrigen
+                        </dt>
+                        <dd id="mz-det-origen"></dd>
+                    </div>
+                    <div class="mz-detalle__fila">
+                        <dt>
+                            <span class="mz-detalle__icono" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z" /></svg>
+                            </span>
+                            UV_MZA
+                        </dt>
+                        <dd id="mz-det-uvmza"></dd>
+                    </div>
+                    <div class="mz-detalle__fila">
+                        <dt>
+                            <span class="mz-detalle__icono" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false"><path d="M12 3 2 8l10 5 10-5-10-5Zm0 7.9L5.6 7.7 12 4.5l6.4 3.2L12 10.9ZM2 16l10 5 10-5-1.6-.8L12 19.1 3.6 15.2 2 16Zm0-4 10 5 10-5-1.6-.8L12 15.1 3.6 11.2 2 12Z" /></svg>
+                            </span>
+                            UV
+                        </dt>
+                        <dd id="mz-det-uv"></dd>
+                    </div>
+                    <div class="mz-detalle__fila">
+                        <dt>
+                            <span class="mz-detalle__icono" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false"><path d="M9 3 3 5.4v15.2L9 18l6 3 6-2.4V3.4L15 6 9 3Zm0 2.2 6 3v10.6l-6-3V5.2Z" /></svg>
+                            </span>
+                            MZA
+                        </dt>
+                        <dd id="mz-det-mza"></dd>
+                    </div>
+                </dl>
+
+                <section class="mz-seccion">
+                    <h3 class="mz-seccion__titulo">
+                        <span class="mz-icono-caja mz-icono-caja--mini" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false">
+                                <path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Zm0 2.2 6 2v11.6l-6-2V5.2Z" />
+                            </svg>
+                        </span>
+                        Ubicación de la manzana
+                    </h3>
+                    <div class="mz-mapa-envoltura">
+                        <div id="mz-mapa" class="mz-mapa" hidden
+                             aria-label="Ubicación de la manzana seleccionada"></div>
+                        <p id="mz-mapa-aviso" class="mz-mapa__aviso" role="status"></p>
+                    </div>
+                </section>
+            </div>
+        </section>
+    </div>
+
+    @* Aviso flotante para el resultado de la consulta. *@
+    <div id="mz-toast" class="mz-toast" role="status" aria-live="polite" hidden></div>
+</section>
+
+@section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/consultas/manzana.js" asp-append-version="true"></script>
+    <script>
+        @* Misma convención que /Usuarios, /Roles, /Bitacora y /Consultas/CodigoFijo: la página
+           protege la vista y, al validar la sesión, arranca el módulo. La API decide el acceso
+           real con el permiso dinámico sobre la opción de menú /Consultas/Manzana. *@
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Consultas/Manzana',
+            alValidar: function () { window.VisorSIG.consultaManzana.iniciar(); }
+        });
+    </script>
+}
+
+

@@ -28,7 +28,7 @@ public class ReportesController : Controller
 
     /// <summary>CU32 – Gestionar Reportes</summary>
     [HttpGet("/Reportes/Gestionar")]
-    public IActionResult Gestionar() => Proximamente("Gestionar Reportes", "/Reportes/Gestionar");
+    public IActionResult Gestionar() => View();
 
     private IActionResult Proximamente(string funcionalidad, string ruta) =>
         View("Proximamente", new PaginaProximamenteViewModel

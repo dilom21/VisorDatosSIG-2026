@@ -1,329 +1,561 @@
 @{
-    ViewData["Title"] = "Inicio - Plataforma Geoespacial Inteligente";
+    ViewData["Title"] = "Plataforma Geoespacial Inteligente - Santa Cruz de la Sierra";
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/home.css" />
+    <link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
 }
 
-<div class="home-v4" id="inicio">
-    <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-wrap">
-            <div class="hero-copy">
-                <div class="eyebrow">Inicio público para invitados y clientes</div>
-                <h1 id="hero-title">Plataforma <span class="accent">Geoespacial</span><br />Inteligente</h1>
-                <p class="hero-lead">
-                    Explora, consulta y comprende la información geográfica de Santa Cruz desde una plataforma
-                    clara, visual y preparada para transformar datos territoriales en mejores decisiones.
-                </p>
+<div class="home-portal" id="inicio">
+    <!-- =======================================================================
+         1. HERO DE ALTA AUTORIDAD TERRITORIAL
+         ======================================================================= -->
+    <section class="portal-hero" aria-labelledby="hero-title">
+        <div class="portal-container">
+            <div class="portal-hero__grid">
+                <div class="portal-hero__intro">
+                    <div class="portal-badge-live">
+                        <span class="badge-live-pulse" aria-hidden="true"></span>
+                        <span>Catastro Geoespacial Activo · Santa Cruz de la Sierra</span>
+                    </div>
 
-                <div class="hero-badges" aria-label="Características principales">
-                    <span>Web y móvil</span>
-                    <span>Cartografía inteligente</span>
-                    <span>Capas vectoriales integradas</span>
-                    <span>Visualización territorial</span>
+                    <h1 id="hero-title" class="portal-hero__title">
+                        Cartografía Inteligente y <span class="accent-color">Gestión Territorial</span>
+                    </h1>
+
+                    <p class="portal-hero__lead">
+                        Visualiza, fiscaliza y comprende la información predial y de servicios de Santa Cruz de la Sierra en un entorno geoespacial de alta precisión, preparado para transformar datos espaciales en decisiones operativas.
+                    </p>
+
+                    <div class="portal-hero__actions">
+                        <!-- Bloque para visitantes anónimos -->
+                        <div data-sesion-anonimo class="portal-btn-row">
+                            <a class="btn-portal btn-portal--primary" asp-controller="Cuenta" asp-action="Login">
+                                <span>Ingresar a la Plataforma</span>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M5 12h14M13 6l6 6-6 6" />
+                                </svg>
+                            </a>
+                            <a class="btn-portal btn-portal--secondary" href="#capas">
+                                <span>Explorar Capas y Datos</span>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </a>
+                        </div>
+
+                        <!-- Bloque para usuarios con sesión activa -->
+                        <div data-sesion-bloque hidden class="portal-btn-row">
+                            <div class="portal-user-welcome">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                <span>Sesión activa como: <strong data-sesion-nombre></strong></span>
+                            </div>
+                            <div class="portal-btn-row">
+                                <a class="btn-portal btn-portal--primary" asp-controller="Visor" asp-action="Index">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+                                        <line x1="9" y1="3" x2="9" y2="18" />
+                                        <line x1="15" y1="6" x2="15" y2="21" />
+                                    </svg>
+                                    <span>Abrir Visor Cartográfico</span>
+                                </a>
+                                <a class="btn-portal btn-portal--secondary" href="#capacidades">
+                                    <span>Ver Capacidades</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Métricas Cuantitativas Auditadas -->
+                    <div class="portal-metrics-bar" aria-label="Métricas territoriales de Santa Cruz">
+                        <div class="portal-metric-card">
+                            <span class="metric-number">15.280</span>
+                            <span class="metric-label">Lotes catastrales georreferenciados</span>
+                        </div>
+                        <div class="portal-metric-card">
+                            <span class="metric-number">863</span>
+                            <span class="metric-label">Manzanas urbanas delimitadas</span>
+                        </div>
+                        <div class="portal-metric-card">
+                            <span class="metric-number">578</span>
+                            <span class="metric-label">Ejes viales y anillos concéntricos</span>
+                        </div>
+                        <div class="portal-metric-card">
+                            <span class="metric-number">6.261</span>
+                            <span class="metric-label">Acometidas con semáforo operativo</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="hero-actions">
+                <!-- Showcase Visual Interactivo -->
+                <div class="portal-hero__showcase">
+                    <article class="portal-showcase-card">
+                        <div class="showcase-header">
+                            <div class="showcase-window-controls" aria-hidden="true">
+                                <span class="showcase-dot"></span>
+                                <span class="showcase-dot"></span>
+                                <span class="showcase-dot"></span>
+                            </div>
+                            <span class="showcase-header-title">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+                                Santa Cruz de la Sierra · SRID 4326
+                            </span>
+                            <span class="showcase-status-badge">En línea</span>
+                        </div>
+
+                        <div class="showcase-viewport">
+                            <img src="~/images/landing-page.jpg" alt="Visualización digital e infraestructura geoespacial de Santa Cruz de la Sierra" loading="lazy" />
+
+                            <div class="showcase-hud">
+                                <div class="showcase-hud-top">
+                                    <div class="showcase-layer-pill">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                                        <span>4 Capas Activas · Vista Topográfica</span>
+                                    </div>
+                                </div>
+
+                                <div class="showcase-hud-bottom">
+                                    <div class="showcase-inspect-box">
+                                        <div class="inspect-header">
+                                            <span class="inspect-badge">Ficha Predial Activa</span>
+                                            <span class="inspect-dot-green" title="Estado Normal" aria-hidden="true"></span>
+                                        </div>
+                                        <h2 class="inspect-title" style="font-size:0.88rem; margin:0 0 6px;">Lote Catastral UV-104 · Mz 18 · Lote 07</h2>
+                                        <div class="inspect-meta">
+                                            <span><strong>Superficie:</strong> 412.50 m²</span>
+                                            <span><strong>Uso:</strong> Residencial</span>
+                                            <span><strong>Servicio:</strong> Normal</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =======================================================================
+         2. EXPLORADOR MULTICAPA INTERACTIVO (#capas)
+         ======================================================================= -->
+    <section class="portal-section portal-section--alt" id="capas" aria-labelledby="capas-title">
+        <div class="portal-container">
+            <header class="portal-section-header">
+                <span class="portal-eyebrow">Estructura Cartográfica Normalizada</span>
+                <h2 id="capas-title" class="portal-section-title">Cada Capa Revela una Dimensión del Territorio</h2>
+                <p class="portal-section-desc">
+                    El modelo espacial de VisorDatosSIG integra cuatro niveles vectoriales independientes y superponibles, garantizando desde el diagnóstico de la trama urbana general hasta la inspección puntual de acometidas en campo.
+                </p>
+            </header>
+
+            <!-- Selector de Pestañas Interactivas -->
+            <div class="layers-tabs-nav" role="tablist" aria-label="Capas vectoriales">
+                <button type="button" class="tab-btn is-active" role="tab" aria-selected="true" data-layer-target="manzanas">
+                    <span class="tab-color-dot" style="background-color: #5d7867;"></span>
+                    <span>01 · Manzanas</span>
+                </button>
+                <button type="button" class="tab-btn" role="tab" aria-selected="false" data-layer-target="lotes">
+                    <span class="tab-color-dot" style="background-color: #3f6c88;"></span>
+                    <span>02 · Lotes</span>
+                </button>
+                <button type="button" class="tab-btn" role="tab" aria-selected="false" data-layer-target="vias">
+                    <span class="tab-color-dot" style="background-color: #cf8057;"></span>
+                    <span>03 · Vías</span>
+                </button>
+                <button type="button" class="tab-btn" role="tab" aria-selected="false" data-layer-target="codigos">
+                    <span class="tab-color-dot" style="background-color: #c98a00;"></span>
+                    <span>04 · Códigos Fijos</span>
+                </button>
+            </div>
+
+            <!-- Contenido Dinámico de Capas -->
+            <div class="layers-tab-content">
+                <!-- Panel 1: Manzanas -->
+                <article class="layer-panel-view is-active" id="panel-manzanas">
+                    <div class="layer-panel-details">
+                        <span class="layer-panel-tag tag-manzanas">Polígonos Urbanos · 863 Registros</span>
+                        <h3 class="layer-panel-title">Morfología Urbana y Unidades Vecinales</h3>
+                        <p class="layer-panel-lead">
+                            Delimita los bloques urbanos que articulan distritos y Unidades Vecinales (UV) en Santa Cruz de la Sierra. Esencial para la planificación macro, cálculo de densidades habitacionales y zonificación reglamentaria.
+                        </p>
+                        <div class="layer-specs-grid">
+                            <div class="layer-spec-item">
+                                <strong>Geometría</strong>
+                                <span>MultiPolygon (PostGIS)</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Unidades</strong>
+                                <span>863 Manzanas</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Atributos Clave</strong>
+                                <span>UV, Nro Manzana, Área, Perímetro</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Simbología</strong>
+                                <span>Contorno Verde Bosque (#5d7867)</span>
+                            </div>
+                        </div>
+                        <div>
+                            <a class="btn-portal btn-portal--secondary" asp-controller="Visor" asp-action="Index">Ver en el visor cartográfico →</a>
+                        </div>
+                    </div>
+                    <div class="layer-panel-visual">
+                        <img src="~/images/capa-manzanas.jpg" alt="Delimitación de Manzanas y Unidades Vecinales en Santa Cruz" loading="lazy" />
+                    </div>
+                </article>
+
+                <!-- Panel 2: Lotes -->
+                <article class="layer-panel-view" id="panel-lotes">
+                    <div class="layer-panel-details">
+                        <span class="layer-panel-tag tag-lotes">Parcelas Catastrales · 15.280 Registros</span>
+                        <h3 class="layer-panel-title">Identificación Predial y Catastro Individual</h3>
+                        <p class="layer-panel-lead">
+                            Cada predio cuenta con codificación catastral única basada en Unidad Vecinal, Manzana y Número de Lote. Permite la verificación geométrica de superficie, linderos y titularidad técnica para trámites y avalúos.
+                        </p>
+                        <div class="layer-specs-grid">
+                            <div class="layer-spec-item">
+                                <strong>Geometría</strong>
+                                <span>Polygon (WGS84 / SRID 4326)</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Cobertura</strong>
+                                <span>15.280 Parcelas</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Búsqueda</strong>
+                                <span>Predictiva por código UV-Mz-Lote</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Simbología</strong>
+                                <span>Línea Cobalto (#3f6c88)</span>
+                            </div>
+                        </div>
+                        <div>
+                            <a class="btn-portal btn-portal--secondary" asp-controller="Visor" asp-action="Index">Consultar Lotes en el visor →</a>
+                        </div>
+                    </div>
+                    <div class="layer-panel-visual">
+                        <img src="~/images/capa-lotes.jpg" alt="Malla de Lotes Catastrales con identificación UV-Manzana-Lote" loading="lazy" />
+                    </div>
+                </article>
+
+                <!-- Panel 3: Vías -->
+                <article class="layer-panel-view" id="panel-vias">
+                    <div class="layer-panel-details">
+                        <span class="layer-panel-tag tag-vias">Red Lineal · 578 Ejes Viales</span>
+                        <h3 class="layer-panel-title">Red Vial, Anillos y Radiales de la Ciudad</h3>
+                        <p class="layer-panel-lead">
+                            Modela la estructura concéntrica característica de Santa Cruz de la Sierra: anillos perimetrales, avenidas radiales estructurantes y calles secundarias. Facilita el análisis de accesibilidad y rutas de inspección.
+                        </p>
+                        <div class="layer-specs-grid">
+                            <div class="layer-spec-item">
+                                <strong>Geometría</strong>
+                                <span>LineString / MultiLineString</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Total Ejes</strong>
+                                <span>578 Vías</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Jerarquía</strong>
+                                <span>Anillo, Radial, Avenida, Calle</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Simbología</strong>
+                                <span>Trazo Terracota Cálido (#cf8057)</span>
+                            </div>
+                        </div>
+                        <div>
+                            <a class="btn-portal btn-portal--secondary" asp-controller="Visor" asp-action="Index">Explorar Red Vial →</a>
+                        </div>
+                    </div>
+                    <div class="layer-panel-visual">
+                        <img src="~/images/capa-vias.jpg" alt="Red Vial, Anillos Concéntricos y Radiales de Santa Cruz" loading="lazy" />
+                    </div>
+                </article>
+
+                <!-- Panel 4: Códigos Fijos -->
+                <article class="layer-panel-view" id="panel-codigos">
+                    <div class="layer-panel-details">
+                        <span class="layer-panel-tag tag-codigos">Puntos de Servicio · 6.261 Acometidas</span>
+                        <h3 class="layer-panel-title">Semaforización de Acometidas y Fiscalización</h3>
+                        <p class="layer-panel-lead">
+                            Puntos georreferenciados de suministro con clasificación operativa en tiempo real. Apoya las brigadas de corte, inspección técnica y regularización mediante semáforo de colores normalizado.
+                        </p>
+                        <div class="layer-specs-grid">
+                            <div class="layer-spec-item">
+                                <strong>Geometría</strong>
+                                <span>Point (Georreferenciado al medidor)</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Acometidas</strong>
+                                <span>6.261 Códigos Fijos</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Semáforo</strong>
+                                <span>Normal, Para Corte, Cortado, Bajas</span>
+                            </div>
+                            <div class="layer-spec-item">
+                                <strong>Identificación</strong>
+                                <span>Consulta al clic con datos de servicio</span>
+                            </div>
+                        </div>
+                        <div>
+                            <a class="btn-portal btn-portal--secondary" asp-controller="Visor" asp-action="Index">Ver Semáforo de Servicios →</a>
+                        </div>
+                    </div>
+                    <div class="layer-panel-visual">
+                        <img src="~/images/capa-codigos.jpg" alt="Acometidas y Códigos Fijos con semáforo operativo" loading="lazy" />
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- =======================================================================
+         3. CAPACIDADES GEOESPACIALES Y GOBERNANZA (#capacidades)
+         ======================================================================= -->
+    <section class="portal-section" id="capacidades" aria-labelledby="capacidades-title">
+        <div class="portal-container">
+            <header class="portal-section-header">
+                <span class="portal-eyebrow">Potencia Operativa y Gobernanza</span>
+                <h2 id="capacidades-title" class="portal-section-title">Herramientas Especializadas para la Gestión Urbana</h2>
+                <p class="portal-section-desc">
+                    Diseñado para responder a los flujos reales de inspectores de campo, analistas catastrales y directivos municipales.
+                </p>
+            </header>
+
+            <div class="capabilities-grid">
+                <!-- Tarjeta 1: Búsqueda Predictiva -->
+                <article class="capability-card">
+                    <div class="capability-icon-wrap icon-wrap--green" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
+                    <span class="capability-num">01 · Búsqueda Espacial</span>
+                    <h3 class="capability-title">Localización Predictiva Multicapa</h3>
+                    <p class="capability-desc">
+                        Encuentra instantáneamente lotes por nomenclatura UV-Manzana-Lote, nombres de avenidas o códigos de servicio con zoom automático y resaltado poligonal en pantalla.
+                    </p>
+                </article>
+
+                <!-- Tarjeta 2: Semaforización Operativa -->
+                <article class="capability-card">
+                    <div class="capability-icon-wrap icon-wrap--amber" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <span class="capability-num">02 · Operaciones</span>
+                    <h3 class="capability-title">Semaforización de Acometidas</h3>
+                    <p class="capability-desc">
+                        Monitorea el estado operativo de los suministros (Normal, Para Corte, Cortado y Bajas) para optimizar cuadrillas en terreno y control de cartera de servicios.
+                    </p>
+                </article>
+
+                <!-- Tarjeta 3: Bitácora y Auditoría -->
+                <article class="capability-card">
+                    <div class="capability-icon-wrap icon-wrap--blue" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <span class="capability-num">03 · Seguridad</span>
+                    <h3 class="capability-title">Auditoría y Trazabilidad Transaccional</h3>
+                    <p class="capability-desc">
+                        Registro inmutable de bitácora para cada consulta espacial, modificación de roles y gestión de usuarios, garantizando cumplimiento y gobernanza de datos públicos.
+                    </p>
+                </article>
+
+                <!-- Tarjeta 4: Reportería Oficial -->
+                <article class="capability-card">
+                    <div class="capability-icon-wrap icon-wrap--orange" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <span class="capability-num">04 · Reportería</span>
+                    <h3 class="capability-title">Generación y Exportación Certificada</h3>
+                    <p class="capability-desc">
+                        Módulo con previsualización unificada y exportación directa en formatos oficiales: planillas Excel (ClosedXML), documentos PDF vectoriales (QuestPDF), CSV y TXT.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- =======================================================================
+         4. EXPERIENCIA MÓVIL Y DE CAMPO (#movil)
+         ======================================================================= -->
+    <section class="portal-section portal-section--alt" id="movil" aria-labelledby="movil-title">
+        <div class="portal-container">
+            <div class="mobile-experience-wrap">
+                <div class="mobile-content-box">
+                    <span class="portal-eyebrow">Operaciones en Campo</span>
+                    <h2 id="movil-title">El Catastro Acompaña a las Cuadrillas en Terreno</h2>
+                    <p>
+                        Diseñado para operar con fluidez en tablets y smartphones. Las cuadrillas de inspección pueden verificar linderos, consultar acometidas y validar el estado de corte directamente en el lugar de los hechos.
+                    </p>
+
+                    <ul class="mobile-benefits-list">
+                        <li>
+                            <span class="check-circle" aria-hidden="true">✓</span>
+                            <span><strong>Navegación táctil de alta respuesta:</strong> Control gestual de zoom, paneo y capas optimizado para pantallas táctiles.</span>
+                        </li>
+                        <li>
+                            <span class="check-circle" aria-hidden="true">✓</span>
+                            <span><strong>Consulta rápida al clic:</strong> Identificación inmediata de cualquier predio o medidor con ficha resumida.</span>
+                        </li>
+                        <li>
+                            <span class="check-circle" aria-hidden="true">✓</span>
+                            <span><strong>Consumo eficiente de datos:</strong> Carga vectorial optimizada que garantiza rapidez incluso en redes móviles de campo.</span>
+                        </li>
+                    </ul>
+
+                    <div class="portal-btn-row">
+                        <a class="btn-portal btn-portal--primary" asp-controller="Visor" asp-action="Index">Probar Visor Adaptable</a>
+                    </div>
+                </div>
+
+                <!-- Mockup Móvil con Interfaz Real -->
+                <div class="modern-phone-wrapper" aria-label="Simulador de experiencia móvil">
+                    <div class="modern-phone-frame">
+                        <div class="phone-island" aria-hidden="true"></div>
+                        <div class="phone-screen-content">
+                            <img src="~/images/visor-movil.jpg" alt="Interfaz del VisorDatosSIG en móvil con búsqueda predictiva y ficha predial" class="phone-map-bg" loading="lazy" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =======================================================================
+         5. BANNER INSTITUCIONAL DE ACCESO (#acceso)
+         ======================================================================= -->
+    <div class="portal-container" id="acceso">
+        <section class="portal-cta-banner" aria-labelledby="cta-title">
+            <div class="cta-banner-content">
+                <h2 id="cta-title" class="cta-banner-title">Comienza a Explorar la Cartografía Territorial</h2>
+                <p class="cta-banner-lead">
+                    Ingresa a VisorDatosSIG y convierte la información espacial en una herramienta precisa para la planificación, supervisión y toma de decisiones en Santa Cruz de la Sierra.
+                </p>
+
+                <div class="cta-banner-buttons">
                     <div data-sesion-anonimo>
-                        <a class="btn btn-primary" asp-controller="Cuenta" asp-action="Login">
-                            <span>Acceder a la plataforma</span>
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M5 12h14M13 6l6 6-6 6" />
-                            </svg>
-                        </a>
+                        <a class="btn-portal btn-cta-light" asp-controller="Cuenta" asp-action="Login">Iniciar Sesión</a>
                     </div>
-
                     <div data-sesion-bloque hidden>
-                        <p class="hero-saludo">Sesión iniciada como: <strong data-sesion-nombre></strong></p>
-                        <a class="btn btn-primary" asp-controller="Visor" asp-action="Index">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" />
-                                <path d="M9 3v15M15 6v15" />
-                            </svg>
-                            <span>Abrir visor cartográfico</span>
-                        </a>
+                        <a class="btn-portal btn-cta-light" asp-controller="Visor" asp-action="Index">Ir al Visor Cartográfico</a>
                     </div>
-
-                    <a class="btn btn-secondary" href="#capas">Explorar capacidades</a>
-                    <a class="btn btn-secondary" href="#arquitectura">Ver arquitectura</a>
+                    <a class="btn-portal btn-cta-ghost" href="#inicio">Volver al Inicio</a>
                 </div>
 
-                <div class="hero-metrics">
-                    <article class="metric">
-                        <strong>4</strong>
-                        <span>capas vectoriales listas para consultar y analizar.</span>
-                    </article>
-                    <article class="metric">
-                        <strong>24/7</strong>
-                        <span>acceso desde escritorio, tablet o dispositivo móvil.</span>
-                    </article>
-                    <article class="metric">
-                        <strong>1</strong>
-                        <span>visión integrada para comprender mejor el territorio.</span>
-                    </article>
+                <div class="cta-trust-strip">
+                    <span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        Base de Datos Espacial PostGIS
+                    </span>
+                    <span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        Estándares OGC & WGS84
+                    </span>
+                    <span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        Control de Acceso Basado en Roles (RBAC)
+                    </span>
+                    <span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        Santa Cruz de la Sierra, Bolivia
+                    </span>
                 </div>
             </div>
+        </section>
+    </div>
 
-            <figure class="hero-visual">
-                <img src="~/images/scrz-solo.png"
-                     alt="Representación cartográfica de Santa Cruz de la Sierra organizada por capas" />
-                <figcaption>Santa Cruz de la Sierra · información organizada por capas</figcaption>
-            </figure>
-        </div>
-    </section>
-
-    <section class="section" id="vision" aria-labelledby="vision-title">
-        <div class="section-header">
-            <div>
-                <div class="eyebrow">Visión territorial</div>
-                <h2 id="vision-title">Del país a la ciudad, sin perder el contexto</h2>
-            </div>
-            <p>
-                VisorDatosSIG conecta la escala nacional con el detalle urbano para presentar la información
-                geográfica de manera ordenada, comprensible y útil.
-            </p>
-        </div>
-
-        <div class="grid-2 vision-grid">
-            <article class="card card--content">
-                <div class="card-body">
-                    <span class="section-number">01 · Una lectura más clara</span>
-                    <h3>Información territorial que se entiende</h3>
-                    <p>
-                        La plataforma reúne organización territorial, cartografía urbana y análisis espacial
-                        en una experiencia pensada tanto para especialistas como para nuevos usuarios.
-                    </p>
-                    <div class="mini-features">
-                        <div>
-                            <strong>Lectura simple</strong>
-                            <span>Datos complejos presentados con una jerarquía visual clara.</span>
-                        </div>
-                        <div>
-                            <strong>Escala conectada</strong>
-                            <span>Del contexto general al detalle de cada elemento urbano.</span>
-                        </div>
-                        <div>
-                            <strong>Consulta visual</strong>
-                            <span>La información se descubre directamente sobre el mapa.</span>
-                        </div>
-                        <div>
-                            <strong>Acceso flexible</strong>
-                            <span>Una experiencia consistente en escritorio, tablet y móvil.</span>
-                        </div>
-                    </div>
-                </div>
-            </article>
-
-            <article class="card card--territory">
-                <div class="card-img">
-                    <img src="~/images/bolivia-scrz.png"
-                         alt="Mapa de Bolivia conectado con la cartografía urbana de Santa Cruz" />
-                </div>
-                <div class="card-body">
-                    <span class="section-number">02 · Escala territorial</span>
-                    <h3>Bolivia y Santa Cruz en una misma narrativa</h3>
-                    <p>
-                        Una transición visual que ubica la ciudad dentro del país y acerca la lectura hasta su
-                        estructura urbana, sus redes y sus unidades catastrales.
+    <!-- =======================================================================
+         6. FOOTER EDITORIAL INSTITUCIONAL
+         ======================================================================= -->
+    <footer class="portal-footer" role="contentinfo">
+        <div class="portal-container">
+            <div class="portal-footer-grid">
+                <div>
+                    <h3 class="footer-brand-title">VisorDatosSIG · Santa Cruz</h3>
+                    <p class="footer-brand-desc">
+                        Plataforma Geoespacial Inteligente para la gestión, migración y visualización del catastro territorial y redes de servicio en Santa Cruz de la Sierra. Diseñada con estándares de alta precisión cartográfica y rendimiento institucional.
                     </p>
                 </div>
-            </article>
-        </div>
-    </section>
-
-    <section class="section" id="capas" aria-labelledby="layers-title">
-        <div class="section-header">
-            <div>
-                <div class="eyebrow">Capas vectoriales integradas</div>
-                <h2 id="layers-title">Cada capa revela una parte del territorio</h2>
-            </div>
-            <p>
-                Activa la información que necesitas y construye una lectura precisa de la ciudad sin perder
-                claridad en el mapa.
-            </p>
-        </div>
-
-        <div class="layers-panel">
-            <div class="layers-panel__intro">
-                <span class="section-number">03 · Estructura cartográfica multicapa</span>
-                <h3>Cuatro niveles integrados para explorar Santa Cruz</h3>
-                <p>
-                    El modelo espacial del sistema se fundamenta en cuatro capas vectoriales normalizadas: delimitación física, división predial, conectividad vial y acometidas de servicio. Cada nivel opera de forma autónoma o superpuesta para un diagnóstico territorial preciso.
-                </p>
-            </div>
-            <div class="layers">
-                <article class="layer-item layer-item--green">
-                    <div class="layer-dot" aria-hidden="true"></div>
-                    <span>01 · Polígonos</span>
-                    <h4>Manzanas</h4>
-                    <p>863 unidades que delimitan la morfología urbana, distritos y unidades vecinales (UV). Esenciales para la zonificación, análisis de densidad y planificación territorial.</p>
-                </article>
-                <article class="layer-item layer-item--blue">
-                    <div class="layer-dot" aria-hidden="true"></div>
-                    <span>02 · Parcelas</span>
-                    <h4>Lotes</h4>
-                    <p>15.280 parcelas catastrales con identificación predial directa (UV, Manzana y Nro. de Lote). Permite la consulta precisa de superficie, linderos y catastro individual.</p>
-                </article>
-                <article class="layer-item layer-item--orange">
-                    <div class="layer-dot" aria-hidden="true"></div>
-                    <span>03 · Líneas</span>
-                    <h4>Vías</h4>
-                    <p>578 ejes viales estructurados por anillos concéntricos, radiales y vías secundarias. Modela la red de movilidad urbana, accesibilidad y conectividad de la ciudad.</p>
-                </article>
-                <article class="layer-item layer-item--sky">
-                    <div class="layer-dot" aria-hidden="true"></div>
-                    <span>04 · Puntos</span>
-                    <h4>Códigos Fijos</h4>
-                    <p>6.261 acometidas georreferenciadas con semáforo de estado operativo (Normal, Para Corte, Cortado, Baja). Soporta identificación al clic y consulta de atributos en campo.</p>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <section class="section" id="arquitectura" aria-labelledby="architecture-title">
-        <div class="section-header">
-            <div>
-                <div class="eyebrow">Arquitectura de solución</div>
-                <h2 id="architecture-title">Una base sólida y preparada para crecer</h2>
-            </div>
-            <p>
-                La experiencia visual se sostiene sobre una solución organizada por responsabilidades, fácil de
-                mantener y lista para incorporar nuevas capacidades geográficas.
-            </p>
-        </div>
-
-        <div class="architecture">
-            <div class="arch-grid">
-                <article class="arch-step">
-                    <span class="step-badge">1</span>
-                    <h3>Presentación</h3>
-                    <p>Interfaz web responsive para consultar el territorio desde cualquier dispositivo.</p>
-                </article>
-                <article class="arch-step">
-                    <span class="step-badge">2</span>
-                    <h3>Servicios</h3>
-                    <p>Consultas, filtros y servicios que conectan la experiencia con los datos.</p>
-                </article>
-                <article class="arch-step">
-                    <span class="step-badge">3</span>
-                    <h3>Dominio geoespacial</h3>
-                    <p>Capas, atributos, relaciones espaciales y reglas del territorio.</p>
-                </article>
-                <article class="arch-step">
-                    <span class="step-badge">4</span>
-                    <h3>Infraestructura</h3>
-                    <p>Persistencia y administración segura de la información geográfica.</p>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <section class="home-mobile" id="movil" aria-labelledby="mobile-title">
-        <div class="home-mobile__copy">
-            <span class="home-mobile__pill">Experiencia adaptable</span>
-            <h2 id="mobile-title">El visor también va contigo.</h2>
-            <p>
-                Consulta el territorio desde el móvil con la misma información del sistema: mapa, búsqueda,
-                identificación y control de capas en una interfaz adaptada a pantallas pequeñas.
-            </p>
-            <ul class="home-mobile__features">
-                <li><span aria-hidden="true">✓</span> Navegación cartográfica táctil</li>
-                <li><span aria-hidden="true">✓</span> Capas vectoriales siempre disponibles</li>
-                <li><span aria-hidden="true">✓</span> Búsqueda e identificación en campo</li>
-            </ul>
-            <div class="home-mobile__availability">
-                <span aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3" /><path d="M10 18h4" /></svg>
-                </span>
-                <div><strong>Diseño responsive</strong><small>Web · tablet · móvil</small></div>
-            </div>
-        </div>
-
-        <div class="home-phone-wrap" aria-label="Vista móvil del sistema VisorDatosSIG">
-            <div class="home-phone-glow" aria-hidden="true"></div>
-            <div class="home-phone">
-                <div class="home-phone__screen">
-                    <div class="home-phone__island" aria-hidden="true"></div>
-                    <div class="home-phone__status">
-                        <span>9:41</span>
-                        <span class="home-phone__signals" aria-hidden="true">
-                            <i></i><i></i><i></i><b></b>
-                            <svg viewBox="0 0 24 24"><path d="M3 9a13 13 0 0 1 18 0M6 12a9 9 0 0 1 12 0M9.5 15.5a4 4 0 0 1 5 0" /><circle cx="12" cy="19" r="1" /></svg>
-                        </span>
-                    </div>
-                    <div class="home-phone__appbar">
-                        <span class="home-phone__logo" aria-hidden="true">
-                            <svg viewBox="0 0 24 24"><path d="M12 21s6-5 6-11a6 6 0 1 0-12 0c0 6 6 11 6 11Z" /><circle cx="12" cy="10" r="2" /></svg>
-                        </span>
-                        <span><strong>VisorDatosSIG</strong><small>Visor cartográfico</small></span>
-                        <button type="button" aria-label="Abrir menú" tabindex="-1"><i></i><i></i><i></i></button>
-                    </div>
-                    <div class="home-phone__map">
-                        <div class="home-phone__search">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
-                            <span>Buscar lote, vía o código</span>
-                        </div>
-                        <div class="home-phone__zoom" aria-hidden="true"><span>+</span><span>−</span></div>
-                        <span class="home-phone__marker home-phone__marker--one" aria-hidden="true"></span>
-                        <span class="home-phone__marker home-phone__marker--two" aria-hidden="true"></span>
-                        <span class="home-phone__marker home-phone__marker--three" aria-hidden="true"></span>
-                        <div class="home-phone__location" aria-hidden="true">
-                            <svg viewBox="0 0 24 24"><path d="m12 2 7 19-7-4-7 4 7-19Z" /></svg>
-                        </div>
-                    </div>
-                    <div class="home-phone__sheet">
-                        <span class="home-phone__handle" aria-hidden="true"></span>
-                        <div class="home-phone__sheet-title">
-                            <div><strong>Capas del mapa</strong><small>3 de 4 visibles</small></div>
-                            <span aria-hidden="true">⌃</span>
-                        </div>
-                        <div class="home-phone__layers">
-                            <span><i class="is-block"></i>Manzanas<b class="is-on"></b></span>
-                            <span><i class="is-lot"></i>Lotes<b></b></span>
-                            <span><i class="is-road"></i>Vías<b class="is-on"></b></span>
-                            <span><i class="is-point"></i>Códigos fijos<b class="is-on"></b></span>
-                        </div>
-                    </div>
-                    <span class="home-phone__homebar" aria-hidden="true"></span>
+                <div class="footer-nav-col">
+                    <h4>Estructura Territorial</h4>
+                    <ul class="footer-links-list">
+                        <li><a href="#capas">Manzanas y Unidades Vecinales</a></li>
+                        <li><a href="#capas">Lotes y Parcelas Catastrales</a></li>
+                        <li><a href="#capas">Red Vial y Anillos Concéntricos</a></li>
+                        <li><a href="#capas">Acometidas y Códigos Fijos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-nav-col">
+                    <h4>Plataforma & Enlaces</h4>
+                    <ul class="footer-links-list">
+                        <li><a asp-controller="Visor" asp-action="Index">Visor Cartográfico</a></li>
+                        <li><a href="#capacidades">Capacidades Geoespaciales</a></li>
+                        <li><a href="#movil">Operaciones en Campo</a></li>
+                        <li><a asp-controller="Cuenta" asp-action="Login">Acceso de Funcionarios</a></li>
+                    </ul>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <section class="cta-banner" id="contacto">
-        <div>
-            <h3>Explora Santa Cruz con una visión más clara</h3>
-            <p>Accede al visor y convierte la información geográfica en una herramienta útil para comprender y decidir.</p>
-        </div>
-        <div class="cta-actions">
-            <div data-sesion-anonimo>
-                <a class="btn btn-light" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
-            </div>
-            <div data-sesion-bloque hidden>
-                <a class="btn btn-light" asp-controller="Visor" asp-action="Index">Ir al visor cartográfico</a>
-            </div>
-            <a class="btn btn-ghost" href="#inicio">Volver al inicio</a>
-        </div>
-    </section>
-
-    <footer>
-        <div class="footer-box">
-            <div class="footer-legal">
-                <strong>© 2026 VisorDatosSIG · Todos los derechos reservados.</strong>
-                <p>Plataforma Geoespacial Inteligente para la gestión, migración y visualización del catastro territorial de Santa Cruz de la Sierra. La información cartográfica y alfanumérica se presenta con fines de planificación y consulta técnica territorial.</p>
-                <div class="footer-links">
-                    <a href="#vision">Visión territorial</a> ·
-                    <a href="#capas">Capas vectoriales</a> ·
-                    <a href="#arquitectura">Arquitectura</a> ·
-                    <span>Términos de servicio</span> ·
-                    <span>Política de privacidad</span> ·
-                    <span>Gobernanza de datos espaciales</span>
-                </div>
-            </div>
-            <div class="footer-meta">
-                <span>Versión 2026 Editorial · Santa Cruz de la Sierra, Bolivia</span>
+            <div class="portal-footer-bottom">
+                <span>© 2026 VisorDatosSIG · Todos los derechos reservados. Santa Cruz de la Sierra, Bolivia.</span>
+                <span>Gobernanza e Infraestructura de Datos Espaciales (IDE)</span>
             </div>
         </div>
     </footer>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Manejador de Tabs del Explorador de Capas
+            const tabButtons = document.querySelectorAll('.layers-tabs-nav .tab-btn');
+            const panelViews = document.querySelectorAll('.layers-tab-content .layer-panel-view');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const targetId = 'panel-' + this.getAttribute('data-layer-target');
+
+                    // Desactivar todos los botones
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('is-active');
+                        btn.setAttribute('aria-selected', 'false');
+                    });
+
+                    // Activar el botón seleccionado
+                    this.classList.add('is-active');
+                    this.setAttribute('aria-selected', 'true');
+
+                    // Ocultar y mostrar paneles
+                    panelViews.forEach(panel => {
+                        if (panel.id === targetId) {
+                            panel.classList.add('is-active');
+                        } else {
+                            panel.classList.remove('is-active');
+                        }
+                    });
+                });
+            });
+
+            // Desplazamiento suave para enlaces ancla internos
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const targetId = this.getAttribute('href');
+                    if (targetId && targetId !== '#') {
+                        const targetElem = document.querySelector(targetId);
+                        if (targetElem) {
+                            e.preventDefault();
+                            targetElem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

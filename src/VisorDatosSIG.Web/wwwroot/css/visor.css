@@ -180,7 +180,7 @@ a:hover {
     z-index: 500;
     background-color: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
-    box-shadow: var(--shadow-sm);
+    padding-top: max(0px, env(safe-area-inset-top, 0px));
 }
 
 .app-header__inner {
@@ -192,6 +192,92 @@ a:hover {
     min-height: var(--header-height);
     margin: 0 auto;
     padding: var(--space-2) var(--space-5);
+}
+
+@media (max-width: 768px) {
+    .app-header {
+        padding-top: max(6px, env(safe-area-inset-top, 0px));
+    }
+
+    .app-header__inner {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        row-gap: 8px;
+        column-gap: 12px;
+        align-items: center;
+        padding: 8px 16px 10px;
+        min-height: auto;
+    }
+
+    .brand {
+        grid-column: 1;
+        grid-row: 1;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .brand__mark {
+        width: 32px;
+        height: 32px;
+    }
+
+    .brand__logo-img {
+        width: 30px;
+        height: 30px;
+    }
+
+    .brand__title {
+        font-size: 0.94rem;
+        white-space: nowrap;
+    }
+
+    .brand__subtitle {
+        font-size: 0.62rem;
+        white-space: nowrap;
+    }
+
+    .sesion {
+        grid-column: 2;
+        grid-row: 1;
+        margin-left: 0;
+    }
+
+    .btn-sesion {
+        min-height: 34px;
+        padding: 0 14px;
+        font-size: 0.82rem;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    .app-nav {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        padding-top: 6px;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .app-nav__link {
+        flex: 1;
+        text-align: center;
+        padding: 6px 10px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        border-radius: 8px;
+        background: var(--color-surface-alt);
+        color: var(--color-text);
+        text-decoration: none;
+    }
+
+    .app-nav__link:hover,
+    .app-nav__link:active {
+        background: var(--color-primary-soft);
+        color: var(--color-primary);
+    }
 }
 
 /* Marca: símbolo cartográfico + nombre. */
@@ -1531,7 +1617,7 @@ body.sesion-verificando .visor-map {
 .visor-btn-reabrir {
     position: absolute;
     top: 12px;
-    left: 56px;
+    left: 16px;
     z-index: 1000;
     display: inline-flex;
     align-items: center;
@@ -1540,20 +1626,36 @@ body.sesion-verificando .visor-map {
     font-size: 0.85rem;
     font-weight: 600;
     color: #ffffff;
-    background: linear-gradient(135deg, #0f8f83 0%, #0a6b62 100%);
+    background: linear-gradient(135deg, var(--color-primary, #183d37) 0%, var(--color-primary-dark, #102e2a) 100%);
     border: none;
     border-radius: 9999px;
-    box-shadow: 0 4px 14px rgba(15, 143, 131, 0.35), 0 2px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 14px rgba(24, 61, 55, 0.35), 0 2px 6px rgba(0, 0, 0, 0.15);
     cursor: pointer;
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
                 box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-                background 0.2s ease;
+                background 0.2s ease,
+                left 0.25s ease;
+}
+
+/* Cuando el sidebar de navegación está oculto, convivir armónicamente con el botón [ Menú ] (left: 12px..94px) */
+.app-shell--sidebar-oculto .visor-btn-reabrir {
+    left: 108px !important;
+}
+
+/* Cuando el sidebar está oculto y el panel de capas está abierto, dar espacio superior para no chocar con [ Menú ] */
+.app-shell--sidebar-oculto .visor-panel {
+    padding-top: 56px !important;
+}
+
+/* Cuando el panel de capas está oculto, asegurar que los controles de zoom de Leaflet bajen para no solaparse */
+.visor-shell--panel-oculto .leaflet-top.leaflet-left {
+    top: 58px !important;
 }
 
 .visor-btn-reabrir:hover {
-    background: linear-gradient(135deg, #12a597 0%, #0d7f74 100%);
+    background: linear-gradient(135deg, var(--color-primary-dark, #102e2a) 0%, var(--color-primary, #183d37) 100%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(15, 143, 131, 0.45), 0 3px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 18px rgba(24, 61, 55, 0.45), 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 
 .visor-btn-reabrir:active {
@@ -1710,4 +1812,33 @@ body.sesion-verificando .visor-map {
     .visor-leyenda__lista {
         grid-template-columns: 1fr;
     }
+}
+
+/* CU07 - Selector de mapa base */
+.visor-mapabase {
+    display: grid;
+    gap: 6px;
+    margin-top: 14px;
+}
+
+.visor-mapabase__label {
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.visor-mapabase__select {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid var(--color-border, #cbd5e1);
+    border-radius: 8px;
+    background: var(--color-surface, #ffffff);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.visor-mapabase__select:focus-visible {
+    outline: 2px solid var(--color-primary, #0d3b66);
+    outline-offset: 2px;
 }

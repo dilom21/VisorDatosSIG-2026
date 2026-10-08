@@ -101,6 +101,46 @@ public sealed class ReportesController : ControllerBase
     }
 
     /// <summary>
+    /// CU32: Genera la vista previa interactiva de una consulta de reporte antes de exportar.
+    /// Permitido para: Administrador y Supervisor (o Responsable de Migración para migraciones).
+    /// </summary>
+    [HttpPost("vista-previa")]
+    [ProducesResponseType(typeof(ReporteVistaPreviaDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ObtenerVistaPrevia(
+        [FromBody] SolicitudExportacionDto solicitud,
+        CancellationToken cancellationToken)
+    {
+        if (solicitud is null)
+        {
+            return BadRequest(new { mensaje = "La solicitud de vista previa es obligatoria." });
+        }
+
+        var tipo = solicitud.TipoReporte ?? string.Empty;
+        if (tipo.Equals("HistorialMigraciones", StringComparison.OrdinalIgnoreCase) ||
+            tipo.Equals("REP-OPR-02", StringComparison.OrdinalIgnoreCase) ||
+            tipo.Equals("Migraciones", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!User.IsInRole("Administrador") && !User.IsInRole("Responsable de Migración"))
+            {
+                return Forbid();
+            }
+        }
+        else
+        {
+            if (!User.IsInRole("Administrador") && !User.IsInRole("Supervisor"))
+            {
+                return Forbid();
+            }
+        }
+
+        var loginUsuario = ObtenerLoginActual();
+        var preview = await _reportesService.ObtenerVistaPreviaAsync(solicitud, loginUsuario, cancellationToken);
+        return Ok(preview);
+    }
+
+    /// <summary>
     /// CU32: Genera y exporta el reporte seleccionado en PDF, Excel (.xlsx), CSV o TXT.
     /// Cumple con la validación de autorización según el tipo de reporte solicitado (RN-REP-12).
     /// </summary>
@@ -117,8 +157,11 @@ public sealed class ReportesController : ControllerBase
             return BadRequest(new { mensaje = "La solicitud de exportación es obligatoria." });
         }
 
+        var tipo = solicitud.TipoReporte ?? string.Empty;
         // RN-REP-12: Si se solicita reporte de migraciones, verificar rol autorizado
-        if (solicitud.TipoReporte.Equals("HistorialMigraciones", StringComparison.OrdinalIgnoreCase))
+        if (tipo.Equals("HistorialMigraciones", StringComparison.OrdinalIgnoreCase) ||
+            tipo.Equals("REP-OPR-02", StringComparison.OrdinalIgnoreCase) ||
+            tipo.Equals("Migraciones", StringComparison.OrdinalIgnoreCase))
         {
             if (!User.IsInRole("Administrador") && !User.IsInRole("Responsable de Migración"))
             {

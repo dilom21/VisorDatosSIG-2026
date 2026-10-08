@@ -442,34 +442,45 @@ body:has(.login-split) .app-main {
     }
 
     body.login-page-fullscreen .app-main {
-        height: auto;
-        min-height: 100vh;
-        overflow: visible;
+        height: 100dvh;
+        min-height: 100dvh;
+        overflow: hidden;
     }
 
     .login-split {
         flex-direction: column;
-        height: auto;
-        min-height: 100vh;
+        height: 100dvh;
+        min-height: 100dvh;
+        overflow: hidden;
     }
 
     .login-split__visual {
         flex: 0 0 auto;
         width: 100%;
-        height: 300px;
+        height: 140px;
+        transition: opacity 160ms ease;
     }
 
     .login-split__back {
-        top: 20px;
-        left: 20px;
+        top: 14px;
+        left: 14px;
+        padding: 6px 14px;
+        font-size: 0.8rem;
     }
 
     .login-split__overlay {
-        padding: 24px 20px;
+        padding: 16px 14px 12px;
+    }
+
+    .login-split__badge {
+        padding: 3px 8px;
+        font-size: 0.65rem;
+        margin-bottom: 4px;
     }
 
     .login-split__hero-title {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+        margin: 0;
     }
 
     .login-split__hero-desc {
@@ -479,16 +490,69 @@ body:has(.login-split) .app-main {
     .login-split__form-container {
         flex: 1 1 auto;
         width: 100%;
-        height: auto;
-        padding: 36px 20px 48px;
+        height: 100%;
+        padding: 24px 20px 36px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-padding-bottom: 40px;
     }
 
     .login-split__form-box {
         max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .login-split__header {
+        margin-bottom: 20px;
+    }
+
+    .login-split__brand-inline {
+        margin-bottom: 12px;
     }
 
     .login-split__headline {
-        font-size: 1.85rem;
+        font-size: 1.6rem;
+        margin-bottom: 6px;
+    }
+
+    .login-split__subheadline {
+        font-size: 0.86rem;
+    }
+
+    .login-split__input {
+        font-size: 16px !important;
+    }
+
+    /* Colapsar banner al enfocar campos en pantalla pequeña */
+    body.login-teclado-activo .login-split__visual,
+    .login-split:has(.login-split__input:focus) .login-split__visual {
+        height: 0 !important;
+        min-height: 0 !important;
+        opacity: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.login-teclado-activo .login-split__header,
+    .login-split:has(.login-split__input:focus) .login-split__header {
+        margin-bottom: 12px;
+    }
+
+    body.login-teclado-activo .login-split__brand-inline,
+    .login-split:has(.login-split__input:focus) .login-split__brand-inline {
+        margin-bottom: 6px;
+    }
+
+    body.login-teclado-activo .login-split__headline,
+    .login-split:has(.login-split__input:focus) .login-split__headline {
+        font-size: 1.35rem;
+        margin-bottom: 2px;
+    }
+
+    body.login-teclado-activo .login-split__subheadline,
+    .login-split:has(.login-split__input:focus) .login-split__subheadline {
+        display: none;
     }
 }
 
@@ -501,11 +565,8 @@ body:has(.login-split) .app-main {
         max-width: 12ch;
     }
 
-    .login-split__visual {
-        height: 240px;
-    }
-    .login-split__headline {
-        font-size: 1.65rem;
+    .login-split__form-container {
+        padding: 18px 16px 28px;
     }
 }
 

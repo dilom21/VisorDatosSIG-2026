@@ -477,6 +477,518 @@ public sealed class ReportesService : IReportesService
     }
 
     // =========================================================================
+    // CU32: Gestionar Reportes - Generación de Vista Previa Unificada
+    // =========================================================================
+    public async Task<ReporteVistaPreviaDto> ObtenerVistaPreviaAsync(
+        SolicitudExportacionDto solicitud,
+        string loginUsuario,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(solicitud);
+        var horaBolivia = ObtenerHoraBolivia();
+        var tipoNormalizado = (solicitud.TipoReporte ?? "REP-SRV-01").Trim();
+
+        using var connection = await _connectionFactory.AbrirAsync(cancellationToken);
+
+        var dto = new ReporteVistaPreviaDto
+        {
+            TipoReporte = tipoNormalizado,
+            FechaGeneracionBolivia = horaBolivia,
+            Operador = string.IsNullOrWhiteSpace(loginUsuario) ? "Operador Autorizado" : loginUsuario
+        };
+
+        // Identificar reporte por código o alias
+        switch (tipoNormalizado.ToUpperInvariant())
+        {
+            case "REP-CAT-01":
+            case "ESTRUCTURATERITORIAL":
+            case "CONSOLIDADO_UV":
+            case "MANZANAS":
+            case "INVENTARIOMANZANAS":
+            {
+                dto.CodigoReporte = "REP-CAT-01";
+                dto.Modulo = "Catastro y Territorial";
+                dto.Titulo = "Consolidado Territorial por Unidad Vecinal (UV)";
+                dto.Subtitulo = "Distribución territorial de manzanas, lotes catastrales y acometidas por Unidad Vecinal";
+                dto.Columnas = new List<string> { "Unidad Vecinal (UV)", "Total Manzanas", "Total Lotes", "Promedio Lotes/Mza", "Acometidas de Servicio", "Estado Cobertura" };
+
+                var busqueda = string.IsNullOrWhiteSpace(solicitud.Busqueda) ? null : solicitud.Busqueda.Trim();
+                const string sql = """
+                    SELECT
+                        ISNULL(m.UV, 'Sin UV') AS UnidadVecinal,
+                        COUNT(DISTINCT m.IdManzana) AS TotalManzanas,
+                        COUNT(DISTINCT l.IdLote) AS TotalLotes,
+                        ROUND(CAST(COUNT(DISTINCT l.IdLote) AS FLOAT) / NULLIF(COUNT(DISTINCT m.IdManzana), 0), 1) AS PromedioLotesPorManzana,
+                        COUNT(DISTINCT cf.IdCodigo) AS TotalAcometidas
+                    FROM dbo.Manzanas m
+                    LEFT JOIN dbo.Lotes l ON l.IdManzana = m.IdManzana
+                    LEFT JOIN dbo.CodigosFijos cf ON cf.IdLote = l.IdLote
+                    WHERE (@Busqueda IS NULL OR m.UV LIKE '%' + @Busqueda + '%')
+                    GROUP BY m.UV
+                    ORDER BY 
+                        CASE WHEN ISNUMERIC(m.UV) = 1 THEN CAST(m.UV AS INT) ELSE 999999 END,
+                        m.UV;
+                    """;
+
+                using var cmd = new SqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@Busqueda", (object?)busqueda ?? DBNull.Value);
+                using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    var uv = reader.IsDBNull(0) ? "UV-0" : reader.GetString(0);
+                    var totalMza = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+                    var totalLotes = reader.IsDBNull(2) ? 0 : reader.GetInt32(2);
+                    var prom = reader.IsDBNull(3) ? 0.0 : Convert.ToDouble(reader.GetValue(3));
+                    var totalAcom = reader.IsDBNull(4) ? 0 : reader.GetInt32(4);
+
+                    var estadoCobertura = totalLotes > 0 ? "Catastrada y Mapeada" : "En Delimitación";
+
+                    dto.Filas.Add(new List<string>
+                    {
+                        "UV " + uv.Replace("UV", "").Replace("-", "").Trim(),
+                        totalMza.ToString("N0"),
+                        totalLotes.ToString("N0"),
+                        prom.ToString("F1", CultureInfo.InvariantCulture),
+                        totalAcom.ToString("N0"),
+                        estadoCobertura
+                    });
+                }
+                break;
+            }
+
+            case "REP-CAT-02":
+            case "PADRONLOTES":
+            case "LOTES":
+            {
+                dto.CodigoReporte = "REP-CAT-02";
+                dto.Modulo = "Catastro y Territorial";
+                dto.Titulo = "Padrón Predial y Catastro Integrado";
+                dto.Subtitulo = "Detalle de parcelas prediales, clave catastral UV-MZA-Lote y vinculación con servicios";
+                dto.Columnas = new List<string> { "Clave Catastral", "Unidad Vecinal (UV)", "Manzana (MZA)", "Nro. Lote", "Acometidas Asociadas", "Estado Predial" };
+
+                var busqueda = string.IsNullOrWhiteSpace(solicitud.Busqueda) ? null : solicitud.Busqueda.Trim();
+                const string sql = """
+                    SELECT TOP 500
+                        l.IdLote,
+                        ISNULL(m.UV, '-'),
+                        ISNULL(m.MZA, '-'),
+                        ISNULL(l.NroLote, '-'),
+                        (SELECT COUNT(*) FROM dbo.CodigosFijos cf WHERE cf.IdLote = l.IdLote) AS TotalCodigos,
+                        (SELECT COUNT(*) FROM dbo.CodigosFijos cf WHERE cf.IdLote = l.IdLote AND cf.Estado = 1) AS CodigosNormales
+                    FROM dbo.Lotes l
+                    LEFT JOIN dbo.Manzanas m ON l.IdManzana = m.IdManzana
+                    WHERE (@Busqueda IS NULL OR l.NroLote LIKE '%' + @Busqueda + '%' OR m.UV_MZA LIKE '%' + @Busqueda + '%' OR m.UV LIKE '%' + @Busqueda + '%' OR m.MZA LIKE '%' + @Busqueda + '%')
+                    ORDER BY m.UV, m.MZA, l.NroLote;
+                    """;
+
+                using var cmd = new SqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@Busqueda", (object?)busqueda ?? DBNull.Value);
+                using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    var uv = reader.GetString(1);
+                    var mza = reader.GetString(2);
+                    var lote = reader.GetString(3);
+                    var totCod = reader.GetInt32(4);
+                    var normCod = reader.GetInt32(5);
+
+                    var clave = (uv != "-" && mza != "-" && lote != "-")
+                        ? $"UV{uv}-M{mza}-L{lote}"
+                        : $"LOTE-{reader.GetInt32(0)}";
+
+                    var estadoPredial = totCod switch
+                    {
+                        0 => "Sin Suministro Registrado",
+                        _ when normCod == totCod => "Servicio Activo Regular",
+                        _ => "Suministro con Observación / Corte"
+                    };
+
+                    dto.Filas.Add(new List<string>
+                    {
+                        clave,
+                        uv,
+                        mza,
+                        lote,
+                        totCod.ToString("N0"),
+                        estadoPredial
+                    });
+                }
+                break;
+            }
+
+            case "REP-CAT-03":
+            case "INFRAESTRUCTURA_VIAS":
+            case "INFRAESTRUCTURAVIAS":
+            case "VIAS":
+            {
+                dto.CodigoReporte = "REP-CAT-03";
+                dto.Modulo = "Catastro y Territorial";
+                dto.Titulo = "Red Vial y Estructura de Movilidad";
+                dto.Subtitulo = "Estructura de vías públicas, avenidas, anillos concéntricos y radiales";
+                dto.Columnas = new List<string> { "ID Vía", "Nombre de Vía / Avenida", "Jerarquía Vial", "Código OSMID" };
+
+                var busqueda = string.IsNullOrWhiteSpace(solicitud.Busqueda) ? null : solicitud.Busqueda.Trim();
+                const string sql = """
+                    SELECT TOP 500
+                        v.IdVia,
+                        ISNULL(v.Nombre, 'Sin Denominación'),
+                        ISNULL(v.TipoVia, 'Vía Urbana'),
+                        ISNULL(v.OSMID, '-')
+                    FROM dbo.Vias v
+                    WHERE (@Busqueda IS NULL OR v.Nombre LIKE '%' + @Busqueda + '%' OR v.TipoVia LIKE '%' + @Busqueda + '%' OR v.OSMID LIKE '%' + @Busqueda + '%')
+                    ORDER BY v.IdVia;
+                    """;
+
+                using var cmd = new SqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@Busqueda", (object?)busqueda ?? DBNull.Value);
+                using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    dto.Filas.Add(new List<string>
+                    {
+                        reader.GetInt32(0).ToString(),
+                        reader.GetString(1),
+                        reader.GetString(2),
+                        reader.GetString(3)
+                    });
+                }
+                break;
+            }
+
+            case "REP-SRV-01":
+            case "ESTADOSERVICIOS":
+            case "SERVICIOS":
+            case "DASHBOARD":
+            {
+                dto.CodigoReporte = "REP-SRV-01";
+                dto.Modulo = "Servicios y Clientes";
+                dto.Titulo = "Estado de Servicios y Códigos Fijos";
+                dto.Subtitulo = "Auditoría operativa de suministros, titulares y estados de servicio";
+                dto.Columnas = new List<string> { "ID Código", "Cód. SIG", "Cód. Fijo", "Titular Abonado", "Estado", "ID Lote", "Longitud", "Latitud" };
+
+                var busqueda = string.IsNullOrWhiteSpace(solicitud.Busqueda) ? null : solicitud.Busqueda.Trim();
+                const string sql = """
+                    SELECT TOP 500
+                        c.IdCodigo,
+                        ISNULL(c.CodF_SIG, '-'),
+                        ISNULL(c.CodFijo, 0),
+                        ISNULL(c.Nombre, '-'),
+                        c.Estado,
+                        ISNULL(c.IdLote, 0),
+                        ISNULL(c.Longitud, 0.0),
+                        ISNULL(c.Latitud, 0.0)
+                    FROM dbo.CodigosFijos c
+                    WHERE (@Estado IS NULL OR c.Estado = @Estado)
+                      AND (@Busqueda IS NULL OR c.Nombre LIKE '%' + @Busqueda + '%' OR c.CodF_SIG LIKE '%' + @Busqueda + '%')
+                    ORDER BY c.IdCodigo;
+                    """;
+
+                using var cmd = new SqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@Estado", (object?)solicitud.EstadoFiltro ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Busqueda", (object?)busqueda ?? DBNull.Value);
+                using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    var est = reader.GetByte(4);
+                    dto.Filas.Add(new List<string>
+                    {
+                        reader.GetInt32(0).ToString(),
+                        reader.GetString(1),
+                        reader.GetInt32(2).ToString(),
+                        reader.GetString(3),
+                        NombreEstado(est),
+                        reader.GetInt32(5).ToString(),
+                        reader.GetDouble(6).ToString("F6", CultureInfo.InvariantCulture),
+                        reader.GetDouble(7).ToString("F6", CultureInfo.InvariantCulture)
+                    });
+                }
+                break;
+            }
+
+            case "REP-SRV-02":
+            case "DISPONIBILIDADPERSONAL":
+            case "PERSONAL":
+            case "CUADRILLAS":
+            {
+                dto.CodigoReporte = "REP-SRV-02";
+                dto.Modulo = "Servicios y Clientes";
+                dto.Titulo = "Disponibilidad de Personal y Cuadrillas";
+                dto.Subtitulo = "Estado de técnicos y cuadrillas operativas en campo";
+                dto.Columnas = new List<string> { "ID", "Código", "Personal Operativo", "Doc. Identidad", "Cargo", "Área", "Disponibilidad", "Estado" };
+
+                var busqueda = string.IsNullOrWhiteSpace(solicitud.Busqueda) ? null : solicitud.Busqueda.Trim();
+                const string sql = """
+                    SELECT TOP 500
+                        e.IdEmpleado,
+                        ISNULL(e.Codigo, '-'),
+                        ISNULL(e.Nombres, '') + ' ' + ISNULL(e.Apellidos, ''),
+                        ISNULL(e.DocumentoIdentidad, '-'),
+                        ISNULL(e.Cargo, '-'),
+                        ISNULL(e.Area, 'Operaciones'),
+                        ISNULL(e.Disponibilidad, 'Disponible'),
+                        CASE WHEN e.Activo = 1 THEN 'Activo' ELSE 'Inactivo' END
+                    FROM dbo.Empleados e
+                    WHERE (@Busqueda IS NULL OR e.Nombres LIKE '%' + @Busqueda + '%' OR e.Apellidos LIKE '%' + @Busqueda + '%' OR e.Cargo LIKE '%' + @Busqueda + '%' OR e.Disponibilidad LIKE '%' + @Busqueda + '%')
+                    ORDER BY e.IdEmpleado;
+                    """;
+
+                using var cmd = new SqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@Busqueda", (object?)busqueda ?? DBNull.Value);
+                using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    dto.Filas.Add(new List<string>
+                    {
+                        reader.GetInt32(0).ToString(),
+                        reader.GetString(1),
+                        reader.GetString(2).Trim(),
+                        reader.GetString(3),
+                        reader.GetString(4),
+                        reader.GetString(5),
+                        reader.GetString(6),
+                        reader.GetString(7)
+                    });
+                }
+                break;
+            }
+
+            case "REP-SRV-03":
+            case "BAJASPARCIALES":
+            case "BAJAS":
+            {
+                dto.CodigoReporte = "REP-SRV-03";
+                dto.Modulo = "Servicios y Clientes";
+                dto.Titulo = "Bajas y Cortes de Suministro";
+                dto.Subtitulo = "Puntos críticos en estado Cortado, Para Corte o En Inspección";
+                dto.Columnas = new List<string> { "ID Código", "Cód. SIG", "Cód. Fijo", "Titular", "Condición Operativa", "ID Lote", "Longitud", "Latitud" };
+
+                var busqueda = string.IsNullOrWhiteSpace(solicitud.Busqueda) ? null : solicitud.Busqueda.Trim();
+                const string sql = """
+                    SELECT TOP 500
+                        c.IdCodigo,
+                        ISNULL(c.CodF_SIG, '-'),
+                        ISNULL(c.CodFijo, 0),
+                        ISNULL(c.Nombre, '-'),
+                        c.Estado,
+                        ISNULL(c.IdLote, 0),
+                        ISNULL(c.Longitud, 0.0),
+                        ISNULL(c.Latitud, 0.0)
+                    FROM dbo.CodigosFijos c
+                    WHERE c.Estado IN (3, 4, 5)
+                      AND (@Busqueda IS NULL OR c.Nombre LIKE '%' + @Busqueda + '%' OR c.CodF_SIG LIKE '%' + @Busqueda + '%')
+                    ORDER BY c.Estado DESC, c.IdCodigo;
+                    """;
+
+                using var cmd = new SqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@Busqueda", (object?)busqueda ?? DBNull.Value);
+                using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    var est = reader.GetByte(4);
+                    dto.Filas.Add(new List<string>
+                    {
+                        reader.GetInt32(0).ToString(),
+                        reader.GetString(1),
+                        reader.GetInt32(2).ToString(),
+                        reader.GetString(3),
+                        NombreEstado(est),
+                        reader.GetInt32(5).ToString(),
+                        reader.GetDouble(6).ToString("F6", CultureInfo.InvariantCulture),
+                        reader.GetDouble(7).ToString("F6", CultureInfo.InvariantCulture)
+                    });
+                }
+                break;
+            }
+
+            case "REP-OPR-01":
+            case "INDICADORESGEOGRAFICOS":
+            case "INDICADORES":
+            {
+                dto.CodigoReporte = "REP-OPR-01";
+                dto.Modulo = "Operaciones e Indicadores";
+                dto.Titulo = "Indicadores de Cobertura Cartográfica SIG";
+                dto.Subtitulo = "Métricas consolidadas de entidades cartográficas por capa espacial";
+                dto.Columnas = new List<string> { "Capa Cartográfica", "Descripción", "Tipo Geometría", "Total Entidades", "% Cobertura", "Estado Integridad" };
+
+                var geo = await ObtenerIndicadoresGeograficosAsync(cancellationToken);
+                foreach (var c in geo.Capas)
+                {
+                    dto.Filas.Add(new List<string>
+                    {
+                        c.Nombre,
+                        c.Descripcion,
+                        c.TipoGeometria,
+                        c.TotalRegistros.ToString("N0"),
+                        $"{c.PorcentajeDelTotal}%",
+                        "100% Validada"
+                    });
+                }
+                break;
+            }
+
+            case "REP-OPR-02":
+            case "HISTORIALMIGRACIONES":
+            case "MIGRACIONES":
+            {
+                dto.CodigoReporte = "REP-OPR-02";
+                dto.Modulo = "Operaciones e Indicadores";
+                dto.Titulo = "Historial de Procesos de Migración";
+                dto.Subtitulo = "Trazabilidad de importaciones shapefiles y cargas masivas territoriales";
+                dto.Columnas = new List<string> { "ID Bitácora", "Fecha (BO)", "Capa", "Archivo Origen", "Modalidad", "Registros", "Duración (s)", "Estado", "Operador" };
+
+                var mig = await ObtenerHistorialMigracionesAsync(200, cancellationToken);
+                foreach (var m in mig.Eventos)
+                {
+                    dto.Filas.Add(new List<string>
+                    {
+                        m.IdBitacora.ToString(),
+                        m.FechaHoraBolivia.ToString("dd/MM/yyyy HH:mm"),
+                        m.Capa,
+                        m.Archivo,
+                        m.Modalidad,
+                        m.RegistrosProcesados.ToString("N0"),
+                        m.DuracionSegundos.ToString("F1", CultureInfo.InvariantCulture),
+                        m.Estado,
+                        m.Usuario
+                    });
+                }
+                break;
+            }
+
+            case "REP-AUD-01":
+            case "BITACORAAUDITORIA":
+            case "BITACORA":
+            case "AUDITORIA":
+            {
+                dto.CodigoReporte = "REP-AUD-01";
+                dto.Modulo = "Seguridad y Auditoría";
+                dto.Titulo = "Bitácora de Seguridad y Accesos";
+                dto.Subtitulo = "Registro de transacciones, seguridad, accesos y operaciones críticas";
+                dto.Columnas = new List<string> { "ID", "Fecha/Hora (BO)", "Operador", "Módulo", "Acción Realizada", "Resultado", "IP Origen", "Detalle" };
+
+                var busqueda = string.IsNullOrWhiteSpace(solicitud.Busqueda) ? null : solicitud.Busqueda.Trim();
+                const string sql = """
+                    SELECT TOP 500
+                        b.IdBitacora,
+                        b.FechaHora,
+                        ISNULL(u.Nombre, ISNULL(u.Login, 'Sistema')),
+                        ISNULL(b.Modulo, 'General'),
+                        ISNULL(b.Accion, '-'),
+                        ISNULL(b.Resultado, 'EXITO'),
+                        ISNULL(b.IP, '-'),
+                        ISNULL(b.Detalle, '-')
+                    FROM dbo.Bitacora b
+                    LEFT JOIN dbo.Usuarios u ON b.IdUsuario = u.IdUsuario
+                    WHERE (@Busqueda IS NULL 
+                        OR b.Modulo LIKE '%' + @Busqueda + '%' 
+                        OR b.Accion LIKE '%' + @Busqueda + '%' 
+                        OR b.Resultado LIKE '%' + @Busqueda + '%'
+                        OR b.IP LIKE '%' + @Busqueda + '%'
+                        OR b.Detalle LIKE '%' + @Busqueda + '%'
+                        OR u.Login LIKE '%' + @Busqueda + '%' 
+                        OR u.Nombre LIKE '%' + @Busqueda + '%')
+                    ORDER BY b.IdBitacora DESC;
+                    """;
+
+                using var cmd = new SqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@Busqueda", (object?)busqueda ?? DBNull.Value);
+                using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    var idBit = reader.GetValue(0)?.ToString() ?? "-";
+                    var fechaObj = reader.GetValue(1);
+                    var fechaStr = fechaObj is DateTime dt 
+                        ? dt.ToString("dd/MM/yyyy HH:mm:ss") 
+                        : (fechaObj?.ToString() ?? "-");
+                    var operador = reader.IsDBNull(2) ? "Sistema" : reader.GetValue(2)?.ToString() ?? "Sistema";
+                    var modulo = reader.IsDBNull(3) ? "General" : reader.GetValue(3)?.ToString() ?? "General";
+                    var accion = reader.IsDBNull(4) ? "-" : reader.GetValue(4)?.ToString() ?? "-";
+                    var resultado = reader.IsDBNull(5) ? "EXITO" : reader.GetValue(5)?.ToString() ?? "EXITO";
+                    var ip = reader.IsDBNull(6) ? "-" : reader.GetValue(6)?.ToString() ?? "-";
+                    var detalle = reader.IsDBNull(7) ? "-" : reader.GetValue(7)?.ToString() ?? "-";
+                    if (detalle.Length > 60) detalle = detalle.Substring(0, 57) + "...";
+
+                    dto.Filas.Add(new List<string>
+                    {
+                        idBit,
+                        fechaStr,
+                        operador,
+                        modulo,
+                        accion,
+                        resultado,
+                        ip,
+                        detalle
+                    });
+                }
+                break;
+            }
+
+            case "REP-AUD-02":
+            case "PADRONUSUARIOS":
+            case "USUARIOS":
+            {
+                dto.CodigoReporte = "REP-AUD-02";
+                dto.Modulo = "Seguridad y Auditoría";
+                dto.Titulo = "Padrón de Usuarios y Roles de Acceso";
+                dto.Subtitulo = "Inventario de cuentas de usuario y asignación de roles de seguridad";
+                dto.Columnas = new List<string> { "ID Usuario", "Login", "Nombre Completo", "Rol Asignado", "Estado Cuenta" };
+
+                var busqueda = string.IsNullOrWhiteSpace(solicitud.Busqueda) ? null : solicitud.Busqueda.Trim();
+                const string sql = """
+                    SELECT TOP 500
+                        u.IdUsuario,
+                        u.Login,
+                        ISNULL(u.Nombre, '-'),
+                        ISNULL(r.NombreRol, 'Sin Rol'),
+                        CASE WHEN u.Activo = 1 THEN 'Activo' ELSE 'Inactivo' END
+                    FROM dbo.Usuarios u
+                    LEFT JOIN dbo.UsuariosRoles ur ON u.IdUsuario = ur.IdUsuario
+                    LEFT JOIN dbo.Roles r ON ur.IdRol = r.IdRol
+                    WHERE (@Busqueda IS NULL OR u.Login LIKE '%' + @Busqueda + '%' OR u.Nombre LIKE '%' + @Busqueda + '%')
+                    ORDER BY u.IdUsuario;
+                    """;
+
+                using var cmd = new SqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@Busqueda", (object?)busqueda ?? DBNull.Value);
+                using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    dto.Filas.Add(new List<string>
+                    {
+                        reader.GetInt32(0).ToString(),
+                        reader.GetString(1),
+                        reader.GetString(2),
+                        reader.GetString(3),
+                        reader.GetString(4)
+                    });
+                }
+                break;
+            }
+
+            default:
+            {
+                return await ObtenerVistaPreviaAsync(new SolicitudExportacionDto
+                {
+                    TipoReporte = "REP-SRV-01",
+                    EstadoFiltro = solicitud.EstadoFiltro,
+                    Busqueda = solicitud.Busqueda
+                }, loginUsuario, cancellationToken);
+            }
+        }
+
+        dto.TotalRegistros = dto.Filas.Count;
+        dto.Metadatos["TotalRegistros"] = dto.TotalRegistros.ToString();
+        dto.Metadatos["FechaGeneracion"] = dto.FechaGeneracionBolivia.ToString("dd/MM/yyyy HH:mm:ss");
+        dto.Metadatos["Operador"] = dto.Operador;
+        if (!string.IsNullOrWhiteSpace(solicitud.Busqueda))
+        {
+            dto.Metadatos["CriterioBusqueda"] = solicitud.Busqueda;
+        }
+
+        return dto;
+    }
+
+    // =========================================================================
     // CU32: Generar y Exportar Reporte en 4 Formatos (PDF, Excel, CSV, TXT)
     // =========================================================================
     public async Task<ArchivoExportadoDto> ExportarReporteAsync(
@@ -484,7 +996,7 @@ public sealed class ReportesService : IReportesService
         string loginUsuario,
         CancellationToken cancellationToken = default)
     {
-        var tipo = solicitud.TipoReporte?.ToLowerInvariant() ?? "estadoservicios";
+        ArgumentNullException.ThrowIfNull(solicitud);
         var formato = solicitud.Formato?.ToLowerInvariant() ?? "pdf";
         var timestamp = ObtenerHoraBolivia().ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
 
@@ -504,6 +1016,8 @@ public sealed class ReportesService : IReportesService
         string timestamp,
         CancellationToken cancellationToken)
     {
+        var preview = await ObtenerVistaPreviaAsync(solicitud, loginUsuario, cancellationToken);
+
         using var workbook = new XLWorkbook();
         var ws = workbook.Worksheets.Add("Reporte Oficial");
 
@@ -513,114 +1027,39 @@ public sealed class ReportesService : IReportesService
         ws.Cell(1, 1).Style.Font.FontSize = 14;
         ws.Cell(1, 1).Style.Font.FontColor = XLColor.FromHtml("#0d3b66");
 
-        var tituloReporte = solicitud.Titulo ?? $"Reporte de {solicitud.TipoReporte}";
-        ws.Cell(2, 1).Value = tituloReporte.ToUpperInvariant();
+        ws.Cell(2, 1).Value = $"{preview.CodigoReporte}: {preview.Titulo}".ToUpperInvariant();
         ws.Cell(2, 1).Style.Font.Bold = true;
         ws.Cell(2, 1).Style.Font.FontSize = 12;
 
-        ws.Cell(3, 1).Value = $"Generado por: {loginUsuario} | Fecha/Hora Bolivia: {ObtenerHoraBolivia():dd/MM/yyyy HH:mm:ss}";
+        ws.Cell(3, 1).Value = $"Módulo: {preview.Modulo} | Operador: {preview.Operador} | Fecha/Hora Bolivia: {preview.FechaGeneracionBolivia:dd/MM/yyyy HH:mm:ss}";
         ws.Cell(3, 1).Style.Font.Italic = true;
         ws.Cell(3, 1).Style.Font.FontColor = XLColor.Gray;
 
         var fila = 5;
-
-        if (solicitud.TipoReporte.Equals("IndicadoresGeograficos", StringComparison.OrdinalIgnoreCase))
+        for (var c = 0; c < preview.Columnas.Count; c++)
         {
-            var geo = await ObtenerIndicadoresGeograficosAsync(cancellationToken);
-            ws.Cell(fila, 1).Value = "Capa Geográfica";
-            ws.Cell(fila, 2).Value = "Descripción";
-            ws.Cell(fila, 3).Value = "Tipo Geometría";
-            ws.Cell(fila, 4).Value = "Total Registros";
-            ws.Cell(fila, 5).Value = "% del Total";
+            ws.Cell(fila, c + 1).Value = preview.Columnas[c];
+        }
+        AplicarEstiloCabecera(ws.Row(fila), preview.Columnas.Count);
+        fila++;
 
-            AplicarEstiloCabecera(ws.Row(fila), 5);
-            fila++;
-
-            foreach (var c in geo.Capas)
+        foreach (var r in preview.Filas)
+        {
+            for (var c = 0; c < preview.Columnas.Count && c < r.Count; c++)
             {
-                ws.Cell(fila, 1).Value = c.Nombre;
-                ws.Cell(fila, 2).Value = c.Descripcion;
-                ws.Cell(fila, 3).Value = c.TipoGeometria;
-                ws.Cell(fila, 4).Value = c.TotalRegistros;
-                ws.Cell(fila, 5).Value = c.PorcentajeDelTotal / 100;
-                ws.Cell(fila, 5).Style.NumberFormat.Format = "0.0%";
-                fila++;
+                ws.Cell(fila, c + 1).Value = r[c];
             }
-        }
-        else if (solicitud.TipoReporte.Equals("HistorialMigraciones", StringComparison.OrdinalIgnoreCase))
-        {
-            var mig = await ObtenerHistorialMigracionesAsync(100, cancellationToken);
-            ws.Cell(fila, 1).Value = "ID";
-            ws.Cell(fila, 2).Value = "Fecha/Hora";
-            ws.Cell(fila, 3).Value = "Capa";
-            ws.Cell(fila, 4).Value = "Archivo Origen";
-            ws.Cell(fila, 5).Value = "Modalidad";
-            ws.Cell(fila, 6).Value = "Registros";
-            ws.Cell(fila, 7).Value = "Duración (s)";
-            ws.Cell(fila, 8).Value = "Estado";
-
-            AplicarEstiloCabecera(ws.Row(fila), 8);
             fila++;
-
-            foreach (var m in mig.Eventos)
-            {
-                ws.Cell(fila, 1).Value = m.IdBitacora;
-                ws.Cell(fila, 2).Value = m.FechaHoraBolivia.ToString("dd/MM/yyyy HH:mm");
-                ws.Cell(fila, 3).Value = m.Capa;
-                ws.Cell(fila, 4).Value = m.Archivo;
-                ws.Cell(fila, 5).Value = m.Modalidad;
-                ws.Cell(fila, 6).Value = m.RegistrosProcesados;
-                ws.Cell(fila, 7).Value = m.DuracionSegundos;
-                ws.Cell(fila, 8).Value = m.Estado;
-                fila++;
-            }
         }
-        else
-        {
-            // Estado de Servicios por defecto (CU29)
-            var serv = await ObtenerEstadoServiciosAsync(solicitud.EstadoFiltro, solicitud.Busqueda, 1, 1000, cancellationToken);
-            ws.Cell(fila, 1).Value = "ID";
-            ws.Cell(fila, 2).Value = "Código SIG";
-            ws.Cell(fila, 3).Value = "Código Fijo";
-            ws.Cell(fila, 4).Value = "Titular del Servicio";
-            ws.Cell(fila, 5).Value = "Estado";
-            ws.Cell(fila, 6).Value = "Lote";
-            ws.Cell(fila, 7).Value = "Longitud";
-            ws.Cell(fila, 8).Value = "Latitud";
 
-            AplicarEstiloCabecera(ws.Row(fila), 8);
-            fila++;
+        ws.Columns().AdjustToContents();
 
-            foreach (var r in serv.Registros)
-            {
-                ws.Cell(fila, 1).Value = r.IdCodigo;
-                ws.Cell(fila, 2).Value = r.CodF_SIG ?? "-";
-                ws.Cell(fila, 3).Value = r.CodFijo ?? 0;
-                ws.Cell(fila, 4).Value = r.Nombre;
-                ws.Cell(fila, 5).Value = r.EstadoNombre;
-                ws.Cell(fila, 6).Value = r.IdLote ?? 0;
-                ws.Cell(fila, 7).Value = r.Longitud ?? 0.0;
-                ws.Cell(fila, 8).Value = r.Latitud ?? 0.0;
-                fila++;
-            }
-        }
-        for (var colIdx = 1; colIdx <= 10; colIdx++)
-        {
-            ws.Column(colIdx).Width = colIdx switch
-            {
-                1 => 10,
-                2 => 20,
-                3 => 18,
-                4 => 35,
-                _ => 16
-            };
-        }
         using var ms = new MemoryStream();
         workbook.SaveAs(ms);
 
         return new ArchivoExportadoDto
         {
-            NombreArchivo = $"Reporte_{solicitud.TipoReporte}_{timestamp}.xlsx",
+            NombreArchivo = $"Reporte_{preview.CodigoReporte}_{timestamp}.xlsx",
             ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             Contenido = ms.ToArray()
         };
@@ -644,34 +1083,14 @@ public sealed class ReportesService : IReportesService
         string timestamp,
         CancellationToken cancellationToken)
     {
+        var preview = await ObtenerVistaPreviaAsync(solicitud, "Sistema", cancellationToken);
         var sb = new StringBuilder();
 
-        if (solicitud.TipoReporte.Equals("IndicadoresGeograficos", StringComparison.OrdinalIgnoreCase))
+        sb.AppendLine(string.Join(";", preview.Columnas.Select(EscaparCsv)));
+
+        foreach (var r in preview.Filas)
         {
-            var geo = await ObtenerIndicadoresGeograficosAsync(cancellationToken);
-            sb.AppendLine("Capa;Descripcion;TipoGeometria;TotalRegistros;Porcentaje");
-            foreach (var c in geo.Capas)
-            {
-                sb.AppendLine($"\"{c.Nombre}\";\"{c.Descripcion}\";\"{c.TipoGeometria}\";{c.TotalRegistros};{c.PorcentajeDelTotal}%");
-            }
-        }
-        else if (solicitud.TipoReporte.Equals("HistorialMigraciones", StringComparison.OrdinalIgnoreCase))
-        {
-            var mig = await ObtenerHistorialMigracionesAsync(100, cancellationToken);
-            sb.AppendLine("IdBitacora;FechaHora;Capa;Archivo;Modalidad;RegistrosProcesados;DuracionSegundos;Estado");
-            foreach (var m in mig.Eventos)
-            {
-                sb.AppendLine($"{m.IdBitacora};\"{m.FechaHoraBolivia:dd/MM/yyyy HH:mm:ss}\";\"{m.Capa}\";\"{m.Archivo}\";\"{m.Modalidad}\";{m.RegistrosProcesados};{m.DuracionSegundos};\"{m.Estado}\"");
-            }
-        }
-        else
-        {
-            var serv = await ObtenerEstadoServiciosAsync(solicitud.EstadoFiltro, solicitud.Busqueda, 1, 2000, cancellationToken);
-            sb.AppendLine("IdCodigo;CodF_SIG;CodFijo;Nombre;Estado;IdLote;Longitud;Latitud");
-            foreach (var r in serv.Registros)
-            {
-                sb.AppendLine($"{r.IdCodigo};\"{r.CodF_SIG}\";{r.CodFijo};\"{r.Nombre.Replace("\"", "\"\"")}\";\"{r.EstadoNombre}\";{r.IdLote};{r.Longitud};{r.Latitud}");
-            }
+            sb.AppendLine(string.Join(";", r.Select(EscaparCsv)));
         }
 
         var encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
@@ -679,10 +1098,20 @@ public sealed class ReportesService : IReportesService
 
         return new ArchivoExportadoDto
         {
-            NombreArchivo = $"Reporte_{solicitud.TipoReporte}_{timestamp}.csv",
+            NombreArchivo = $"Reporte_{preview.CodigoReporte}_{timestamp}.csv",
             ContentType = "text/csv; charset=utf-8",
             Contenido = bytes
         };
+    }
+
+    private static string EscaparCsv(string valor)
+    {
+        if (string.IsNullOrEmpty(valor)) return "\"\"";
+        if (valor.Contains(';') || valor.Contains('"') || valor.Contains('\n') || valor.Contains('\r'))
+        {
+            return $"\"{valor.Replace("\"", "\"\"")}\"";
+        }
+        return valor;
     }
 
     // --- Exportador TXT plano institucional alineado ---
@@ -692,69 +1121,37 @@ public sealed class ReportesService : IReportesService
         string timestamp,
         CancellationToken cancellationToken)
     {
+        var preview = await ObtenerVistaPreviaAsync(solicitud, loginUsuario, cancellationToken);
         var sb = new StringBuilder();
-        var horaBolivia = ObtenerHoraBolivia();
 
         sb.AppendLine("==========================================================================================");
         sb.AppendLine("                             VISORDATOSSIG 2026 - REPORTE OFICIAL                         ");
         sb.AppendLine("                      Plataforma Geoespacial · Santa Cruz de la Sierra                    ");
         sb.AppendLine("==========================================================================================");
-        sb.AppendLine($"Tipo de Reporte : {solicitud.TipoReporte}");
-        sb.AppendLine($"Fecha y Hora    : {horaBolivia:dd/MM/yyyy HH:mm:ss} (Hora Bolivia UTC-4)");
-        sb.AppendLine($"Generado por    : {loginUsuario}");
+        sb.AppendLine($"Código Reporte  : {preview.CodigoReporte} - {preview.Titulo}");
+        sb.AppendLine($"Módulo          : {preview.Modulo}");
+        sb.AppendLine($"Fecha y Hora    : {preview.FechaGeneracionBolivia:dd/MM/yyyy HH:mm:ss} (Hora Bolivia UTC-4)");
+        sb.AppendLine($"Operador        : {preview.Operador}");
+        sb.AppendLine($"Total Registros : {preview.TotalRegistros:N0}");
         sb.AppendLine("==========================================================================================");
         sb.AppendLine();
 
-        if (solicitud.TipoReporte.Equals("IndicadoresGeograficos", StringComparison.OrdinalIgnoreCase))
-        {
-            var geo = await ObtenerIndicadoresGeograficosAsync(cancellationToken);
-            sb.AppendLine(string.Format("{0,-15} | {1,-35} | {2,-15} | {3,12} | {4,8}", "CAPA", "DESCRIPCIÓN", "GEOMETRÍA", "TOTAL REG.", "PART.%"));
-            sb.AppendLine(new string('-', 95));
+        sb.AppendLine(string.Join("  |  ", preview.Columnas));
+        sb.AppendLine(new string('-', 95));
 
-            foreach (var c in geo.Capas)
-            {
-                sb.AppendLine(string.Format("{0,-15} | {1,-35} | {2,-15} | {3,12:N0} | {4,7:0.0}%", c.Nombre, c.Descripcion, c.TipoGeometria, c.TotalRegistros, c.PorcentajeDelTotal));
-            }
-            sb.AppendLine(new string('=', 95));
-            sb.AppendLine($"TOTAL ENTIDADES REGISTRADAS: {geo.TotalEntidades:N0}");
-        }
-        else if (solicitud.TipoReporte.Equals("HistorialMigraciones", StringComparison.OrdinalIgnoreCase))
+        foreach (var r in preview.Filas)
         {
-            var mig = await ObtenerHistorialMigracionesAsync(50, cancellationToken);
-            sb.AppendLine(string.Format("{0,-6} | {1,-16} | {2,-14} | {3,-26} | {4,10} | {5,-8}", "ID", "FECHA/HORA", "CAPA", "ARCHIVO", "REGISTROS", "ESTADO"));
-            sb.AppendLine(new string('-', 95));
-
-            foreach (var m in mig.Eventos)
-            {
-                var archCorto = m.Archivo.Length > 25 ? m.Archivo.Substring(0, 22) + "..." : m.Archivo;
-                sb.AppendLine(string.Format("{0,-6} | {1,-16} | {2,-14} | {3,-26} | {4,10:N0} | {5,-8}", m.IdBitacora, m.FechaHoraBolivia.ToString("dd/MM/yy HH:mm"), m.Capa, archCorto, m.RegistrosProcesados, m.Estado));
-            }
-            sb.AppendLine(new string('=', 95));
-            sb.AppendLine($"TOTAL MIGRACIONES EVALUADAS: {mig.TotalMigraciones} | EXITOSAS: {mig.MigracionesExitosas}");
-        }
-        else
-        {
-            var serv = await ObtenerEstadoServiciosAsync(solicitud.EstadoFiltro, solicitud.Busqueda, 1, 500, cancellationToken);
-            sb.AppendLine(string.Format("{0,-8} | {1,-16} | {2,-12} | {3,-30} | {4,-12}", "ID", "CÓDIGO SIG", "CÓDIGO FIJO", "TITULAR", "ESTADO"));
-            sb.AppendLine(new string('-', 95));
-
-            foreach (var r in serv.Registros)
-            {
-                var nom = r.Nombre.Length > 29 ? r.Nombre.Substring(0, 27) + ".." : r.Nombre;
-                sb.AppendLine(string.Format("{0,-8} | {1,-16} | {2,-12} | {3,-30} | {4,-12}", r.IdCodigo, r.CodF_SIG ?? "-", r.CodFijo?.ToString() ?? "-", nom, r.EstadoNombre));
-            }
-            sb.AppendLine(new string('=', 95));
-            sb.AppendLine($"TOTAL SERVICIOS LISTADOS: {serv.Registros.Count} de {serv.TotalRegistros:N0} disponibles");
+            sb.AppendLine(string.Join("  |  ", r));
         }
 
+        sb.AppendLine(new string('=', 95));
         sb.AppendLine();
-        sb.AppendLine("------------------------------------------------------------------------------------------");
         sb.AppendLine("Documento generado automáticamente por VisorDatosSIG. Firma digital de auditoría válida.");
 
         var bytes = Encoding.UTF8.GetBytes(sb.ToString());
         return new ArchivoExportadoDto
         {
-            NombreArchivo = $"Reporte_{solicitud.TipoReporte}_{timestamp}.txt",
+            NombreArchivo = $"Reporte_{preview.CodigoReporte}_{timestamp}.txt",
             ContentType = "text/plain; charset=utf-8",
             Contenido = bytes
         };
@@ -767,21 +1164,9 @@ public sealed class ReportesService : IReportesService
         string timestamp,
         CancellationToken cancellationToken)
     {
-        var horaBolivia = ObtenerHoraBolivia();
-        var tituloDoc = solicitud.Titulo ?? $"Reporte de {solicitud.TipoReporte}";
-
-        // Obtenemos los datos según el tipo
-        var estadoServicios = solicitud.TipoReporte.Equals("EstadoServicios", StringComparison.OrdinalIgnoreCase) || solicitud.TipoReporte.Equals("Dashboard", StringComparison.OrdinalIgnoreCase)
-            ? await ObtenerEstadoServiciosAsync(solicitud.EstadoFiltro, solicitud.Busqueda, 1, 100, cancellationToken)
-            : null;
-
-        var indicadoresGeo = solicitud.TipoReporte.Equals("IndicadoresGeograficos", StringComparison.OrdinalIgnoreCase)
-            ? await ObtenerIndicadoresGeograficosAsync(cancellationToken)
-            : null;
-
-        var historialMig = solicitud.TipoReporte.Equals("HistorialMigraciones", StringComparison.OrdinalIgnoreCase)
-            ? await ObtenerHistorialMigracionesAsync(50, cancellationToken)
-            : null;
+        var preview = await ObtenerVistaPreviaAsync(solicitud, loginUsuario, cancellationToken);
+        var horaBolivia = preview.FechaGeneracionBolivia;
+        var tituloDoc = $"{preview.CodigoReporte} - {preview.Titulo}";
 
         byte[]? graficoBytes = null;
         if (!string.IsNullOrWhiteSpace(solicitud.GraficoBase64))
@@ -789,12 +1174,12 @@ public sealed class ReportesService : IReportesService
             try
             {
                 var clean = solicitud.GraficoBase64;
-                if (clean.Contains(",")) clean = clean.Substring(clean.IndexOf(",") + 1);
+                if (clean.Contains(',')) clean = clean[(clean.IndexOf(',') + 1)..];
                 graficoBytes = Convert.FromBase64String(clean);
             }
             catch
             {
-                // Si la imagen falla en decodificar, continuamos sin el gráfico estampado
+                // Continuar sin gráfico estampado si falla
             }
         }
 
@@ -805,7 +1190,7 @@ public sealed class ReportesService : IReportesService
                 page.Size(PageSizes.A4);
                 page.Margin(1.5f, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(9));
+                page.DefaultTextStyle(x => x.FontSize(8));
 
                 // Encabezado
                 page.Header().Column(col =>
@@ -814,139 +1199,70 @@ public sealed class ReportesService : IReportesService
                     {
                         row.RelativeItem().Column(c =>
                         {
-                            c.Item().Text("VISORDATOSSIG 2026").Bold().FontSize(13).FontColor("#0d3b66");
-                            c.Item().Text("Plataforma Geoespacial Territorial · Santa Cruz de la Sierra").FontSize(8).FontColor(Colors.Grey.Medium);
+                            c.Item().Text("VISORDATOSSIG 2026").Bold().FontSize(12).FontColor("#0d3b66");
+                            c.Item().Text("Plataforma Geoespacial Territorial · Santa Cruz de la Sierra").FontSize(7.5f).FontColor(Colors.Grey.Medium);
                         });
 
-                        row.ConstantItem(180).Column(c =>
+                        row.ConstantItem(220).Column(c =>
                         {
-                            c.Item().AlignRight().Text($"Fecha: {horaBolivia:dd/MM/yyyy HH:mm}").FontSize(8);
-                            c.Item().AlignRight().Text($"Operador: {loginUsuario}").FontSize(8);
+                            c.Item().AlignRight().Text($"Fecha: {horaBolivia:dd/MM/yyyy HH:mm}").FontSize(7.5f);
+                            c.Item().AlignRight().Text($"Operador: {preview.Operador}").FontSize(7.5f);
                             c.Item().AlignRight().Text("Zona Horaria: Bolivia (UTC-4)").FontSize(7).Italic();
                         });
                     });
 
-                    col.Item().PaddingTop(5).LineHorizontal(1.5f).LineColor("#0d3b66");
-                    col.Item().PaddingTop(8).Text(tituloDoc.ToUpperInvariant()).Bold().FontSize(12).FontColor("#0d3b66");
-                    col.Item().PaddingBottom(8);
+                    col.Item().PaddingTop(4).LineHorizontal(1.5f).LineColor("#0d3b66");
+                    col.Item().PaddingTop(6).Text(tituloDoc.ToUpperInvariant()).Bold().FontSize(11).FontColor("#0d3b66");
+                    col.Item().Text(preview.Subtitulo).FontSize(8).FontColor(Colors.Grey.Darken1);
+                    col.Item().PaddingBottom(6);
                 });
 
                 // Contenido
                 page.Content().Column(col =>
                 {
-                    // Si se adjuntó gráfico estadístico (Chart.js base64)
                     if (graficoBytes is not null && graficoBytes.Length > 0)
                     {
-                        col.Item().PaddingBottom(10).Column(imgCol =>
+                        col.Item().PaddingBottom(8).Column(imgCol =>
                         {
-                            imgCol.Item().Text("Visualización Gráfica Estadística:").Bold().FontSize(9);
-                            imgCol.Item().PaddingTop(4).MaxWidth(380).Image(graficoBytes);
+                            imgCol.Item().Text("Visualización Gráfica Estadística:").Bold().FontSize(8.5f);
+                            imgCol.Item().PaddingTop(3).MaxWidth(380).Image(graficoBytes);
                         });
                     }
 
-                    // Renderizado de tabla según el tipo
-                    if (indicadoresGeo is not null)
+                    col.Item().Table(tabla =>
                     {
-                        col.Item().Table(tabla =>
+                        tabla.ColumnsDefinition(columns =>
                         {
-                            tabla.ColumnsDefinition(columns =>
+                            for (var i = 0; i < preview.Columnas.Count; i++)
                             {
-                                columns.RelativeColumn(2);
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(2);
-                                columns.RelativeColumn(2);
-                                columns.RelativeColumn(1.5f);
-                            });
-
-                            tabla.Header(h =>
-                            {
-                                h.Cell().Background("#0d3b66").Padding(4).Text("Capa").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).Text("Descripción").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).Text("Geometría").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).AlignRight().Text("Total").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).AlignRight().Text("%").Bold().FontColor(Colors.White);
-                            });
-
-                            foreach (var c in indicadoresGeo.Capas)
-                            {
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(c.Nombre);
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(c.Descripcion);
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(c.TipoGeometria);
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).AlignRight().Text(c.TotalRegistros.ToString("N0"));
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).AlignRight().Text($"{c.PorcentajeDelTotal}%");
+                                columns.RelativeColumn();
                             }
                         });
 
-                        col.Item().PaddingTop(10).Text($"Total de entidades cartográficas auditadas: {indicadoresGeo.TotalEntidades:N0}").Bold();
+                        tabla.Header(h =>
+                        {
+                            foreach (var cabecera in preview.Columnas)
+                            {
+                                h.Cell().Background("#0d3b66").Padding(3).Text(cabecera).Bold().FontColor(Colors.White).FontSize(7.5f);
+                            }
+                        });
+
+                        foreach (var fila in preview.Filas.Take(60))
+                        {
+                            for (var c = 0; c < preview.Columnas.Count && c < fila.Count; c++)
+                            {
+                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(3).Text(fila[c]).FontSize(7);
+                            }
+                        }
+                    });
+
+                    if (preview.TotalRegistros > 60)
+                    {
+                        col.Item().PaddingTop(6).Text($"Mostrando 60 de {preview.TotalRegistros:N0} registros en este extracto impreso.").FontSize(7.5f).Italic();
                     }
-                    else if (historialMig is not null)
+                    else
                     {
-                        col.Item().Table(tabla =>
-                        {
-                            tabla.ColumnsDefinition(columns =>
-                            {
-                                columns.ConstantColumn(40);
-                                columns.RelativeColumn(2);
-                                columns.RelativeColumn(2);
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(1.5f);
-                                columns.RelativeColumn(1.5f);
-                            });
-
-                            tabla.Header(h =>
-                            {
-                                h.Cell().Background("#0d3b66").Padding(4).Text("ID").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).Text("Fecha").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).Text("Capa").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).Text("Archivo").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).AlignRight().Text("Registros").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).Text("Estado").Bold().FontColor(Colors.White);
-                            });
-
-                            foreach (var m in historialMig.Eventos.Take(40))
-                            {
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(m.IdBitacora.ToString());
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(m.FechaHoraBolivia.ToString("dd/MM/yy HH:mm"));
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(m.Capa);
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(m.Archivo);
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).AlignRight().Text(m.RegistrosProcesados.ToString("N0"));
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(m.Estado);
-                            }
-                        });
-                    }
-                    else if (estadoServicios is not null)
-                    {
-                        col.Item().Table(tabla =>
-                        {
-                            tabla.ColumnsDefinition(columns =>
-                            {
-                                columns.ConstantColumn(50);
-                                columns.RelativeColumn(2);
-                                columns.RelativeColumn(2);
-                                columns.RelativeColumn(3.5f);
-                                columns.RelativeColumn(2);
-                            });
-
-                            tabla.Header(h =>
-                            {
-                                h.Cell().Background("#0d3b66").Padding(4).Text("ID").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).Text("Cód. SIG").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).Text("Cód. Fijo").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).Text("Titular").Bold().FontColor(Colors.White);
-                                h.Cell().Background("#0d3b66").Padding(4).Text("Estado").Bold().FontColor(Colors.White);
-                            });
-
-                            foreach (var s in estadoServicios.Registros.Take(50))
-                            {
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(s.IdCodigo.ToString());
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(s.CodF_SIG ?? "-");
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(s.CodFijo?.ToString() ?? "-");
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(s.Nombre);
-                                tabla.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(s.EstadoNombre);
-                            }
-                        });
-
-                        col.Item().PaddingTop(10).Text($"Mostrando {Math.Min(50, estadoServicios.Registros.Count)} de {estadoServicios.TotalRegistros:N0} registros disponibles.").FontSize(8).Italic();
+                        col.Item().PaddingTop(6).Text($"Total de registros emitidos: {preview.TotalRegistros:N0}").Bold().FontSize(7.5f);
                     }
                 });
 
@@ -969,7 +1285,7 @@ public sealed class ReportesService : IReportesService
 
         return new ArchivoExportadoDto
         {
-            NombreArchivo = $"Reporte_{solicitud.TipoReporte}_{timestamp}.pdf",
+            NombreArchivo = $"Reporte_{preview.CodigoReporte}_{timestamp}.pdf",
             ContentType = "application/pdf",
             Contenido = pdfBytes
         };

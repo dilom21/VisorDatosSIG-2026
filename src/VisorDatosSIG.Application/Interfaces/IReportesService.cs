@@ -37,6 +37,14 @@ public interface IReportesService
     Task<HistorialMigracionesDto> ObtenerHistorialMigracionesAsync(int limite = 50, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// CU32: Genera la vista previa tabular de datos para verificar antes de exportar.
+    /// </summary>
+    Task<ReporteVistaPreviaDto> ObtenerVistaPreviaAsync(
+        SolicitudExportacionDto solicitud,
+        string loginUsuario,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// CU32: Genera y exporta el reporte solicitado en PDF, Excel (XLSX), CSV o TXT.
     /// </summary>
     Task<ArchivoExportadoDto> ExportarReporteAsync(

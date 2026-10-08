@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Consultar Lotes";
+    Layout = "_AppLayout";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="~/css/consultas/entidades.css" asp-append-version="true" />
+}
+<section id="consulta-entidades" class="consulta-entidades" data-capa="lotes" aria-labelledby="consulta-titulo">
+    <header><h1 id="consulta-titulo">Consultar Lotes</h1>
+    <p>Busque registros y seleccione un resultado para consultar sus datos y ubicación.</p></header>
+    <form id="consulta-filtros" class="consulta-filtros">
+        <label>Número de lote<input name="nroLote" type="text" maxlength="100" /></label>
+<label>ID de manzana<input name="idManzana" type="number" min="1" step="1" /></label>
+        <label>Registros por página<select name="limite"><option>10</option><option selected>20</option><option>50</option><option>100</option></select></label>
+        <button type="submit">Buscar</button><button type="reset" class="consulta-secundario">Limpiar</button>
+    </form>
+    <p id="consulta-estado" role="status" aria-live="polite"></p>
+    <div class="consulta-columnas">
+        <section aria-label="Resultados">
+            <div class="consulta-tabla"><table><caption id="consulta-conteo">Resultados</caption><thead id="consulta-cabecera"></thead><tbody id="consulta-filas"></tbody></table></div>
+            <nav class="consulta-paginacion" aria-label="Paginación">
+                <button id="consulta-anterior" type="button" disabled>Anterior</button>
+                <span id="consulta-pagina"></span>
+                <button id="consulta-siguiente" type="button" disabled>Siguiente</button>
+            </nav>
+        </section>
+        <section class="consulta-detalle" aria-labelledby="consulta-detalle-titulo">
+            <h2 id="consulta-detalle-titulo">Detalle</h2>
+            <p id="consulta-detalle-estado" role="status">Seleccione un registro.</p>
+            <dl id="consulta-atributos"></dl>
+            <div id="consulta-mapa" hidden aria-label="Ubicación del registro seleccionado"></div>
+            <p id="consulta-mapa-aviso" role="status"></p>
+        </section>
+    </div>
+</section>
+@section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/consultas/entidades.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Consultas/Lotes',
+            alValidar: function () { window.VisorSIG.consultaEntidades.iniciar(); }
+        });
+    </script>
+}
