@@ -5,19 +5,36 @@ using VisorDatosSIG.Web.Models;
 namespace VisorDatosSIG.Web.Controllers;
 
 /// <summary>
-/// Módulo Reportes: ruta <c>/Reportes</c> (Gestionar Reportes, CU22).
+/// Módulo 6: Reportes y Analítica Territorial (CU28 a CU32).
 /// </summary>
-/// <remarks>
-/// Pendiente de implementación: se muestra la página "Próximamente" para no romper la
-/// navegación del sidebar ni llevar al usuario a un 404.
-/// </remarks>
 public class ReportesController : Controller
 {
-    /// <summary>Ruta <c>/Reportes</c>.</summary>
-    public IActionResult Index() => View("Proximamente", new PaginaProximamenteViewModel
-    {
-        Modulo = ModulosSistema.Reportes,
-        Funcionalidad = "Gestionar Reportes",
-        RutaActual = "/Reportes"
-    });
+    /// <summary>CU28 – Consultar Dashboard General</summary>
+    [HttpGet("/Reportes")]
+    [HttpGet("/Reportes/Dashboard")]
+    public IActionResult Index() => View();
+
+    /// <summary>CU29 – Consultar Estado de Servicios</summary>
+    [HttpGet("/Reportes/Servicios")]
+    public IActionResult Servicios() => View();
+
+    /// <summary>CU30 – Consultar Indicadores de Información Geográfica</summary>
+    [HttpGet("/Reportes/Indicadores")]
+    public IActionResult Indicadores() => View();
+
+    /// <summary>CU31 – Consultar Historial de Migraciones</summary>
+    [HttpGet("/Reportes/Migraciones")]
+    public IActionResult Migraciones() => View();
+
+    /// <summary>CU32 – Gestionar Reportes</summary>
+    [HttpGet("/Reportes/Gestionar")]
+    public IActionResult Gestionar() => Proximamente("Gestionar Reportes", "/Reportes/Gestionar");
+
+    private IActionResult Proximamente(string funcionalidad, string ruta) =>
+        View("Proximamente", new PaginaProximamenteViewModel
+        {
+            Modulo = ModulosSistema.Reportes,
+            Funcionalidad = funcionalidad,
+            RutaActual = ruta
+        });
 }

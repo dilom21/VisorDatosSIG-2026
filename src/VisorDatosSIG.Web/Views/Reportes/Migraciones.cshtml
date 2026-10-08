@@ -1,0 +1,246 @@
+@*
+    Módulo 6: Reportes y Analítica Territorial
+    Consultar Historial de Migraciones
+*@
+@{
+    ViewData["Title"] = "Consultar Historial de Migraciones - Reportes y Analítica Territorial";
+    Layout = "_AppLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/reportes.css" asp-append-version="true" />
+}
+
+<div class="reportes-seccion">
+    <!-- Encabezado Principal de Consultar Historial de Migraciones -->
+    <header class="reportes-cabecera">
+        <div class="reportes-cabecera__info">
+            <h1 class="reportes-cabecera__titulo">Consultar Historial de Migraciones</h1>
+            <p class="reportes-cabecera__intro">
+                Consulta de procesos de migración espacial ejecutados previamente, volumen de datos cargados, tiempos de ejecución y resultados históricos registrados.
+            </p>
+            <div class="reportes-cabecera__meta">
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Hora Oficial (Bolivia UTC-4): <strong id="hora-auditoria">Cargando...</strong>
+                </span>
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    Acceso Autorizado: <strong id="perfil-usuario">Administrador / Responsable de Migración</strong>
+                </span>
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    Modo: <strong>Solo Lectura (Auditoría de Cargas)</strong>
+                </span>
+            </div>
+        </div>
+        <div class="reportes-cabecera__acciones">
+            <!-- Botones de Exportación (4 formatos requeridos) -->
+            <div class="rep-exportar-grupo">
+                <span class="rep-exportar-label">Exportar:</span>
+                <button type="button" class="btn-exportar-chip btn-exportar-chip--excel" data-exportar="xlsx" title="Exportar a Microsoft Excel (.xlsx)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="8" y1="13" x2="16" y2="17"></line>
+                        <line x1="16" y1="13" x2="8" y2="17"></line>
+                    </svg>
+                    <span>Excel (.xlsx)</span>
+                </button>
+                <button type="button" class="btn-exportar-chip btn-exportar-chip--pdf" data-exportar="pdf" title="Exportar a documento PDF (.pdf)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span>PDF (.pdf)</span>
+                </button>
+                <button type="button" class="btn-exportar-chip btn-exportar-chip--csv" data-exportar="csv" title="Exportar a valores separados por coma (.csv)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span>CSV (.csv)</span>
+                </button>
+                <button type="button" class="btn-exportar-chip" data-exportar="txt" title="Exportar a texto plano tabulado (.txt)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span>Texto (.txt)</span>
+                </button>
+            </div>
+
+            <button id="btn-actualizar-migraciones" type="button" class="btn-rep-primario" title="Actualizar historial de migraciones">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span>Actualizar Historial</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Notificación / Aviso de Error controlado (RN-REP-05) -->
+    <div id="migraciones-aviso" class="dashboard-aviso" hidden></div>
+
+    <!-- Indicadores KPIs Históricos Consolidados -->
+    <div class="rep-kpi-grid">
+        <!-- 1. Total Procesos Ejecutados -->
+        <div class="rep-kpi-card rep-kpi-card--destacado">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Procesos de Migración</span>
+                <span class="badge-estado badge-estado--normal">Histórico</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-total-migraciones">0</div>
+            <div class="rep-kpi-card__subtexto">Cargas espaciales registradas en bitácora</div>
+        </div>
+
+        <!-- 2. Registros Espaciales Migrados -->
+        <div class="rep-kpi-card rep-kpi-card--sig">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Registros Migrados</span>
+                <span class="badge-estado badge-estado--inspeccion">Geometrías</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-total-registros-migrados" style="color: #0284c7;">0</div>
+            <div class="rep-kpi-card__subtexto">Total de entidades insertadas en Azure SQL</div>
+        </div>
+
+        <!-- 3. Migraciones Exitosas -->
+        <div class="rep-kpi-card">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Migraciones Exitosas</span>
+                <span class="badge-estado badge-estado--normal" id="kpi-migraciones-pct">100% Éxito</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-migraciones-exitosas" style="color: #16a34a;">0</div>
+            <div class="rep-kpi-card__subtexto">Cargas completadas sin inconsistencias</div>
+        </div>
+
+        <!-- 4. Procesos con Advertencias o Incidencias -->
+        <div class="rep-kpi-card">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Con Observaciones</span>
+                <span class="badge-estado badge-estado--pendiente">Advertencias</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-migraciones-advertencias" style="color: #ea580c;">0</div>
+            <div class="rep-kpi-card__subtexto">Procesos con registros omitidos o alertas</div>
+        </div>
+    </div>
+
+    <!-- Gráficos Estadísticos del Historial -->
+    <div class="rep-charts-grid-2">
+        <!-- Gráfico 1: Volumen por Proceso -->
+        <div class="rep-card">
+            <div class="rep-card__header">
+                <h3 class="rep-card__titulo">Volumen de Entidades por Migración Reciente</h3>
+                <p class="rep-card__subtitulo">Comparativa de registros procesados vs. insertados efectivamente</p>
+            </div>
+            <div class="rep-chart-container" style="height: 260px;">
+                <canvas id="chart-volumen-migraciones"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfico 2: Tasa de Resultados de Ejecución -->
+        <div class="rep-card">
+            <div class="rep-card__header">
+                <h3 class="rep-card__titulo">Distribución de Resultados de Carga</h3>
+                <p class="rep-card__subtitulo">Proporción de procesos exitosos frente a procesos con advertencias</p>
+            </div>
+            <div class="rep-chart-container" style="height: 260px;">
+                <canvas id="chart-doughnut-estados-mig"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Filtros y Búsqueda -->
+    <div class="rep-filtros-card">
+        <div class="rep-filtros-fila">
+            <div class="rep-filtros-grupo">
+                <div class="rep-campo">
+                    <label for="filtro-mig-capa">Capa Cartográfica</label>
+                    <select id="filtro-mig-capa" class="rep-control rep-control--select">
+                        <option value="">Todas las Capas</option>
+                    </select>
+                </div>
+
+                <div class="rep-campo">
+                    <label for="filtro-mig-estado">Resultado del Proceso</label>
+                    <select id="filtro-mig-estado" class="rep-control rep-control--select">
+                        <option value="">Todos los Estados</option>
+                        <option value="EXITO">Completadas con Éxito</option>
+                        <option value="ADVERTENCIA">Con Observaciones / Advertencias</option>
+                    </select>
+                </div>
+
+                <div class="rep-campo" style="flex: 1; min-width: 240px;">
+                    <label for="filtro-mig-buscar">Buscar en Historial</label>
+                    <input type="search" id="filtro-mig-buscar" class="rep-control rep-control--search"
+                           placeholder="Archivo origen, capa, usuario u operador..." autocomplete="off" />
+                </div>
+
+                <button type="button" id="btn-limpiar-mig-filtros" class="rep-btn-secundario" title="Restablecer filtros">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span>Limpiar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla Histórica de Procesos de Migración -->
+    <div class="rep-tabla-card">
+        <div class="rep-tabla-header">
+            <h3 class="rep-tabla-titulo">Registro Histórico de Cargas Espaciales</h3>
+            <span class="rep-tabla-conteo" id="tabla-migraciones-conteo">Cargando historial...</span>
+        </div>
+        <div class="rep-tabla-envoltura">
+            <table class="rep-tabla" aria-label="Tabla histórica de procesos de migración">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">ID</th>
+                        <th style="width: 130px;">Fecha / Hora</th>
+                        <th style="width: 120px;">Capa Destino</th>
+                        <th>Archivo de Origen</th>
+                        <th style="width: 100px;">Modalidad</th>
+                        <th style="width: 140px;">Registros Carga</th>
+                        <th style="width: 90px;">Duración</th>
+                        <th style="width: 110px;">Resultado</th>
+                        <th style="width: 120px;">Operador</th>
+                        <th style="width: 70px; text-align: center;">Detalle</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-migraciones-body">
+                    <tr>
+                        <td colspan="10" class="rep-vacio-mensaje">Cargando procesos de migración...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js" asp-append-version="true"></script>
+    <script src="~/js/reportes/migraciones.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Reportes/Migraciones',
+            alValidar: function () {
+                if (window.VisorSIG && window.VisorSIG.reportesMigraciones) {
+                    window.VisorSIG.reportesMigraciones.iniciar();
+                }
+            }
+        });
+    </script>
+}

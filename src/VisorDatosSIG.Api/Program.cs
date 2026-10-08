@@ -11,6 +11,7 @@ using VisorDatosSIG.Infrastructure.Navigation;
 using VisorDatosSIG.Infrastructure.Persistence;
 using VisorDatosSIG.Infrastructure.Persistence.Repositories;
 using VisorDatosSIG.Infrastructure.Security;
+using VisorDatosSIG.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,6 +91,9 @@ builder.Services.AddScoped<IPermisoRepository, PermisoRepository>();
 builder.Services.AddScoped<IPermisoService, PermisoService>();
 builder.Services.AddScoped<IBitacoraConsultaRepository, BitacoraConsultaRepository>();
 builder.Services.AddScoped<IBitacoraConsultaService, BitacoraConsultaService>();
+
+// Módulo 6: Reportes y Analítica (CU28 a CU32)
+builder.Services.AddScoped<IReportesService, ReportesService>();
 
 // Autenticación JWT Bearer.
 builder.Services

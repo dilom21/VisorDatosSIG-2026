@@ -126,7 +126,16 @@ window.VisorSIG = window.VisorSIG || {};
             return false;
         }
 
-        return normalizarRuta(window.location.pathname) === objetivo;
+        var actual = normalizarRuta(window.location.pathname);
+        if (actual === objetivo) {
+            return true;
+        }
+
+        if (actual === '/reportes' && objetivo === '/reportes/dashboard') {
+            return true;
+        }
+
+        return false;
     }
 
     // ------------------------------------------------------------------------

@@ -1,0 +1,860 @@
+/* =============================================================================
+   VisorDatosSIG 2026 — Módulo 6: Reportes y Analítica Territorial
+   CU28 – Consultar Dashboard General (CSS)
+   Paleta: Azul Corporativo (#0d3b66), Pizarra y Blancos puros. Sin neón ni degradados.
+   ============================================================================= */
+
+:root {
+    --rep-primary: #0d3b66;
+    --rep-primary-hover: #092a4a;
+    --rep-primary-light: #e8f0fe;
+    --rep-text-dark: #0f172a;
+    --rep-text-muted: #64748b;
+    --rep-border: #cbd5e1;
+    --rep-border-light: #e2e8f0;
+    --rep-bg-card: #ffffff;
+    --rep-bg-subtle: #f8fafc;
+    --rep-success: #16a34a;
+    --rep-warning: #d97706;
+    --rep-danger: #dc2626;
+    --rep-info: #0284c7;
+    --rep-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --rep-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    --rep-radius: 8px;
+    --rep-radius-lg: 12px;
+}
+
+.reportes-seccion {
+    padding: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+/* --- Cabecera Principal --- */
+.reportes-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    background: var(--rep-bg-card);
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--rep-radius-lg);
+    border: 1px solid var(--rep-border-light);
+    box-shadow: var(--rep-shadow-sm);
+}
+
+.reportes-cabecera__info {
+    flex: 1;
+    min-width: 280px;
+}
+
+.reportes-cabecera__titulo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--rep-primary);
+    margin: 0 0 0.35rem 0;
+    letter-spacing: -0.01em;
+}
+
+.reportes-cabecera__intro {
+    font-size: 0.9rem;
+    color: var(--rep-text-muted);
+    margin: 0 0 0.75rem 0;
+    line-height: 1.45;
+}
+
+.reportes-cabecera__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.reportes-meta-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--rep-text-muted);
+    background: var(--rep-bg-subtle);
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--rep-radius);
+    border: 1px solid var(--rep-border-light);
+}
+
+.reportes-meta-tag strong {
+    color: var(--rep-primary);
+}
+
+.reportes-cabecera__acciones {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+/* --- Botones --- */
+.btn-rep-primario {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.65rem 1.15rem;
+    border-radius: var(--rep-radius);
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    border: 1px solid var(--rep-primary);
+    background-color: var(--rep-primary);
+    color: #ffffff;
+    text-decoration: none;
+    box-shadow: var(--rep-shadow-sm);
+}
+
+.btn-rep-primario:hover:not(:disabled) {
+    background-color: var(--rep-primary-hover);
+    border-color: var(--rep-primary-hover);
+}
+
+.btn-rep-primario:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* --- Alertas y Avisos --- */
+.dashboard-aviso {
+    padding: 0.75rem 1rem;
+    border-radius: var(--rep-radius);
+    font-size: 0.875rem;
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: var(--rep-text-dark);
+}
+
+.dashboard-aviso--error {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+/* --- Grid de KPIs --- */
+.rep-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.rep-kpi-card {
+    background: var(--rep-bg-card);
+    border: 1px solid var(--rep-border-light);
+    border-radius: var(--rep-radius);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--rep-shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 4px solid var(--rep-primary);
+}
+
+.rep-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--rep-shadow-md);
+}
+
+.rep-kpi-card--destacado {
+    border-left-color: #0d3b66;
+}
+
+.rep-kpi-card--personal {
+    border-left-color: #1d4ed8;
+}
+
+.rep-kpi-card--sig {
+    border-left-color: #0284c7;
+}
+
+.rep-kpi-card--migraciones {
+    border-left-color: #475569;
+}
+
+.rep-kpi-card__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.rep-kpi-card__label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--rep-text-muted);
+}
+
+.rep-kpi-card__valor {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--rep-primary);
+    line-height: 1.1;
+    margin-bottom: 0.35rem;
+}
+
+.rep-kpi-card__subtexto {
+    font-size: 0.8rem;
+    color: var(--rep-text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.rep-kpi-card__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--rep-border-light);
+}
+
+.kpi-mini-pill {
+    font-size: 0.75rem;
+    background: var(--rep-bg-subtle);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    color: var(--rep-text-dark);
+    border: 1px solid var(--rep-border-light);
+}
+
+.kpi-mini-pill b {
+    color: var(--rep-primary);
+}
+
+/* Badges de Estado */
+.badge-estado {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.badge-estado--normal {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.badge-estado--pendiente {
+    background-color: #ffedd5;
+    color: #c2410c;
+}
+
+.badge-estado--corte {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.badge-estado--cortado {
+    background-color: #fecdd3;
+    color: #881337;
+}
+
+.badge-estado--inspeccion {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+.badge-estado--exito {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.badge-estado--advertencia {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.badge-estado--error {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.btn-rep-ver-detalle {
+    height: 28px;
+    padding: 0 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--rep-primary);
+    background: #ffffff;
+    border: 1px solid var(--rep-border);
+    border-radius: var(--rep-radius);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.15s ease;
+}
+
+.btn-rep-ver-detalle:hover {
+    background: var(--rep-primary-light);
+    border-color: var(--rep-primary);
+}
+
+/* --- Layout de Tarjetas y Gráficos --- */
+.rep-charts-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    gap: 1.5rem;
+}
+
+.rep-card {
+    background: var(--rep-bg-card);
+    border: 1px solid var(--rep-border-light);
+    border-radius: var(--rep-radius-lg);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--rep-shadow-sm);
+    display: flex;
+    flex-direction: column;
+}
+
+.rep-card__header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--rep-border-light);
+}
+
+.rep-card__titulo {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--rep-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.rep-card__desc {
+    font-size: 0.8rem;
+    color: var(--rep-text-muted);
+    margin: 0;
+}
+
+.rep-chart-container {
+    position: relative;
+    width: 100%;
+    height: 320px;
+}
+
+/* Gráfico de dona con leyenda lateral */
+.rep-chart-with-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: center;
+    min-height: 320px;
+}
+
+.rep-chart-container--donut {
+    height: 280px;
+}
+
+.rep-donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    justify-content: center;
+}
+
+.rep-donut-legend-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: var(--rep-bg-subtle);
+    border: 1px solid var(--rep-border-light);
+    border-radius: var(--rep-radius);
+    font-size: 0.85rem;
+}
+
+.rep-donut-legend-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rep-donut-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.rep-donut-label {
+    font-weight: 600;
+    color: var(--rep-text-dark);
+}
+
+.rep-donut-legend-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rep-donut-count {
+    color: var(--rep-primary);
+    font-weight: 700;
+}
+
+.rep-donut-pct {
+    font-size: 0.75rem;
+    color: var(--rep-text-muted);
+}
+
+/* --- Panel Resumen de Situación Territorial --- */
+.rep-resumen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.rep-resumen-item {
+    background: var(--rep-bg-subtle);
+    border: 1px solid var(--rep-border-light);
+    border-radius: var(--rep-radius);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.rep-resumen-item__label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--rep-text-muted);
+    letter-spacing: 0.04em;
+}
+
+.rep-resumen-item__valor {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--rep-primary);
+}
+
+.rep-resumen-item__sub {
+    font-size: 0.75rem;
+    color: var(--rep-text-muted);
+}
+
+/* --- Responsive Media Queries --- */
+@media (max-width: 992px) {
+    .rep-charts-grid-2 {
+        grid-template-columns: 1fr;
+    }
+    .rep-chart-with-legend {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .reportes-seccion {
+        padding: 1rem;
+    }
+    .rep-charts-grid-2 {
+        grid-template-columns: 1fr;
+    }
+    .rep-chart-container {
+        height: 260px;
+    }
+    .rep-kpi-card__valor {
+        font-size: 1.75rem;
+    }
+}
+
+/* =============================================================================
+   Estilos específicos de Consultar Estado de Servicios
+   ============================================================================= */
+
+/* Barra de Filtros y Búsqueda */
+.rep-filtros-card {
+    background: var(--rep-bg-card);
+    border: 1px solid var(--rep-border-light);
+    border-radius: var(--rep-radius-lg);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--rep-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.rep-filtros-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.rep-filtros-grupo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 280px;
+}
+
+.rep-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.rep-campo label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--rep-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.rep-control {
+    height: 38px;
+    padding: 0 0.75rem;
+    font-size: 0.88rem;
+    border: 1px solid var(--rep-border);
+    border-radius: var(--rep-radius);
+    background: #ffffff;
+    color: var(--rep-text-dark);
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rep-control:focus {
+    outline: none;
+    border-color: var(--rep-primary);
+    box-shadow: 0 0 0 2px rgba(13, 59, 102, 0.15);
+}
+
+.rep-control--select {
+    min-width: 180px;
+    cursor: pointer;
+}
+
+.rep-control--search {
+    min-width: 260px;
+    flex: 1;
+}
+
+.rep-btn-secundario {
+    height: 38px;
+    padding: 0 1rem;
+    border: 1px solid var(--rep-border);
+    border-radius: var(--rep-radius);
+    background: #ffffff;
+    color: var(--rep-text-dark);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.rep-btn-secundario:hover {
+    background: var(--rep-bg-subtle);
+    border-color: var(--rep-border-light);
+}
+
+/* Grupo de Exportación */
+.rep-exportar-grupo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.rep-exportar-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--rep-text-muted);
+    margin-right: 0.25rem;
+}
+
+.btn-exportar-chip {
+    height: 34px;
+    padding: 0 0.75rem;
+    border-radius: var(--rep-radius);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid var(--rep-border);
+    background: #ffffff;
+    color: var(--rep-text-dark);
+    transition: all 0.15s ease;
+}
+
+.btn-exportar-chip:hover {
+    border-color: var(--rep-primary);
+    color: var(--rep-primary);
+    background: var(--rep-primary-light);
+}
+
+.btn-exportar-chip:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-exportar-chip--excel:hover {
+    border-color: #16a34a;
+    color: #16a34a;
+    background: #f0fdf4;
+}
+
+.btn-exportar-chip--pdf:hover {
+    border-color: #dc2626;
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+.btn-exportar-chip--csv:hover {
+    border-color: #0284c7;
+    color: #0284c7;
+    background: #f0f9ff;
+}
+
+/* Tabla de Servicios */
+.rep-tabla-card {
+    background: var(--rep-bg-card);
+    border: 1px solid var(--rep-border-light);
+    border-radius: var(--rep-radius-lg);
+    box-shadow: var(--rep-shadow-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.rep-tabla-header {
+    padding: 1rem 1.5rem;
+    background: var(--rep-bg-subtle);
+    border-bottom: 1px solid var(--rep-border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.rep-tabla-titulo {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--rep-primary);
+    margin: 0;
+}
+
+.rep-tabla-conteo {
+    font-size: 0.82rem;
+    color: var(--rep-text-muted);
+}
+
+.rep-tabla-envoltura {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.rep-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    text-align: left;
+}
+
+.rep-tabla th {
+    background: #f1f5f9;
+    color: var(--rep-text-muted);
+    font-weight: 700;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--rep-border);
+    white-space: nowrap;
+}
+
+.rep-tabla td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--rep-border-light);
+    color: var(--rep-text-dark);
+    vertical-align: middle;
+}
+
+.rep-tabla tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.rep-tabla tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.rep-vacio-mensaje {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--rep-text-muted);
+    font-size: 0.95rem;
+}
+
+.rep-vacio-icono {
+    margin-bottom: 0.5rem;
+    color: #94a3b8;
+}
+
+/* Paginación */
+.rep-paginacion-bar {
+    padding: 0.85rem 1.5rem;
+    border-top: 1px solid var(--rep-border-light);
+    background: var(--rep-bg-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.rep-pag-tamano {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--rep-text-muted);
+}
+
+.rep-pag-tamano select {
+    height: 32px;
+    padding: 0 0.5rem;
+    border: 1px solid var(--rep-border);
+    border-radius: 4px;
+    font-size: 0.82rem;
+    background: #ffffff;
+}
+
+.rep-pag-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.rep-btn-pag {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 0.5rem;
+    border: 1px solid var(--rep-border);
+    background: #ffffff;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--rep-text-dark);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.rep-btn-pag:hover:not(:disabled) {
+    background: var(--rep-primary-light);
+    border-color: var(--rep-primary);
+    color: var(--rep-primary);
+}
+
+.rep-btn-pag.activo {
+    background: var(--rep-primary);
+    border-color: var(--rep-primary);
+    color: #ffffff;
+}
+
+.rep-btn-pag:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.rep-pag-info {
+    font-size: 0.82rem;
+    color: var(--rep-text-muted);
+}
+
+/* =============================================================================
+   Estilos específicos de Consultar Indicadores de Información Geográfica
+   ============================================================================= */
+
+.rep-geom-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+}
+
+.rep-geom-badge--polygon {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.rep-geom-badge--point {
+    background-color: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.rep-geom-badge--linestring {
+    background-color: #f3e8ff;
+    color: #7e22ce;
+    border: 1px solid #e9d5ff;
+}
+
+.rep-metadata-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.rep-metadata-box {
+    background: var(--rep-bg-subtle);
+    border: 1px solid var(--rep-border-light);
+    border-radius: var(--rep-radius);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.rep-metadata-box__label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--rep-text-muted);
+    letter-spacing: 0.04em;
+}
+
+.rep-metadata-box__valor {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--rep-primary);
+    word-break: break-all;
+}
+
+.rep-metadata-box__sub {
+    font-size: 0.75rem;
+    color: var(--rep-text-muted);
+}

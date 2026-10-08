@@ -1,0 +1,241 @@
+@*
+    Módulo 6: Reportes y Analítica Territorial
+    Consultar Estado de Servicios
+*@
+@{
+    ViewData["Title"] = "Consultar Estado de Servicios - Reportes y Analítica Territorial";
+    Layout = "_AppLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/reportes.css" asp-append-version="true" />
+}
+
+<div class="reportes-seccion">
+    <!-- Encabezado Principal de Consultar Estado de Servicios -->
+    <header class="reportes-cabecera">
+        <div class="reportes-cabecera__info">
+            <h1 class="reportes-cabecera__titulo">Consultar Estado de Servicios</h1>
+            <p class="reportes-cabecera__intro">
+                Consolidación de servicios de clientes y distribución según los estados definidos por el negocio: normal, pendiente, por cortar y demás situaciones registradas.
+            </p>
+            <div class="reportes-cabecera__meta">
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Hora Oficial (Bolivia UTC-4): <strong id="hora-auditoria">Cargando...</strong>
+                </span>
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    Acceso Autorizado: <strong id="perfil-usuario">Administrador / Supervisor</strong>
+                </span>
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    Modo: <strong>Solo Lectura (Auditoría)</strong>
+                </span>
+            </div>
+        </div>
+        <div class="reportes-cabecera__acciones">
+            <button id="btn-actualizar-servicios" type="button" class="btn-rep-primario" title="Actualizar información en tiempo real">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span>Actualizar Datos</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Notificación / Aviso de Error controlado (RN-REP-05) -->
+    <div id="servicios-aviso" class="dashboard-aviso" hidden></div>
+
+    <!-- Indicadores KPIs Consolidados de Estados -->
+    <div class="rep-kpi-grid">
+        <!-- 1. Total Servicios -->
+        <div class="rep-kpi-card rep-kpi-card--destacado">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Total Servicios</span>
+                <span class="badge-estado badge-estado--normal">Consolidado</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-total-servicios">0</div>
+            <div class="rep-kpi-card__subtexto">Total de suministros registrados en el sistema</div>
+        </div>
+
+        <!-- 2. Normal -->
+        <div class="rep-kpi-card">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Normal / Al Día</span>
+                <span class="badge-estado badge-estado--normal" id="kpi-normal-pct">0%</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-normal-cant" style="color: #16a34a;">0</div>
+            <div class="rep-kpi-card__subtexto">Servicios sin deuda ni observaciones</div>
+        </div>
+
+        <!-- 3. Pendiente -->
+        <div class="rep-kpi-card">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Pendiente</span>
+                <span class="badge-estado badge-estado--pendiente" id="kpi-pendiente-pct">0%</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-pendiente-cant" style="color: #ea580c;">0</div>
+            <div class="rep-kpi-card__subtexto">Facturación o trámite en espera</div>
+        </div>
+
+        <!-- 4. Por Cortar / Para Corte -->
+        <div class="rep-kpi-card">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Por Cortar</span>
+                <span class="badge-estado badge-estado--corte" id="kpi-corte-pct">0%</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-corte-cant" style="color: #dc2626;">0</div>
+            <div class="rep-kpi-card__subtexto">Programados para corte por mora</div>
+        </div>
+
+        <!-- 5. Cortados -->
+        <div class="rep-kpi-card">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Cortados</span>
+                <span class="badge-estado badge-estado--cortado" id="kpi-cortado-pct">0%</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-cortado-cant" style="color: #991b1b;">0</div>
+            <div class="rep-kpi-card__subtexto">Suministro interrumpido físicamente</div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Distribución Consolidada -->
+    <div class="rep-card">
+        <div class="rep-card__header">
+            <h2 class="rep-card__titulo">Distribución Consolidada por Estado del Negocio</h2>
+            <p class="rep-card__subtitulo">Proporción y volumen total de clientes según su estado de servicio</p>
+        </div>
+        <div class="rep-chart-container" style="height: 240px;">
+            <canvas id="chart-distribucion-servicios"></canvas>
+        </div>
+    </div>
+
+    <!-- Barra de Filtros, Búsqueda y Exportación -->
+    <div class="rep-filtros-card">
+        <div class="rep-filtros-fila">
+            <div class="rep-filtros-grupo">
+                <div class="rep-campo">
+                    <label for="filtro-estado">Estado del Servicio</label>
+                    <select id="filtro-estado" class="rep-control rep-control--select">
+                        <option value="">Todos los Estados</option>
+                    </select>
+                </div>
+
+                <div class="rep-campo" style="flex: 1; min-width: 240px;">
+                    <label for="filtro-buscar">Buscar Servicio</label>
+                    <input type="search" id="filtro-buscar" class="rep-control rep-control--search"
+                           placeholder="Código Fijo, Código SIG o Nombre del Titular..." autocomplete="off" />
+                </div>
+
+                <button type="button" id="btn-limpiar-filtros" class="rep-btn-secundario" title="Restablecer filtros">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span>Limpiar</span>
+                </button>
+            </div>
+
+            <!-- Botones de Exportación (4 formatos requeridos) -->
+            <div class="rep-exportar-grupo">
+                <span class="rep-exportar-label">Exportar:</span>
+                <button type="button" class="btn-exportar-chip btn-exportar-chip--excel" data-exportar="xlsx" title="Exportar a Microsoft Excel (.xlsx)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="8" y1="13" x2="16" y2="17"></line>
+                        <line x1="16" y1="13" x2="8" y2="17"></line>
+                    </svg>
+                    <span>Excel (.xlsx)</span>
+                </button>
+                <button type="button" class="btn-exportar-chip btn-exportar-chip--pdf" data-exportar="pdf" title="Exportar a documento PDF (.pdf)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span>PDF (.pdf)</span>
+                </button>
+                <button type="button" class="btn-exportar-chip btn-exportar-chip--csv" data-exportar="csv" title="Exportar a valores separados por coma (.csv)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span>CSV (.csv)</span>
+                </button>
+                <button type="button" class="btn-exportar-chip" data-exportar="txt" title="Exportar a texto plano tabulado (.txt)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span>Texto (.txt)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla Detallada de Servicios de Clientes -->
+    <div class="rep-tabla-card">
+        <div class="rep-tabla-header">
+            <h3 class="rep-tabla-titulo">Listado Consolidado de Servicios</h3>
+            <span class="rep-tabla-conteo" id="tabla-conteo-info">Cargando servicios...</span>
+        </div>
+        <div class="rep-tabla-envoltura">
+            <table class="rep-tabla" aria-label="Tabla de servicios de clientes y su estado">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">N° ID</th>
+                        <th style="width: 170px;">Código Fijo / SIG</th>
+                        <th>Titular del Suministro</th>
+                        <th style="width: 150px;">Estado Actual</th>
+                        <th style="width: 130px;">Lote Catastral</th>
+                        <th style="width: 190px;">Coordenadas (Lng, Lat)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-servicios-body">
+                    <tr>
+                        <td colspan="6" class="rep-vacio-mensaje">Cargando información consolidada...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- Paginación -->
+        <div class="rep-paginacion-bar">
+            <div class="rep-pag-tamano">
+                <label for="select-tamano-pagina">Registros por página:</label>
+                <select id="select-tamano-pagina">
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <nav class="rep-pag-nav" id="paginacion-nav" aria-label="Paginación de servicios"></nav>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js" asp-append-version="true"></script>
+    <script src="~/js/reportes/servicios.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Reportes/Servicios',
+            alValidar: function () {
+                if (window.VisorSIG && window.VisorSIG.reportesServicios) {
+                    window.VisorSIG.reportesServicios.iniciar();
+                }
+            }
+        });
+    </script>
+}

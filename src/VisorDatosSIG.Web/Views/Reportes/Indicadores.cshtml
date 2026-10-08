@@ -1,0 +1,264 @@
+@*
+    Módulo 6: Reportes y Analítica Territorial
+    Consultar Indicadores de Información Geográfica
+*@
+@{
+    ViewData["Title"] = "Consultar Indicadores de Información Geográfica - Reportes y Analítica Territorial";
+    Layout = "_AppLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/reportes.css" asp-append-version="true" />
+}
+
+<div class="reportes-seccion">
+    <!-- Encabezado Principal de Consultar Indicadores de Información Geográfica -->
+    <header class="reportes-cabecera">
+        <div class="reportes-cabecera__info">
+            <h1 class="reportes-cabecera__titulo">Consultar Indicadores de Información Geográfica</h1>
+            <p class="reportes-cabecera__intro">
+                Métricas cuantitativas, volumen cartográfico y distribución de entidades geoespaciales almacenadas en el sistema (manzanas, lotes, códigos fijos y red vial).
+            </p>
+            <div class="reportes-cabecera__meta">
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Hora Oficial (Bolivia UTC-4): <strong id="hora-auditoria">Cargando...</strong>
+                </span>
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    Acceso Autorizado: <strong id="perfil-usuario">Administrador / Supervisor</strong>
+                </span>
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    Modo: <strong>Solo Lectura (Auditoría Territorial)</strong>
+                </span>
+            </div>
+        </div>
+        <div class="reportes-cabecera__acciones">
+            <!-- Botones de Exportación (4 formatos requeridos) -->
+            <div class="rep-exportar-grupo">
+                <span class="rep-exportar-label">Exportar:</span>
+                <button type="button" class="btn-exportar-chip btn-exportar-chip--excel" data-exportar="xlsx" title="Exportar a Microsoft Excel (.xlsx)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="8" y1="13" x2="16" y2="17"></line>
+                        <line x1="16" y1="13" x2="8" y2="17"></line>
+                    </svg>
+                    <span>Excel (.xlsx)</span>
+                </button>
+                <button type="button" class="btn-exportar-chip btn-exportar-chip--pdf" data-exportar="pdf" title="Exportar a documento PDF (.pdf)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span>PDF (.pdf)</span>
+                </button>
+                <button type="button" class="btn-exportar-chip btn-exportar-chip--csv" data-exportar="csv" title="Exportar a valores separados por coma (.csv)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span>CSV (.csv)</span>
+                </button>
+                <button type="button" class="btn-exportar-chip" data-exportar="txt" title="Exportar a texto plano tabulado (.txt)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span>Texto (.txt)</span>
+                </button>
+            </div>
+
+            <button id="btn-actualizar-indicadores" type="button" class="btn-rep-primario" title="Actualizar indicadores en tiempo real">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span>Actualizar Indicadores</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Notificación / Aviso de Error controlado (RN-REP-05) -->
+    <div id="indicadores-aviso" class="dashboard-aviso" hidden></div>
+
+    <!-- Indicadores KPIs Consolidados Principales -->
+    <div class="rep-kpi-grid">
+        <!-- 1. Total Entidades Cartográficas -->
+        <div class="rep-kpi-card rep-kpi-card--destacado">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Total Entidades SIG</span>
+                <span class="badge-estado badge-estado--normal">Consolidado</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-total-entidades">0</div>
+            <div class="rep-kpi-card__subtexto">Elementos espaciales en la base de datos</div>
+        </div>
+
+        <!-- 2. Lotes y Parcelas -->
+        <div class="rep-kpi-card rep-kpi-card--sig">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Predios y Lotes</span>
+                <span class="badge-estado badge-estado--inspeccion" id="kpi-lotes-pct">0%</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-lotes-cant" style="color: #0284c7;">0</div>
+            <div class="rep-kpi-card__subtexto">Parcelas catastrales registradas</div>
+        </div>
+
+        <!-- 3. Puntos de Servicio -->
+        <div class="rep-kpi-card rep-kpi-card--personal">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Códigos Fijos / Suministros</span>
+                <span class="badge-estado badge-estado--normal" id="kpi-servicios-pct">0%</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-servicios-cant" style="color: #1d4ed8;">0</div>
+            <div class="rep-kpi-card__subtexto">Puntos de conexión georreferenciados</div>
+        </div>
+
+        <!-- 4. Traza Urbana (Manzanas y Vías) -->
+        <div class="rep-kpi-card">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Traza Urbana</span>
+                <span class="badge-estado badge-estado--normal">Red Geodésica</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-trazado-manz" style="font-size: 1.5rem; color: #0d3b66;">0 Manz.</div>
+            <div class="rep-kpi-card__subtexto" id="kpi-trazado-vias">0 Vías</div>
+        </div>
+    </div>
+
+    <!-- Indicadores Territoriales Derivados (Panel de Métricas Analíticas) -->
+    <div class="rep-card">
+        <div class="rep-card__header">
+            <h2 class="rep-card__titulo">Indicadores Territoriales y Densidades Geográficas</h2>
+            <p class="rep-card__subtitulo">Relaciones espaciales calculadas entre la infraestructura urbana y los suministros de clientes</p>
+        </div>
+        <div class="rep-resumen-grid">
+            <div class="rep-resumen-item">
+                <span class="rep-resumen-item__label">Densidad Predial Urbana</span>
+                <span class="rep-resumen-item__valor" id="dens-lotes-manzana">0 predios/manzana</span>
+                <small class="rep-resumen-item__sub">Promedio de lotes por cada manzana delimitada</small>
+            </div>
+            <div class="rep-resumen-item">
+                <span class="rep-resumen-item__label">Tasa de Conexión Predial</span>
+                <span class="rep-resumen-item__valor" id="dens-codigos-lote">0 suministros/lote</span>
+                <small class="rep-resumen-item__sub">Promedio de puntos de servicio por parcela catastral</small>
+            </div>
+            <div class="rep-resumen-item">
+                <span class="rep-resumen-item__label">Red Vial Urbana Estimada</span>
+                <span class="rep-resumen-item__valor" id="dens-vias-km">0 km lineales</span>
+                <small class="rep-resumen-item__sub">Longitud aproximada de ejes de calles y avenidas</small>
+            </div>
+            <div class="rep-resumen-item">
+                <span class="rep-resumen-item__label">Manzanas con Cobertura</span>
+                <span class="rep-resumen-item__valor" id="dens-manzanas-cubiertas" style="color:var(--rep-primary);">0 manzanas</span>
+                <small class="rep-resumen-item__sub">Manzanas con polígono válido en Azure SQL</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dos Gráficos Estadísticos: Volumen por Capa y Participación por Geometría OGC -->
+    <div class="rep-charts-grid-2">
+        <!-- Gráfico 1: Volumen por Capa Cartográfica -->
+        <div class="rep-card">
+            <div class="rep-card__header">
+                <h3 class="rep-card__titulo">Volumen de Registros por Capa Cartográfica</h3>
+                <p class="rep-card__subtitulo">Conteo total de entidades almacenadas en cada tabla geoespacial</p>
+            </div>
+            <div class="rep-chart-container" style="height: 270px;">
+                <canvas id="chart-volumen-capas"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfico 2: Participación por Tipo de Geometría OGC -->
+        <div class="rep-card">
+            <div class="rep-card__header">
+                <h3 class="rep-card__titulo">Distribución por Tipo de Geometría Espacial</h3>
+                <p class="rep-card__subtitulo">Proporción según el estándar OGC: Polígonos, Puntos y Líneas</p>
+            </div>
+            <div class="rep-chart-container" style="height: 270px;">
+                <canvas id="chart-doughnut-geometrias"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla Detallada de Capas Geográficas del Sistema -->
+    <div class="rep-tabla-card">
+        <div class="rep-tabla-header">
+            <h3 class="rep-tabla-titulo">Catálogo Oficial de Capas Geográficas</h3>
+            <span class="rep-tabla-conteo">4 capas registradas en Azure SQL</span>
+        </div>
+        <div class="rep-tabla-envoltura">
+            <table class="rep-tabla" aria-label="Tabla de capas geográficas del sistema">
+                <thead>
+                    <tr>
+                        <th style="width: 180px;">Capa Cartográfica</th>
+                        <th>Descripción y Propósito</th>
+                        <th style="width: 160px;">Tipo de Geometría OGC</th>
+                        <th style="width: 150px;">Total Registros</th>
+                        <th style="width: 150px;">Participación (% Total)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-capas-body">
+                    <tr>
+                        <td colspan="5" class="rep-vacio-mensaje">Cargando catálogo de capas...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Panel de Cobertura Espacial y Sistema de Referencia -->
+    <div class="rep-card">
+        <div class="rep-card__header">
+            <h3 class="rep-card__titulo">Metadatos y Extensión Geográfica (Bounding Box)</h3>
+            <p class="rep-card__subtitulo">Parámetros geodésicos del ámbito territorial cubierto por el sistema</p>
+        </div>
+        <div class="rep-metadata-grid">
+            <div class="rep-metadata-box">
+                <span class="rep-metadata-box__label">Sistema de Referencia Espacial (CRS)</span>
+                <span class="rep-metadata-box__valor" id="meta-srid">WGS 84 (EPSG:4326)</span>
+                <small class="rep-metadata-box__sub">Proyección geográfica estándar de almacenamiento</small>
+            </div>
+            <div class="rep-metadata-box">
+                <span class="rep-metadata-box__label">Jurisdicción Territorial</span>
+                <span class="rep-metadata-box__valor" id="meta-jurisdiccion">Santa Cruz de la Sierra · Bolivia</span>
+                <small class="rep-metadata-box__sub">Municipio y Departamento de cobertura</small>
+            </div>
+            <div class="rep-metadata-box">
+                <span class="rep-metadata-box__label">Extensión Espacial [MinX, MinY] a [MaxX, MaxY]</span>
+                <span class="rep-metadata-box__valor" id="meta-bbox">[-63.2201, -17.8340] a [-63.1250, -17.7420]</span>
+                <small class="rep-metadata-box__sub">Límites envolventes de las manzanas urbanas</small>
+            </div>
+            <div class="rep-metadata-box">
+                <span class="rep-metadata-box__label">Integridad de Fuente</span>
+                <span class="rep-metadata-box__valor" style="color: #16a34a;">100% Conectado y Sincronizado</span>
+                <small class="rep-metadata-box__sub">Azure SQL · Acceso strictly Read-Only</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js" asp-append-version="true"></script>
+    <script src="~/js/reportes/indicadores.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Reportes/Indicadores',
+            alValidar: function () {
+                if (window.VisorSIG && window.VisorSIG.reportesIndicadores) {
+                    window.VisorSIG.reportesIndicadores.iniciar();
+                }
+            }
+        });
+    </script>
+}

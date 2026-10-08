@@ -1,0 +1,219 @@
+@*
+    Módulo 6: Reportes y Analítica Territorial
+    CU28 – Consultar Dashboard General
+*@
+@{
+    ViewData["Title"] = "Consultar Dashboard - Reportes y Analítica Territorial";
+    Layout = "_AppLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/reportes.css" asp-append-version="true" />
+}
+
+<div class="reportes-seccion">
+    <!-- Encabezado Principal del Dashboard General (CU28) -->
+    <header class="reportes-cabecera">
+        <div class="reportes-cabecera__info">
+            <h1 class="reportes-cabecera__titulo">Consultar Dashboard</h1>
+            <p class="reportes-cabecera__intro">
+                Visión general e indicadores consolidados del sistema: servicios, personal operativo, infraestructura geoespacial y seguimiento de operaciones.
+            </p>
+            <div class="reportes-cabecera__meta">
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Hora Oficial (Bolivia UTC-4): <strong id="hora-auditoria">Cargando...</strong>
+                </span>
+                <span class="reportes-meta-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    Acceso Autorizado: <strong id="perfil-usuario">Administrador / Supervisor</strong>
+                </span>
+            </div>
+        </div>
+        <div class="reportes-cabecera__acciones">
+            <button id="btn-actualizar-reportes" type="button" class="btn-rep-primario" title="Actualizar indicadores en tiempo real">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span>Actualizar Indicadores</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Notificación / Estado de Error controlado (RN-REP-05) -->
+    <div id="dashboard-aviso" class="dashboard-aviso" hidden></div>
+
+    <!-- 4 Indicadores KPIs Consolidados Principales -->
+    <div class="rep-kpi-grid">
+        <!-- 1. Servicios -->
+        <div class="rep-kpi-card rep-kpi-card--destacado">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Servicios Registrados</span>
+                <span class="badge-estado badge-estado--normal" id="kpi-servicios-badge">Cargando...</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-total-servicios">0</div>
+            <div class="rep-kpi-card__subtexto" id="kpi-servicios-sub">Puntos de código fijo registrados</div>
+            <div class="rep-kpi-card__pills">
+                <span class="kpi-mini-pill" title="Servicios Normales">Normales: <b id="kpi-pill-normales">0</b></span>
+                <span class="kpi-mini-pill" title="Pendientes">Pendientes: <b id="kpi-pill-pendientes">0</b></span>
+                <span class="kpi-mini-pill" title="En Corte">Cortes: <b id="kpi-pill-cortes">0</b></span>
+            </div>
+        </div>
+
+        <!-- 2. Personal Operativo -->
+        <div class="rep-kpi-card rep-kpi-card--personal">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Personal Operativo</span>
+                <span class="badge-estado badge-estado--inspeccion">Cuadrillas</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-personal-operativo">0</div>
+            <div class="rep-kpi-card__subtexto" id="kpi-personal-sub">Técnicos de campo en servicio activo</div>
+            <div class="rep-kpi-card__pills">
+                <span class="kpi-mini-pill">Disponibles: <b id="kpi-pill-disponibles">0</b></span>
+                <span class="kpi-mini-pill">En Cuadrilla: <b id="kpi-pill-enservicio">0</b></span>
+            </div>
+        </div>
+
+        <!-- 3. Entidades Territoriales SIG -->
+        <div class="rep-kpi-card rep-kpi-card--sig">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Cobertura Geoespacial</span>
+                <span class="badge-estado badge-estado--inspeccion">Catastro SIG</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-entidades-sig">0</div>
+            <div class="rep-kpi-card__subtexto">Entidades espaciales en la base vectorial</div>
+            <div class="rep-kpi-card__pills">
+                <span class="kpi-mini-pill">Manzanas: <b id="kpi-pill-manzanas">0</b></span>
+                <span class="kpi-mini-pill">Lotes: <b id="kpi-pill-lotes">0</b></span>
+                <span class="kpi-mini-pill">Vías: <b id="kpi-pill-vias">0</b></span>
+            </div>
+        </div>
+
+        <!-- 4. Procesos de Migración -->
+        <div class="rep-kpi-card rep-kpi-card--migraciones">
+            <div class="rep-kpi-card__top">
+                <span class="rep-kpi-card__label">Migraciones Espaciales</span>
+                <span class="badge-estado badge-estado--normal">Bitácora</span>
+            </div>
+            <div class="rep-kpi-card__valor" id="kpi-migraciones-totales">0</div>
+            <div class="rep-kpi-card__subtexto">Cargas de capas shapefile registradas</div>
+            <div class="rep-kpi-card__pills">
+                <span class="kpi-mini-pill">Tasa Éxito: <b>100%</b></span>
+                <span class="kpi-mini-pill">Integridad: <b>Válida</b></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fila 1 de Gráficos: Comparativa Versus y Tendencia Temporal -->
+    <div class="rep-charts-grid-2">
+        <div class="rep-card">
+            <div class="rep-card__header">
+                <div>
+                    <h2 class="rep-card__titulo">Comparativa de Servicios por Distrito ("Versus")</h2>
+                    <p class="rep-card__desc">Servicios programados frente a ejecutados e incidentes por distrito territorial.</p>
+                </div>
+            </div>
+            <div class="rep-chart-container">
+                <canvas id="chart-versus"></canvas>
+            </div>
+        </div>
+
+        <div class="rep-card">
+            <div class="rep-card__header">
+                <div>
+                    <h2 class="rep-card__titulo">Tendencia Temporal de Operaciones de Campo</h2>
+                    <p class="rep-card__desc">Evolución mensual de inspecciones, cortes y reconexiones en los distritos.</p>
+                </div>
+            </div>
+            <div class="rep-chart-container">
+                <canvas id="chart-lineas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fila 2 de Gráficos: Distribución de Estados y Cobertura de Capas SIG -->
+    <div class="rep-charts-grid-2">
+        <!-- Gráfico de Dona: Estados de Servicios -->
+        <div class="rep-card">
+            <div class="rep-card__header">
+                <div>
+                    <h2 class="rep-card__titulo">Distribución de Estados de Servicio</h2>
+                    <p class="rep-card__desc">Proporción consolidada de suministros Normales, Pendientes, Para Corte o Cortados.</p>
+                </div>
+            </div>
+            <div class="rep-chart-with-legend">
+                <div class="rep-chart-container rep-chart-container--donut">
+                    <canvas id="chart-torta-servicios"></canvas>
+                </div>
+                <div id="contenedor-resumen-estados" class="rep-donut-legend">
+                    <!-- Se llena dinámicamente con JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de Barras: Entidades por Capa Espacial -->
+        <div class="rep-card">
+            <div class="rep-card__header">
+                <div>
+                    <h2 class="rep-card__titulo">Volumen de Entidades por Capa Espacial</h2>
+                    <p class="rep-card__desc">Inventario cuantitativo de geometrías vectoriales del visor catastral.</p>
+                </div>
+            </div>
+            <div class="rep-chart-container">
+                <canvas id="chart-barras-capas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de Situación Consolidada y Control Operativo -->
+    <div class="rep-card">
+        <div class="rep-card__header">
+            <div>
+                <h2 class="rep-card__titulo">Resumen Ejecutivo de Situación Territorial</h2>
+                <p class="rep-card__desc">Parámetros clave de monitoreo y auditoría consolidada de la red.</p>
+            </div>
+        </div>
+        <div class="rep-resumen-grid">
+            <div class="rep-resumen-item">
+                <span class="rep-resumen-item__label">Municipio / Jurisdicción</span>
+                <span class="rep-resumen-item__valor">Santa Cruz de la Sierra</span>
+                <small class="rep-resumen-item__sub">Sistema Geodésico WGS 84 (EPSG:4326)</small>
+            </div>
+            <div class="rep-resumen-item">
+                <span class="rep-resumen-item__label">Densidad Catastral Estimada</span>
+                <span class="rep-resumen-item__valor" id="resumen-lotes-mza">17.7 Lotes / Manzana</span>
+                <small class="rep-resumen-item__sub">Promedio de predios por manzana urbana</small>
+            </div>
+            <div class="rep-resumen-item">
+                <span class="rep-resumen-item__label">Tasa de Suministros al Día</span>
+                <span class="rep-resumen-item__valor" id="resumen-cobertura">75.0% Normal</span>
+                <small class="rep-resumen-item__sub">Abonados en estado operativo Normal</small>
+            </div>
+            <div class="rep-resumen-item">
+                <span class="rep-resumen-item__label">Integridad de Fuentes de Datos</span>
+                <span class="rep-resumen-item__valor" style="color:var(--rep-primary);">100% Conectado</span>
+                <small class="rep-resumen-item__sub">Base de datos Azure SQL · Modo solo lectura</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js" asp-append-version="true"></script>
+    <script src="~/js/reportes/reportes.js" asp-append-version="true"></script>
+    <script>
+        window.VisorSIG.guard.protegerPagina({
+            returnUrl: '/Reportes/Dashboard',
+            alValidar: function () {
+                if (window.VisorSIG && window.VisorSIG.reportes) {
+                    window.VisorSIG.reportes.iniciar();
+                }
+            }
+        });
+    </script>
+}
