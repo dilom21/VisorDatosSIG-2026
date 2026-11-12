@@ -342,32 +342,137 @@ window.VisorSIG = window.VisorSIG || {};
         temporizador = setTimeout(limpiar, 4000);
     }
 
-    function localizar(item, clave) {
-        var mapa = (ns.mapa && typeof ns.mapa.obtener === 'function') ? ns.mapa.obtener() : null;
-        if (!mapa) {
-            return;
-        }
-        // Se vuelve a resolver la feature al momento del clic: si la capa se
-        // desactivó o el mapa se movió, la entidad podría ya no estar cargada.
-        var capa = buscarCapaCargada(clave, item.clave);
-        if (!capa) {
-            return;
-        }
+    // Localiza codigos fijos aunque la capa no este activa o la entidad este
+    // fuera del viewport. El endpoint de detalle entrega coordenadas reales.
+    var secuenciaLocalizacion = 0;
+    var marcadorBusqueda = null;
 
-        // Si el modo Identificar está activo, se desactiva antes de abrir el
-        // popup local, para no ofrecer una UX contradictoria.
+    function limpiarMarcadorBusqueda() {
+        var mapa = (ns.mapa && typeof ns.mapa.obtener === 'function') ? ns.mapa.obtener() : null;
+        if (mapa && marcadorBusqueda && mapa.hasLayer(marcadorBusqueda)) {
+            mapa.removeLayer(marcadorBusqueda);
+        }
+        marcadorBusqueda = null;
+    }
+
+    function desactivarIdentificacion() {
         if (ns.identify && typeof ns.identify.estaActivo === 'function'
             && ns.identify.estaActivo()
             && typeof ns.identify.desactivar === 'function') {
             ns.identify.desactivar();
         }
+    }
+
+    function localizarCodigoFijo(item) {
+        var mapa = (ns.mapa && typeof ns.mapa.obtener === 'function') ? ns.mapa.obtener() : null;
+        var id = String(item.clave);
+        if (!mapa || !/^[1-9]\\d*$/.test(id) || !ns.api
+            || typeof ns.api.peticion !== 'function' || typeof L === 'undefined') {
+            fijarEstado('No se puede localizar este codigo fijo.', 'aviso');
+            return Promise.resolve(false);
+        }
+
+        var pedido = ++secuenciaLocalizacion;
+        return ns.api.peticion('api/codigos-fijos/' + encodeURIComponent(id), {
+            metodo: 'GET',
+            token: obtenerToken(),
+            protegida: true
+        }).then(function (respuesta) {
+            if (pedido !== secuenciaLocalizacion) {
+                return false;
+            }
+            if (!respuesta || !respuesta.ok || !respuesta.datos) {
+                if (!respuesta || respuesta.status !== 401) {
+                    fijarEstado(respuesta && respuesta.status === 403
+                        ? 'Sin permiso para consultar la ubicacion de este cliente.'
+                        : 'No se pudo obtener la ubicacion del cliente.', 'aviso');
+                }
+                return false;
+            }
+
+            var detalle = respuesta.datos;
+            var lat = Number(valorCampo(detalle, 'latitud'));
+            var lng = Number(valorCampo(detalle, 'longitud'));
+            var tieneCoordenadas = valorCampo(detalle, 'latitud') !== null
+                && valorCampo(detalle, 'longitud') !== null
+                && isFinite(lat) && isFinite(lng)
+                && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+            var punto = tieneCoordenadas ? L.latLng(lat, lng) : null;
+            var limites = null;
+
+            if (!punto && valorCampo(detalle, 'geometria')) {
+                try {
+                    var geometria = valorCampo(detalle, 'geometria');
+                    if (typeof geometria === 'string') {
+                        geometria = JSON.parse(geometria);
+                    }
+                    var capaGeometrica = L.geoJSON(geometria);
+                    limites = capaGeometrica.getBounds();
+                    if (!limites.isValid()) {
+                        limites = null;
+                    }
+                } catch (e) {
+                    limites = null;
+                }
+            }
+
+            if (!punto && !limites) {
+                fijarEstado('El cliente no tiene coordenadas geograficas validas.', 'aviso');
+                return false;
+            }
+
+            desactivarIdentificacion();
+            limpiarMarcadorBusqueda();
+
+            if (punto) {
+                mapa.flyTo(punto, 18, { animate: true, duration: 1.2 });
+                marcadorBusqueda = L.circleMarker(punto, {
+                    radius: 11, color: '#075985', weight: 3,
+                    fillColor: '#facc15', fillOpacity: 0.9
+                }).addTo(mapa);
+            } else {
+                mapa.flyToBounds(limites, { padding: [40, 40], maxZoom: 18, duration: 1.2 });
+                marcadorBusqueda = L.geoJSON(geometria, {
+                    style: { color: '#075985', weight: 4, fillOpacity: 0.35 }
+                }).addTo(mapa);
+            }
+
+            var contenido = document.createElement('div');
+            var titulo = document.createElement('strong');
+            titulo.textContent = mostrarValor(valorCampo(detalle, 'codFSig') || item.titulo);
+            var nombre = document.createElement('p');
+            nombre.textContent = mostrarValor(valorCampo(detalle, 'nombre') || item.subtitulo);
+            contenido.appendChild(titulo);
+            contenido.appendChild(nombre);
+            marcadorBusqueda.bindPopup(contenido).openPopup();
+            return true;
+        }).catch(function () {
+            if (pedido === secuenciaLocalizacion) {
+                fijarEstado('No se pudo obtener la ubicacion del cliente.', 'aviso');
+            }
+            return false;
+        });
+    }
+
+    function localizar(item, clave) {
+        if (clave === 'codigosfijos') {
+            return localizarCodigoFijo(item);
+        }
+        var mapa = (ns.mapa && typeof ns.mapa.obtener === 'function') ? ns.mapa.obtener() : null;
+        if (!mapa) {
+            return;
+        }
+        var capa = buscarCapaCargada(clave, item.clave);
+        if (!capa) {
+            return;
+        }
+        desactivarIdentificacion();
 
         if (typeof capa.getLatLng === 'function') {
-            mapa.panTo(capa.getLatLng());
+            mapa.flyTo(capa.getLatLng(), 18, { duration: 1.2 });
         } else if (typeof capa.getBounds === 'function') {
             mapa.fitBounds(capa.getBounds(), { padding: [30, 30], maxZoom: 18 });
         }
-
         abrirPopup(capa);
         programarReaperturaPopup(clave, item.clave);
     }
@@ -379,7 +484,7 @@ window.VisorSIG = window.VisorSIG || {};
         var clave = claveInterna(item.capa);
         var capa = buscarCapaCargada(clave, item.clave);
 
-        if (capa) {
+        if (capa || clave === 'codigosfijos') {
             var boton = document.createElement('button');
             boton.type = 'button';
             boton.className = 'btn-secundario visor-busqueda__ver';
@@ -582,6 +687,13 @@ window.VisorSIG = window.VisorSIG || {};
         fijarEstado(textoConteo(paged.totalRegistros), 'exito');
         renderizarResultados(paged.items);
         renderizarPaginacion(paged);
+
+        // Cuando solo coincide un cliente, centrar y acercar automaticamente.
+        // No depende del bbox ni de que la capa este cargada.
+        if (paged.totalRegistros === 1 && paged.items.length === 1
+            && claveInterna(paged.items[0].capa) === 'codigosfijos') {
+            localizarCodigoFijo(paged.items[0]);
+        }
     }
 
     // --- API pública --------------------------------------------------------
@@ -605,6 +717,7 @@ window.VisorSIG = window.VisorSIG || {};
             : PAGINA_INICIAL;
 
         secuencia += 1;
+        secuenciaLocalizacion += 1;
         var actual = secuencia;
 
         fijarEstado(TEXTO_CARGANDO, 'cargando');
@@ -621,6 +734,8 @@ window.VisorSIG = window.VisorSIG || {};
     function limpiar() {
         // Invalida cualquier respuesta en vuelo.
         secuencia += 1;
+        secuenciaLocalizacion += 1;
+        limpiarMarcadorBusqueda();
         paginaActual = PAGINA_INICIAL;
         terminoActual = '';
         capaActual = '';
